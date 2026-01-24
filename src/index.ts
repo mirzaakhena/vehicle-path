@@ -46,7 +46,6 @@ export type {
   PathExecutionState,
   VehicleMovementState,
   MovementConfig,
-  SceneDefinition,
   SceneContext
 } from './core/types/movement'
 
@@ -60,8 +59,7 @@ export type {
   SceneConnectionInput,
   SceneConfig,
   VehicleInput,
-  MovementInput,
-  ApiResult
+  GotoCommandInput
 } from './core/types/api'
 
 // =============================================================================
@@ -72,10 +70,7 @@ export type {
 export {
   buildGraph,
   findPath,
-  canReachTarget,
-  getReachableCurves,
   calculateBezierArcLength,
-  resolveOffset,
   resolveFromLineOffset,
   resolveToLineOffset,
   type Graph,
@@ -109,7 +104,6 @@ export {
   type PreparedPath,
 
   // Segment transition
-  checkRearCompletion,
   handleArrival,
   type SegmentCompletionContext,
   type SegmentCompletionResult,

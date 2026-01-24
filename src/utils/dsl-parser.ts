@@ -28,7 +28,7 @@
  * ```
  */
 
-import type { SceneConfig, SceneLineInput, SceneConnectionInput, VehicleInput, MovementInput } from '../core/types/api'
+import type { SceneConfig, SceneLineInput, SceneConnectionInput, VehicleInput, GotoCommandInput } from '../core/types/api'
 
 /**
  * Parse result with errors for validation feedback
@@ -41,7 +41,7 @@ export interface ParseResult<T> {
 /**
  * Movement command parsed from DSL (includes vehicleId for routing)
  */
-export interface MovementCommand extends MovementInput {
+export interface MovementCommand extends GotoCommandInput {
   vehicleId: string
 }
 

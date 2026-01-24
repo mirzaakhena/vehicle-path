@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react'
 import { useScene } from './useScene'
 import { useVehicles } from './useVehicles'
 import { useMovementQueue } from './useMovementQueue'
-import type { SceneConfig, SceneLineInput, SceneConnectionInput, VehicleInput, MovementInput } from '../../core/types/api'
+import type { SceneConfig, SceneLineInput, SceneConnectionInput, VehicleInput, GotoCommandInput } from '../../core/types/api'
 import type { Line, Curve } from '../../core/types/geometry'
 import type { Vehicle, GotoCommand } from '../../core/types/vehicle'
 
@@ -55,7 +55,7 @@ export interface UseVehiclePathResult {
   clearVehicles: () => void
 
   // Movement operations
-  queueMovement: (vehicleId: string, input: MovementInput) => OperationResult
+  queueMovement: (vehicleId: string, input: GotoCommandInput) => OperationResult
   clearQueue: (vehicleId?: string) => OperationResult
 
   // Utility
@@ -268,7 +268,7 @@ export function useVehiclePath({ wheelbase }: UseVehiclePathProps): UseVehiclePa
   }, [vehicleHook, movementQueue])
 
   // Coordinated queueMovement
-  const queueMovement = useCallback((vehicleId: string, input: MovementInput): OperationResult => {
+  const queueMovement = useCallback((vehicleId: string, input: GotoCommandInput): OperationResult => {
     const result = movementQueue.queueMovement(vehicleId, input)
     if (!result.success) {
       return { success: false, error: result.error }

@@ -4,10 +4,7 @@ import type { MovementConfig } from '../types/movement'
 import {
   buildGraph,
   findPath,
-  canReachTarget,
-  getReachableCurves,
-  calculateBezierArcLength,
-  resolveOffset
+  calculateBezierArcLength
 } from '../pathFinding'
 
 // ============================================================================
@@ -31,31 +28,6 @@ const defaultConfig: MovementConfig = {
   wheelbase: 60,
   tangentMode: 'proportional-40'
 }
-
-// ============================================================================
-// resolveOffset Tests
-// ============================================================================
-
-describe('resolveOffset', () => {
-  const testLine = createLine('test', 0, 0, 100, 0)
-
-  it('should use default percentage when offset is undefined', () => {
-    expect(resolveOffset(testLine, undefined, undefined, 100)).toBe(100)
-    expect(resolveOffset(testLine, undefined, undefined, 50)).toBe(50)
-    expect(resolveOffset(testLine, undefined, undefined, 0)).toBe(0)
-  })
-
-  it('should convert percentage to absolute', () => {
-    expect(resolveOffset(testLine, 50, true, 100)).toBe(50)
-    expect(resolveOffset(testLine, 25, true, 100)).toBe(25)
-    expect(resolveOffset(testLine, 100, true, 100)).toBe(100)
-  })
-
-  it('should use absolute offset directly', () => {
-    expect(resolveOffset(testLine, 30, false, 100)).toBe(30)
-    expect(resolveOffset(testLine, 80, false, 100)).toBe(80)
-  })
-})
 
 // ============================================================================
 // calculateBezierArcLength Tests
@@ -427,87 +399,3 @@ describe('findPath - edge cases', () => {
   })
 })
 
-// ============================================================================
-// Helper Function Tests
-// ============================================================================
-
-describe('canReachTarget', () => {
-  it('should return true when path exists', () => {
-    const lines = [line001, line002]
-    const curves: Curve[] = [
-      { fromLineId: 'line001', toLineId: 'line002' }
-    ]
-    const graph = buildGraph(lines, curves, defaultConfig)
-
-    const canReach = canReachTarget(
-      graph,
-      { lineId: 'line001', offset: 0 },
-      'line002',
-      50
-    )
-
-    expect(canReach).toBe(true)
-  })
-
-  it('should return false when no path exists', () => {
-    const lines = [line001, line002]
-    const curves: Curve[] = []
-    const graph = buildGraph(lines, curves, defaultConfig)
-
-    const canReach = canReachTarget(
-      graph,
-      { lineId: 'line001', offset: 0 },
-      'line002',
-      50
-    )
-
-    expect(canReach).toBe(false)
-  })
-})
-
-describe('getReachableCurves', () => {
-  it('should return curves ahead of current offset', () => {
-    const lines = [line001, line002, line003]
-    const curves: Curve[] = [
-      {
-        fromLineId: 'line001',
-        toLineId: 'line002',
-        fromOffset: 30,
-        fromIsPercentage: true
-      },
-      {
-        fromLineId: 'line001',
-        toLineId: 'line003',
-        fromOffset: 70,
-        fromIsPercentage: true
-      }
-    ]
-    const graph = buildGraph(lines, curves, defaultConfig)
-
-    // With wheelbase=60: 30% = 72, 70% = 88
-    // Vehicle at 80 is between the two curves
-    const reachable = getReachableCurves(graph, 'line001', 80)
-
-    expect(reachable).toHaveLength(1)
-    expect(reachable[0].toLineId).toBe('line003')
-  })
-
-  it('should return empty array when no curves ahead', () => {
-    const lines = [line001, line002]
-    const curves: Curve[] = [
-      {
-        fromLineId: 'line001',
-        toLineId: 'line002',
-        fromOffset: 30,
-        fromIsPercentage: true
-      }
-    ]
-    const graph = buildGraph(lines, curves, defaultConfig)
-
-    // With wheelbase=60: fromOffset 30% = 72
-    // Vehicle at 90 is beyond the curve, so no curves ahead
-    const reachable = getReachableCurves(graph, 'line001', 90)
-
-    expect(reachable).toHaveLength(0)
-  })
-})

@@ -69,33 +69,6 @@ export function calculateBezierArcLength(bezier: BezierCurve, segments: number =
 // ============================================================================
 
 /**
- * Menghitung absolute offset dari offset yang mungkin percentage
- *
- * @deprecated This is a legacy function with no active callers in the codebase.
- * Use {@link resolveFromLineOffset} or {@link resolveToLineOffset} for curve offsets instead.
- * This function is a candidate for removal in a future version.
- */
-export function resolveOffset(
-  line: Line,
-  offset: number | undefined,
-  isPercentage: boolean | undefined,
-  defaultPercentage: number
-): number {
-  const lineLength = distance(line.start, line.end)
-
-  if (offset === undefined) {
-    // Use default percentage
-    return (defaultPercentage / 100) * lineLength
-  }
-
-  if (isPercentage) {
-    return (offset / 100) * lineLength
-  }
-
-  return offset
-}
-
-/**
  * Resolve offset untuk FROM line (garis asal kurva)
  * - 0% → wheelbase (bukan 0, untuk memberi ruang vehicle)
  * - 100% → lineLength (ujung garis)
@@ -420,38 +393,3 @@ export function findPath(
   return null
 }
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Mengecek apakah path valid dari posisi vehicle ke target
- *
- * @deprecated This function has no active callers in the codebase (only used in tests).
- * It is a candidate for removal in a future version.
- * Consider using {@link findPath} directly and checking for null result instead.
- */
-export function canReachTarget(
-  graph: Graph,
-  vehiclePos: VehiclePosition,
-  targetLineId: string,
-  targetOffset: number,
-  targetIsPercentage: boolean = false
-): boolean {
-  return findPath(graph, vehiclePos, targetLineId, targetOffset, targetIsPercentage) !== null
-}
-
-/**
- * Mendapatkan semua kurva yang bisa diambil dari posisi tertentu pada line
- *
- * @deprecated This function has no active callers in the codebase (only used in tests).
- * It is a candidate for removal in a future version.
- */
-export function getReachableCurves(
-  graph: Graph,
-  lineId: string,
-  currentOffset: number
-): GraphEdge[] {
-  const edges = graph.adjacency.get(lineId) || []
-  return edges.filter(edge => edge.fromOffset >= currentOffset)
-}

@@ -3,7 +3,7 @@
  */
 
 import type { Line, Curve, BezierCurve } from './geometry'
-import type { Vehicle, VehicleStart } from './vehicle'
+import type { Vehicle } from './vehicle'
 import type { TangentMode } from './config'
 
 // Forward declarations for types from algorithms (to avoid circular imports)
@@ -53,19 +53,6 @@ export interface VehicleMovementState {
 export interface MovementConfig {
   wheelbase: number
   tangentMode: TangentMode
-}
-
-/**
- * Scene definition (parsed from text input)
- *
- * @deprecated This type has no active callers in the codebase.
- * It is exported as part of the public API but not used internally.
- * This type is a candidate for removal in a future version.
- */
-export interface SceneDefinition {
-  lines: Line[]
-  curves: Curve[]
-  vehicles: VehicleStart[]
 }
 
 /**

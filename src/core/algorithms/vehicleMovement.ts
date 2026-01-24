@@ -674,30 +674,4 @@ export function handleArrival(
   return { handled: true, vehicle: arrivedVehicle, newExecution: null }
 }
 
-/**
- * Check if rear axle has completed all segments
- *
- * @deprecated This function has no active callers in the codebase.
- * The animation loop in useVehicleMovement uses updateAxlePosition directly
- * and checks completion via rearResult.completed flag instead.
- * This function is a candidate for removal in a future version.
- */
-export function checkRearCompletion(
-  state: VehicleMovementState,
-  ctx: SegmentCompletionContext
-): SegmentCompletionResult {
-  const exec = state.execution
-
-  if (!exec) {
-    return { handled: false, vehicle: state.vehicle }
-  }
-
-  // Check if rear axle has completed path
-  if (exec.rear.currentSegmentIndex >= exec.path.segments.length) {
-    return handleArrival(state, ctx)
-  }
-
-  return { handled: false, vehicle: state.vehicle }
-}
-
 export type { VehicleMovementState as SegmentVehicleState }
