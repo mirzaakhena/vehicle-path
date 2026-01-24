@@ -22,10 +22,10 @@ function App() {
   sim.connect('line1', 'line2')
 
   // Tambah kendaraan
-  sim.addVehicle({ id: 'v1', lineId: 'line1', position: 0 })
+  sim.addVehicles({ id: 'v1', lineId: 'line1', position: 0 })
 
   // Gerakkan ke tujuan
-  sim.goto('v1', 'line2', 1.0)
+  sim.goto({ id: 'v1', lineId: 'line2', position: 1.0 })
 
   // Jalankan animasi
   sim.prepare()
@@ -65,7 +65,8 @@ sim.disconnect('line1', 'line2')
 ### Kendaraan
 
 ```ts
-sim.addVehicle({ id: 'v1', lineId: 'line1', position: 0 })
+sim.addVehicles({ id: 'v1', lineId: 'line1', position: 0 })
+sim.addVehicles({ id: 'v2', lineId: 'line1', position: 150, isPercentage: false }) // absolute
 sim.removeVehicle('v1')
 sim.clearVehicles()
 ```
@@ -73,8 +74,9 @@ sim.clearVehicles()
 ### Pergerakan
 
 ```ts
-sim.goto('v1', 'line2', 1.0)  // 1.0 = ujung line
-sim.goto('v1', 'line2', 0.5)  // 0.5 = tengah line
+sim.goto({ id: 'v1', lineId: 'line2' })                // default position = 1.0 (ujung)
+sim.goto({ id: 'v1', lineId: 'line2', position: 0.5 }) // 0.5 = tengah line
+sim.goto({ id: 'v1', lineId: 'line2', position: 150, isPercentage: false }) // absolute
 sim.clearQueue('v1')
 ```
 
@@ -117,8 +119,8 @@ function AnimatedVehicle() {
 
   useEffect(() => {
     sim.addLine({ id: 'line1', start: [100, 100], end: [500, 100] })
-    sim.addVehicle({ id: 'v1', lineId: 'line1', position: 0 })
-    sim.goto('v1', 'line1', 1.0)
+    sim.addVehicles({ id: 'v1', lineId: 'line1', position: 0 })
+    sim.goto({ id: 'v1', lineId: 'line1', position: 1.0 })
     sim.prepare()
 
     const animate = () => {

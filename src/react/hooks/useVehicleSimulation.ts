@@ -3,7 +3,7 @@ import { useScene } from './useScene'
 import { useVehicles } from './useVehicles'
 import { useMovementQueue } from './useMovementQueue'
 import { useAnimation } from './useAnimation'
-import type { SceneLineInput, CoordinateInput, VehicleInput, GotoCommandInput } from '../../core/types/api'
+import type { SceneLineInput, CoordinateInput, VehicleInput, GotoInput, GotoCommandInput } from '../../core/types/api'
 import type { Line, Curve } from '../../core/types/geometry'
 import type { Vehicle, GotoCommand } from '../../core/types/vehicle'
 import type { TangentMode } from '../../core/types/config'
@@ -67,7 +67,7 @@ export interface UseVehicleSimulationResult {
   clearVehicles: () => void
 
   // Movement operations (mirrors DSL: "v1 goto line001 100%")
-  goto: (vehicleId: string, targetLineId: string, targetPosition?: number) => SimulationResult
+  goto: (input: GotoInput) => SimulationResult
   clearQueue: (vehicleId?: string) => SimulationResult
 
   // Animation
@@ -110,7 +110,8 @@ export interface UseVehicleSimulationResult {
  * sim.removeVehicle('v1')
  *
  * // Movement (mirrors DSL: "v1 goto line001 100%")
- * sim.goto('v1', 'line001', 1.0)
+ * sim.goto({ id: 'v1', lineId: 'line001', position: 1.0 })
+ * sim.goto({ id: 'v1', lineId: 'line001', position: 150, isPercentage: false })
  *
  * // Animation
  * sim.prepare()
@@ -303,12 +304,13 @@ export function useVehicleSimulation({
   }, [vehicleHook, movementQueue])
 
   // Movement: goto (simplified API)
-  const goto = useCallback((vehicleId: string, targetLineId: string, targetPosition: number = 1.0): SimulationResult => {
-    const input: GotoCommandInput = {
-      targetLineId,
-      targetPosition
+  const goto = useCallback((input: GotoInput): SimulationResult => {
+    const command: GotoCommandInput = {
+      targetLineId: input.lineId,
+      targetPosition: input.position ?? 1.0,
+      isPercentage: input.isPercentage
     }
-    const result = movementQueue.queueMovement(vehicleId, input)
+    const result = movementQueue.queueMovement(input.id, command)
     if (!result.success) {
       return { success: false, error: result.error }
     }

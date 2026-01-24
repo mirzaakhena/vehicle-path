@@ -87,6 +87,21 @@ export interface VehicleInput {
 // =============================================================================
 
 /**
+ * Simplified goto input for useVehicleSimulation.goto()
+ *
+ * @example
+ * goto({ id: 'v1', lineId: 'line002' })  // position defaults to 1.0 (end)
+ * goto({ id: 'v1', lineId: 'line002', position: 0.5 })  // 50% of line
+ * goto({ id: 'v1', lineId: 'line002', position: 150, isPercentage: false })  // absolute 150
+ */
+export interface GotoInput {
+  id: string               // vehicle id
+  lineId: string           // target line id
+  position?: number        // position value on target line, defaults to 1.0 (end of line)
+  isPercentage?: boolean   // if true, position is 0-1 percentage; if false, absolute distance. Defaults to true
+}
+
+/**
  * Input for goto/queueMovement commands (API-friendly version of GotoCommand)
  *
  * @example
