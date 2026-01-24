@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { VehicleEventEmitter } from '../emitter'
-import type { GotoCompletionInfo } from '../../../core/types/vehicle'
+import { VehicleEventEmitter } from '../event-emitter'
+import type { GotoCompletionInfo } from '../../core/types/vehicle'
 
 describe('VehicleEventEmitter', () => {
   describe('on/emit', () => {

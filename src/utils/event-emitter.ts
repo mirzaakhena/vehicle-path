@@ -1,5 +1,5 @@
-import type { GotoCompletionInfo, GotoCommand, VehicleState } from '../../core/types/vehicle'
-import type { Point } from '../../core/types/geometry'
+import type { GotoCompletionInfo, GotoCommand, VehicleState } from '../core/types/vehicle'
+import type { Point } from '../core/types/geometry'
 
 /**
  * Info when a command starts execution

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Line, Curve } from '../../core/types/geometry'
 import type { SceneConfig, SceneConnectionInput } from '../../core/types/api'
-import { parseSceneDSL, generateSceneDSL } from '../../utils/dsl/parser'
+import { parseSceneDSL, generateSceneDSL } from '../../utils/dsl-parser'
 import { useScene } from '../hooks/useScene'
 
 /**

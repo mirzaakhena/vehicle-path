@@ -147,7 +147,7 @@ export {
   type VehiclePositionUpdate,
   type Unsubscribe,
   type CommandStartInfo
-} from './utils/events/emitter'
+} from './utils/event-emitter'
 
 // DSL Parser Utilities
 export {
@@ -163,7 +163,7 @@ export {
   // Types
   type ParseResult,
   type MovementCommand
-} from './utils/dsl/parser'
+} from './utils/dsl-parser'
 
 // Animation Loop Utility
 export {
@@ -171,7 +171,7 @@ export {
   useAnimationLoop,
   type AnimationLoopOptions,
   type AnimationLoopControls
-} from './utils/animation/loop'
+} from './utils/animation-loop'
 
 // Vehicle Helpers
 export {
@@ -180,7 +180,7 @@ export {
   validateGotoCommands,
   getNextGotoVehicleId,
   type GotoValidationResult
-} from './utils/helpers/vehicleHelpers'
+} from './utils/vehicle-helpers'
 
 // =============================================================================
 // React Layer - Hooks

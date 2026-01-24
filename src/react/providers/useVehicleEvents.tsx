@@ -5,7 +5,7 @@ import {
   type VehicleEventCallback,
   type VehicleEventMap,
   type VehiclePositionUpdate
-} from '../../utils/events/emitter'
+} from '../../utils/event-emitter'
 
 /**
  * React context for VehicleEventEmitter

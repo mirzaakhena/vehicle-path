@@ -8,7 +8,7 @@ import {
   VehicleEventContext,
   VehicleEventProvider
 } from '../useVehicleEvents'
-import { VehicleEventEmitter } from '../../../utils/events/emitter'
+import { VehicleEventEmitter } from '../../../utils/event-emitter'
 
 describe('useVehicleEvents', () => {
   describe('useCreateVehicleEventEmitter', () => {

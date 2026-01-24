@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react'
 import type { Line } from '../../core/types/geometry'
 import type { Vehicle, VehicleStart } from '../../core/types/vehicle'
 import type { VehicleInput } from '../../core/types/api'
-import { validateAndCreateVehicles } from '../../utils/helpers/vehicleHelpers'
+import { validateAndCreateVehicles } from '../../utils/vehicle-helpers'
 
 /**
  * Convert VehicleInput to internal VehicleStart format

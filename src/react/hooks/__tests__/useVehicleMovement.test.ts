@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useVehicleMovement } from '../useVehicleMovement'
-import { VehicleEventEmitter } from '../../../utils/events/emitter'
+import { VehicleEventEmitter } from '../../../utils/event-emitter'
 import type { Line, Curve } from '../../../core/types/geometry'
 import type { Vehicle } from '../../../core/types/vehicle'
 

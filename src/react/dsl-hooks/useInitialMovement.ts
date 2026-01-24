@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import type { Line } from '../../core/types/geometry'
-import { parseVehiclesDSL } from '../../utils/dsl/parser'
+import { parseVehiclesDSL } from '../../utils/dsl-parser'
 import { useVehicles } from '../hooks/useVehicles'
 
 interface UseInitialMovementProps {

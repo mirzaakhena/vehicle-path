@@ -1,7 +1,7 @@
-import type { Line } from '../../core/types/geometry'
-import type { Vehicle, AxleState, VehicleStart, GotoCommand } from '../../core/types/vehicle'
-import { getPointOnLineByOffset, distance } from '../../core/algorithms/math'
-import { calculateInitialFrontPosition } from '../../core/algorithms/vehicleMovement'
+import type { Line } from '../core/types/geometry'
+import type { Vehicle, AxleState, VehicleStart, GotoCommand } from '../core/types/vehicle'
+import { getPointOnLineByOffset, distance } from '../core/algorithms/math'
+import { calculateInitialFrontPosition } from '../core/algorithms/vehicleMovement'
 
 export function validateAndCreateVehicles(
   vehicleStarts: VehicleStart[],

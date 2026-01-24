@@ -19,7 +19,7 @@ import type {
   MovementConfig
 } from '../types/movement'
 import type { PathResult } from './pathFinding'
-import type { CommandStartInfo } from '../../utils/events/emitter'
+import type { CommandStartInfo } from '../../utils/event-emitter'
 import { findPath, resolveFromLineOffset, resolveToLineOffset } from './pathFinding'
 import { createBezierCurve, buildArcLengthTable, getPointOnBezier, distanceToT } from './math'
 

@@ -13,7 +13,7 @@ import {
   type SegmentCompletionContext,
   type VehicleMovementState
 } from '../../core/algorithms/vehicleMovement'
-import type { VehicleEventEmitter } from '../../utils/events/emitter'
+import type { VehicleEventEmitter } from '../../utils/event-emitter'
 
 interface UseVehicleMovementProps {
   vehicles: Vehicle[]

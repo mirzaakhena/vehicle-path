@@ -22,7 +22,7 @@ export {
   type VehiclePositionUpdate,
   type Unsubscribe,
   type CommandStartInfo
-} from './events/emitter'
+} from './event-emitter'
 
 // =============================================================================
 // DSL Parser
@@ -41,7 +41,7 @@ export {
   // Types
   type ParseResult,
   type MovementCommand
-} from './dsl/parser'
+} from './dsl-parser'
 
 // =============================================================================
 // Animation Loop
@@ -52,7 +52,7 @@ export {
   useAnimationLoop,
   type AnimationLoopOptions,
   type AnimationLoopControls
-} from './animation/loop'
+} from './animation-loop'
 
 // =============================================================================
 // Vehicle Helpers
@@ -64,4 +64,4 @@ export {
   validateGotoCommands,
   getNextGotoVehicleId,
   type GotoValidationResult
-} from './helpers/vehicleHelpers'
+} from './vehicle-helpers'

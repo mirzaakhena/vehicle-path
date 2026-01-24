@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import type { Line } from '../../core/types/geometry'
 import type { Vehicle } from '../../core/types/vehicle'
-import { parseMovementDSL, type MovementCommand } from '../../utils/dsl/parser'
+import { parseMovementDSL, type MovementCommand } from '../../utils/dsl-parser'
 import { useMovement } from '../hooks/useMovement'
 
 interface UseMovementSequenceProps {

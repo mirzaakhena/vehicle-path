@@ -28,7 +28,7 @@
  * ```
  */
 
-import type { SceneConfig, SceneLineInput, SceneConnectionInput, VehicleInput, MovementInput } from '../../core/types/api'
+import type { SceneConfig, SceneLineInput, SceneConnectionInput, VehicleInput, MovementInput } from '../core/types/api'
 
 /**
  * Parse result with errors for validation feedback

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createAnimationLoop } from '../loop'
+import { createAnimationLoop } from '../animation-loop'
 
 describe('createAnimationLoop', () => {
   let rafCallbacks: Map<number, (timestamp: number) => void> = new Map()

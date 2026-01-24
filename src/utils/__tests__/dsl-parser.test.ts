@@ -7,7 +7,7 @@ import {
   generateSceneDSL,
   generateVehiclesDSL,
   generateMovementDSL
-} from '../parser'
+} from '../dsl-parser'
 
 describe('parseSceneDSL', () => {
   describe('line parsing', () => {
