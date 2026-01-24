@@ -6,13 +6,14 @@
  *
  * @example
  * ```typescript
- * import {
- *   useVehicleMovement,
- *   VehicleEventEmitter,
- *   parseSceneDSL,
- *   generateSceneDSL
- * } from 'vehicle-path'
- * import type { Point, Line, Vehicle } from 'vehicle-path'
+ * import { useVehicleSimulation } from 'vehicle-path'
+ *
+ * const sim = useVehicleSimulation({ wheelbase: 30 })
+ * sim.addLine({ id: 'line1', start: [0, 0], end: [400, 0] })
+ * sim.addVehicle({ id: 'v1', lineId: 'line1', position: 0 })
+ * sim.goto('v1', 'line1', 1.0)
+ * sim.prepare()
+ * sim.tick(5)
  * ```
  */
 
@@ -184,14 +185,31 @@ export {
 // React Layer - Hooks
 // =============================================================================
 
-export { useVehicleMovement } from './react/hooks/useVehicleMovement'
+// PRIMARY API - Single Entrypoint
+export {
+  useVehicleSimulation,
+  type UseVehicleSimulationProps,
+  type UseVehicleSimulationResult,
+  type SimulationWarning,
+  type SimulationResult
+} from './react/hooks/useVehicleSimulation'
 
-// Scene API (programmatic)
+// Primitive Hooks (for advanced users)
 export { useScene, type UseSceneResult } from './react/hooks/useScene'
 export { useVehicles, type UseVehiclesResult, type UseVehiclesProps } from './react/hooks/useVehicles'
-export { useMovement, type UseMovementResult, type UseMovementProps } from './react/hooks/useMovement'
+export { useMovementQueue, type UseMovementQueueResult, type UseMovementQueueProps } from './react/hooks/useMovementQueue'
+export { useAnimation, type UseAnimationProps } from './react/hooks/useAnimation'
 
-// Coordinated API (combines Scene, Vehicles, Movement with edge case handling)
+// DEPRECATED - Backward compatibility aliases
+/** @deprecated Use useMovementQueue instead */
+export { useMovementQueue as useMovement } from './react/hooks/useMovementQueue'
+export type { UseMovementQueueResult as UseMovementResult } from './react/hooks/useMovementQueue'
+export type { UseMovementQueueProps as UseMovementProps } from './react/hooks/useMovementQueue'
+
+/** @deprecated Use useAnimation instead */
+export { useAnimation as useVehicleMovement } from './react/hooks/useAnimation'
+
+/** @deprecated Use useVehicleSimulation instead */
 export {
   useVehiclePath,
   type UseVehiclePathProps,

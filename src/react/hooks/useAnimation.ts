@@ -54,7 +54,7 @@ export function useAnimation({
   tangentMode,
   curves,
   eventEmitter
-}: UseVehicleMovementProps) {
+}: UseAnimationProps) {
   const [movingVehicles, setMovingVehicles] = useState<Vehicle[]>([])
 
   // Create config object for movement functions
