@@ -114,6 +114,10 @@ export interface MovementInput {
 
 /**
  * Result type for operations that may fail
+ *
+ * @deprecated This type has no active callers in the codebase.
+ * It is exported as part of the public API but not used internally.
+ * This type is a candidate for removal in a future version.
  */
 export interface ApiResult<T> {
   success: boolean

@@ -676,7 +676,11 @@ export function handleArrival(
 
 /**
  * Check if rear axle has completed all segments
- * Note: This is called from the animation loop which uses updateAxlePosition for movement
+ *
+ * @deprecated This function has no active callers in the codebase.
+ * The animation loop in useVehicleMovement uses updateAxlePosition directly
+ * and checks completion via rearResult.completed flag instead.
+ * This function is a candidate for removal in a future version.
  */
 export function checkRearCompletion(
   state: VehicleMovementState,

@@ -70,7 +70,10 @@ export function calculateBezierArcLength(bezier: BezierCurve, segments: number =
 
 /**
  * Menghitung absolute offset dari offset yang mungkin percentage
- * (Legacy function - use resolveFromLineOffset/resolveToLineOffset for curve offsets)
+ *
+ * @deprecated This is a legacy function with no active callers in the codebase.
+ * Use {@link resolveFromLineOffset} or {@link resolveToLineOffset} for curve offsets instead.
+ * This function is a candidate for removal in a future version.
  */
 export function resolveOffset(
   line: Line,
@@ -423,6 +426,10 @@ export function findPath(
 
 /**
  * Mengecek apakah path valid dari posisi vehicle ke target
+ *
+ * @deprecated This function has no active callers in the codebase (only used in tests).
+ * It is a candidate for removal in a future version.
+ * Consider using {@link findPath} directly and checking for null result instead.
  */
 export function canReachTarget(
   graph: Graph,
@@ -436,6 +443,9 @@ export function canReachTarget(
 
 /**
  * Mendapatkan semua kurva yang bisa diambil dari posisi tertentu pada line
+ *
+ * @deprecated This function has no active callers in the codebase (only used in tests).
+ * It is a candidate for removal in a future version.
  */
 export function getReachableCurves(
   graph: Graph,

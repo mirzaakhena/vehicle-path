@@ -93,66 +93,6 @@ export function getNextStartVehicleId(existingVehicles: VehicleStart[]): string 
   return `v${maxNumber + 1}`
 }
 
-export interface GotoValidationResult {
-  commands: GotoCommand[]
-  errors: string[]
-  vehicleQueues: Map<string, GotoCommand[]>
-}
-
-export function validateGotoCommands(
-  commands: GotoCommand[],
-  vehicles: Vehicle[],
-  lines: Line[]
-): GotoValidationResult {
-  const errors: string[] = []
-  const validCommands: GotoCommand[] = []
-  const vehicleQueues = new Map<string, GotoCommand[]>()
-
-  // Create lookup sets
-  const vehicleIds = new Set(vehicles.map(v => v.id))
-  const lineIds = new Set(lines.map(l => l.id))
-  const lineLengths = new Map(lines.map(l => {
-    const dx = l.end.x - l.start.x
-    const dy = l.end.y - l.start.y
-    return [l.id, Math.sqrt(dx * dx + dy * dy)]
-  }))
-
-  for (const cmd of commands) {
-    // Check vehicle exists
-    if (!vehicleIds.has(cmd.vehicleId)) {
-      errors.push(`Vehicle "${cmd.vehicleId}" does not exist`)
-      continue
-    }
-
-    // Check target line exists
-    if (!lineIds.has(cmd.targetLineId)) {
-      errors.push(`Line "${cmd.targetLineId}" does not exist`)
-      continue
-    }
-
-    // Check offset is valid
-    const lineLength = lineLengths.get(cmd.targetLineId)!
-    const absoluteOffset = cmd.isPercentage
-      ? (cmd.targetOffset / 100) * lineLength
-      : cmd.targetOffset
-
-    if (absoluteOffset < 0 || absoluteOffset > lineLength) {
-      errors.push(`Offset ${cmd.targetOffset}${cmd.isPercentage ? '%' : ''} is out of bounds for ${cmd.targetLineId}`)
-      continue
-    }
-
-    // Valid command
-    validCommands.push(cmd)
-
-    // Add to vehicle queue
-    const queue = vehicleQueues.get(cmd.vehicleId) || []
-    queue.push(cmd)
-    vehicleQueues.set(cmd.vehicleId, queue)
-  }
-
-  return { commands: validCommands, errors, vehicleQueues }
-}
-
 export function getNextGotoVehicleId(
   existingCommands: GotoCommand[],
   vehicles: Vehicle[]

@@ -61,7 +61,5 @@ export {
 export {
   validateAndCreateVehicles,
   getNextStartVehicleId,
-  validateGotoCommands,
-  getNextGotoVehicleId,
-  type GotoValidationResult
+  getNextGotoVehicleId
 } from './vehicle-helpers'

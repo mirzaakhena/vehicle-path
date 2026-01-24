@@ -57,6 +57,10 @@ export interface MovementConfig {
 
 /**
  * Scene definition (parsed from text input)
+ *
+ * @deprecated This type has no active callers in the codebase.
+ * It is exported as part of the public API but not used internally.
+ * This type is a candidate for removal in a future version.
  */
 export interface SceneDefinition {
   lines: Line[]

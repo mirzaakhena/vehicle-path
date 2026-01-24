@@ -177,9 +177,7 @@ export {
 export {
   validateAndCreateVehicles,
   getNextStartVehicleId,
-  validateGotoCommands,
-  getNextGotoVehicleId,
-  type GotoValidationResult
+  getNextGotoVehicleId
 } from './utils/vehicle-helpers'
 
 // =============================================================================
