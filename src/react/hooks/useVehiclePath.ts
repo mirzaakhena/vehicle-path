@@ -72,6 +72,10 @@ export interface UseVehiclePathResult {
  * - Removing a vehicle that has queued movements (clears the queue)
  * - Detecting orphaned connections when lines are removed
  *
+ * @deprecated Use `useVehicleSimulation` instead. This hook will be removed in a future version.
+ * The new hook provides a cleaner API with simplified methods like `connect()`, `goto()`,
+ * and `loadFromDSL()` for loading DSL definitions.
+ *
  * @example
  * ```typescript
  * const {

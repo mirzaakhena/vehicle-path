@@ -1,0 +1,160 @@
+⏺ Berikut ringkasan referensi untuk setiap fungsi di vehicleMovement.ts:                                                             
+                                                                                                                                     
+  ---                                                                                                                                
+  Ringkasan Referensi                                                                                                                
+                                                                                                                                     
+  Fungsi dengan Caller Aktif                                                                                                         
+  Fungsi: initializeAllVehicles                                                                                                      
+  Caller Aktif: useVehicleMovement.ts:56                                                                                             
+  Penggunaan: Inisialisasi semua vehicles saat start                                                                                 
+  ────────────────────────────────────────                                                                                           
+  Fungsi: updateAxlePosition                                                                                                         
+  Caller Aktif: useVehicleMovement.ts:125,135                                                                                        
+  Penggunaan: Update posisi rear dan front axle setiap tick                                                                          
+  ────────────────────────────────────────                                                                                           
+  Fungsi: prepareCommandPath                                                                                                         
+  Caller Aktif: useVehicleMovement.ts:162,249+                                                                                       
+  Penggunaan: Persiapkan path untuk command                                                                                          
+  ────────────────────────────────────────                                                                                           
+  Fungsi: handleArrival                                                                                                              
+  Caller Aktif: useVehicleMovement.ts:167                                                                                            
+  Penggunaan: Handle saat vehicle sampai di tujuan                                                                                   
+  ────────────────────────────────────────                                                                                           
+  Fungsi: calculateFrontAxlePosition                                                                                                 
+  Caller Aktif: useVehicleMovement.ts, vehicleMovement.ts:623                                                                        
+  Penggunaan: Hitung posisi front axle dari rear + wheelbase                                                                         
+  ────────────────────────────────────────                                                                                           
+  Fungsi: calculateInitialFrontPosition                                                                                              
+  Caller Aktif: vehicle-helpers.ts:63                                                                                                
+  Penggunaan: Hitung posisi awal front axle saat create vehicle                                                                      
+  ────────────────────────────────────────                                                                                           
+  Fungsi: getLineLength                                                                                                              
+  Caller Aktif: pathFinding.ts (internal), vehicleMovement.ts:506                                                                    
+  Penggunaan: Hitung panjang line                                                                                                    
+  Fungsi Internal (Dipanggil dari Fungsi Lain di File yang Sama)                                                                     
+  ┌─────────────────────────────┬────────────────────────────────────────────────────────┬────────────────────────────────────────┐  
+  │           Fungsi            │                     Dipanggil Oleh                     │               Keterangan               │  
+  ├─────────────────────────────┼────────────────────────────────────────────────────────┼────────────────────────────────────────┤  
+  │ getPositionFromOffset       │ calculateInitialFrontPosition, calculatePositionOnLine │ Konversi offset ke koordinat Point     │  
+  ├─────────────────────────────┼────────────────────────────────────────────────────────┼────────────────────────────────────────┤  
+  │ getCumulativeArcLength      │ calculateFrontAxlePosition                             │ Hitung total arc-length dari awal path │  
+  ├─────────────────────────────┼────────────────────────────────────────────────────────┼────────────────────────────────────────┤  
+  │ arcLengthToSegmentPosition  │ calculateFrontAxlePosition                             │ Konversi arc-length ke posisi segment  │  
+  ├─────────────────────────────┼────────────────────────────────────────────────────────┼────────────────────────────────────────┤  
+  │ calculatePositionOnLine     │ updateAxlePosition                                     │ Hitung posisi di line segment          │  
+  ├─────────────────────────────┼────────────────────────────────────────────────────────┼────────────────────────────────────────┤  
+  │ calculatePositionOnCurve    │ updateAxlePosition                                     │ Hitung posisi di curve segment         │  
+  ├─────────────────────────────┼────────────────────────────────────────────────────────┼────────────────────────────────────────┤  
+  │ initializeMovingVehicle     │ initializeAllVehicles                                  │ Initialize single vehicle              │  
+  ├─────────────────────────────┼────────────────────────────────────────────────────────┼────────────────────────────────────────┤  
+  │ createInitialMovementState  │ initializeAllVehicles                                  │ Buat initial movement state            │  
+  ├─────────────────────────────┼────────────────────────────────────────────────────────┼────────────────────────────────────────┤  
+  │ buildCurveDataMap (private) │ prepareCommandPath                                     │ Build curve data untuk path            │  
+  └─────────────────────────────┴────────────────────────────────────────────────────────┴────────────────────────────────────────┘  
+  Fungsi Tanpa Caller Aktif (Kandidat Dead Code)                                                                                     
+  ┌─────────────────────┬────────────────────────────────────────────────────┐                                                       
+  │       Fungsi        │                       Status                       │                                                       
+  ├─────────────────────┼────────────────────────────────────────────────────┤                                                       
+  │ checkRearCompletion │ Tidak ada caller aktif - hanya re-export dan tests │                                                       
+  └─────────────────────┴────────────────────────────────────────────────────┘                                                       
+  ---                                                                                                                                
+  Detail per Fungsi                                                                                                                  
+                                                                                                                                     
+  1. getPositionFromOffset (line 37)                                                                                                 
+                                                                                                                                     
+  - Internal: Dipanggil oleh calculateInitialFrontPosition:194, calculatePositionOnLine:279                                          
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+                                                                                                                                     
+  2. getLineLength (line 51)                                                                                                         
+                                                                                                                                     
+  - Internal: Dipanggil oleh prepareCommandPath:506                                                                                  
+  - External: src/core/algorithms/pathFinding.ts (tidak import, tapi ada duplicate implementation)                                   
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+                                                                                                                                     
+  3. getCumulativeArcLength (line 69)                                                                                                
+                                                                                                                                     
+  - Internal: Dipanggil oleh calculateFrontAxlePosition:151                                                                          
+  - Tests: vehicleMovement.test.ts:158                                                                                               
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+                                                                                                                                     
+  4. arcLengthToSegmentPosition (line 94)                                                                                            
+                                                                                                                                     
+  - Internal: Dipanggil oleh calculateFrontAxlePosition:161                                                                          
+  - Tests: vehicleMovement.test.ts:180                                                                                               
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+                                                                                                                                     
+  5. calculateFrontAxlePosition (line 144)                                                                                           
+                                                                                                                                     
+  - External: useVehicleMovement.ts:12 (import), digunakan di handleArrival:623                                                      
+  - Tests: vehicleMovement.test.ts:207                                                                                               
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+                                                                                                                                     
+  6. calculateInitialFrontPosition (line 177)                                                                                        
+                                                                                                                                     
+  - External: vehicle-helpers.ts:63                                                                                                  
+  - Tests: vehicleMovement.test.ts                                                                                                   
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+                                                                                                                                     
+  7. initializeMovingVehicle (line 210)                                                                                              
+                                                                                                                                     
+  - Internal: Dipanggil oleh initializeAllVehicles:254                                                                               
+  - Tests: vehicleMovement.test.ts:250                                                                                               
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+                                                                                                                                     
+  8. createInitialMovementState (line 224)                                                                                           
+                                                                                                                                     
+  - Internal: Dipanggil oleh initializeAllVehicles:257                                                                               
+  - Tests: vehicleMovement.test.ts:289                                                                                               
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+                                                                                                                                     
+  9. initializeAllVehicles (line 243)                                                                                                
+                                                                                                                                     
+  - External: useVehicleMovement.ts:56                                                                                               
+  - Tests: vehicleMovement.test.ts:299                                                                                               
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+                                                                                                                                     
+  10. calculatePositionOnLine (line 275)                                                                                             
+                                                                                                                                     
+  - Internal: Dipanggil oleh updateAxlePosition (multiple locations)                                                                 
+  - Tests: vehicleMovement.test.ts:345                                                                                               
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+                                                                                                                                     
+  11. calculatePositionOnCurve (line 290)                                                                                            
+                                                                                                                                     
+  - Internal: Dipanggil oleh updateAxlePosition (multiple locations)                                                                 
+  - Tests: vehicleMovement.test.ts:382                                                                                               
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+                                                                                                                                     
+  12. updateAxlePosition (line 311)                                                                                                  
+                                                                                                                                     
+  - External: useVehicleMovement.ts:125,135                                                                                          
+  - Tests: vehicleMovement.test.ts:413                                                                                               
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+                                                                                                                                     
+  13. prepareCommandPath (line 494)                                                                                                  
+                                                                                                                                     
+  - External: useVehicleMovement.ts:162 (via ctx), juga dipanggil langsung                                                           
+  - Tests: vehicleMovement.test.ts:728                                                                                               
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+                                                                                                                                     
+  14. handleArrival (line 568)                                                                                                       
+                                                                                                                                     
+  - External: useVehicleMovement.ts:167                                                                                              
+  - Tests: Tidak ada test langsung (diuji via integration)                                                                           
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+                                                                                                                                     
+  15. checkRearCompletion (line 681) ⚠️                                                                                              
+                                                                                                                                     
+  - Caller Aktif: TIDAK ADA                                                                                                          
+  - Tests: Tidak ada                                                                                                                 
+  - Re-export: src/core/index.ts, src/index.ts                                                                                       
+  - Status: Kandidat dead code                                                                                                       
+                                                                                                                                     
+  ---                                                                                                                                
+  Project Demo                                                                                                                       
+                                                                                                                                     
+  Tidak ada penggunaan langsung dari fungsi-fungsi vehicleMovement.ts di project demo. Demo menggunakan hooks level tinggi           
+  (useVehicleMovement, useVehiclePath).                                                                                              
+                                                                                                                                     
+  ---                                                                                                                                
+  Apakah kamu ingin saya menandai checkRearCompletion sebagai @deprecated juga?      

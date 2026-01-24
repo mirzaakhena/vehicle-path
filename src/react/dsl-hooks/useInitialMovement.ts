@@ -13,6 +13,10 @@ interface UseInitialMovementProps {
  *
  * This hook provides text-based vehicle initialization that internally uses
  * the programmatic useVehicles API as the single source of truth.
+ *
+ * @deprecated Use `useVehicleSimulation.loadFromDSL()` instead. This hook will be removed in a future version.
+ * The new unified hook provides a simpler API for loading DSL definitions that includes
+ * scene, vehicles, and movements in a single call.
  */
 export function useInitialMovement({ lines, wheelbase }: UseInitialMovementProps) {
   const [initialMovementText, setInitialMovementTextInternal] = useState('')

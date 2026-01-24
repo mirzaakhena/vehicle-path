@@ -112,6 +112,8 @@ export interface UseSceneResult {
   setScene: (config: SceneConfig) => { success: boolean; errors?: string[] }
   /** Add a single line to the scene */
   addLine: (line: SceneLineInput) => { success: boolean; error?: string }
+  /** Update a line's start and/or end coordinates */
+  updateLine: (lineId: string, updates: { start?: CoordinateInput; end?: CoordinateInput }) => { success: boolean; error?: string }
   /** Remove a line from the scene */
   removeLine: (lineId: string) => { success: boolean; error?: string }
   /** Add a connection between two lines */
@@ -182,6 +184,26 @@ export function useScene(): UseSceneResult {
     }
 
     setLines(prev => [...prev, toLine(line)])
+    setError(null)
+    return { success: true }
+  }, [lines])
+
+  const updateLine = useCallback((lineId: string, updates: { start?: CoordinateInput; end?: CoordinateInput }) => {
+    const lineIndex = lines.findIndex(l => l.id === lineId)
+    if (lineIndex === -1) {
+      const errorMsg = `Line with ID '${lineId}' not found`
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
+
+    setLines(prev => prev.map(l => {
+      if (l.id !== lineId) return l
+      return {
+        ...l,
+        start: updates.start ? toPoint(updates.start) : l.start,
+        end: updates.end ? toPoint(updates.end) : l.end
+      }
+    }))
     setError(null)
     return { success: true }
   }, [lines])
@@ -274,6 +296,7 @@ export function useScene(): UseSceneResult {
     curves,
     setScene,
     addLine,
+    updateLine,
     removeLine,
     addConnection,
     removeConnection,

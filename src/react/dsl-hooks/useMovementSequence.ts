@@ -14,6 +14,10 @@ interface UseMovementSequenceProps {
  *
  * This hook provides text-based movement commands that internally uses
  * the programmatic useMovement API as the single source of truth.
+ *
+ * @deprecated Use `useVehicleSimulation.loadFromDSL()` instead. This hook will be removed in a future version.
+ * The new unified hook provides a simpler API for loading DSL definitions that includes
+ * scene, vehicles, and movements in a single call.
  */
 export function useMovementSequence({ lines, vehicles }: UseMovementSequenceProps) {
   const [movementSequenceText, setMovementSequenceTextInternal] = useState('')

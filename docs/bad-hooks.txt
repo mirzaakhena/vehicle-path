@@ -1,0 +1,224 @@
+⏺ Sekarang saya punya gambaran lengkap. Berikut listing semua hooks dan API-nya:                                          
+                                                                                                                          
+  ---                                                                                                                     
+  📦 COMPLETE HOOK INVENTORY                                                                                              
+                                                                                                                          
+  Layer 1: Primitive Hooks (Building Blocks)                                                                              
+                                                                                                                          
+  useScene                                                                                                                
+                                                                                                                          
+  // Data                                                                                                                 
+  lines: Line[]                                                                                                           
+  curves: Curve[]                                                                                                         
+  error: string | null                                                                                                    
+                                                                                                                          
+  // Functions                                                                                                            
+  setScene(config: SceneConfig)                                                                                           
+  addLine(line: SceneLineInput)                                                                                           
+  removeLine(lineId: string)                                                                                              
+  addConnection(connection: SceneConnectionInput)                                                                         
+  removeConnection(fromLineId, toLineId)                                                                                  
+  clear()                                                                                                                 
+                                                                                                                          
+  useVehicles                                                                                                             
+                                                                                                                          
+  // Props: { lines, wheelbase }                                                                                          
+                                                                                                                          
+  // Data                                                                                                                 
+  vehicles: Vehicle[]                                                                                                     
+  error: string | null                                                                                                    
+                                                                                                                          
+  // Functions                                                                                                            
+  addVehicle(input: VehicleInput)                                                                                         
+  removeVehicle(vehicleId: string)                                                                                        
+  clear()                                                                                                                 
+                                                                                                                          
+  useMovement                                                                                                             
+                                                                                                                          
+  // Props: { vehicles, lines, curves }                                                                                   
+                                                                                                                          
+  // Data                                                                                                                 
+  vehicleQueues: Map<string, GotoCommand[]>                                                                               
+  error: string | null                                                                                                    
+                                                                                                                          
+  // Functions                                                                                                            
+  queueMovement(vehicleId, input: MovementInput)                                                                          
+  clearQueue(vehicleId?: string)                                                                                          
+                                                                                                                          
+  useVehicleMovement                                                                                                      
+                                                                                                                          
+  // Props: { vehicles, lines, vehicleQueues, wheelbase, tangentMode, curves, eventEmitter }                              
+                                                                                                                          
+  // Data                                                                                                                 
+  movingVehicles: Vehicle[]                                                                                               
+  isPrepared: boolean                                                                                                     
+                                                                                                                          
+  // Functions                                                                                                            
+  prepare(): boolean                                                                                                      
+  tick(distance: number): boolean                                                                                         
+  reset()                                                                                                                 
+  continueVehicle(vehicleId): boolean                                                                                     
+  isMoving(): boolean                                                                                                     
+                                                                                                                          
+  ---                                                                                                                     
+  Layer 2: Coordinator Hook                                                                                               
+                                                                                                                          
+  useVehiclePath ⭐                                                                                                       
+                                                                                                                          
+  // Props: { wheelbase }                                                                                                 
+                                                                                                                          
+  // Data (aggregated)                                                                                                    
+  lines: Line[]                           // from useScene                                                                
+  curves: Curve[]                         // from useScene                                                                
+  vehicles: Vehicle[]                     // from useVehicles                                                             
+  vehicleQueues: Map<string, GotoCommand[]>  // from useMovement                                                          
+  error: string | null                                                                                                    
+                                                                                                                          
+  // Scene Functions (wrapper/proxy)                                                                                      
+  setScene(config) → OperationResult      // + clears vehicles                                                            
+  addLine(line) → OperationResult         // pure proxy ❌ duplikat                                                       
+  removeLine(lineId) → OperationResult    // + warnings, remove vehicles                                                  
+  addConnection(conn) → OperationResult   // pure proxy ❌ duplikat                                                       
+  removeConnection(...) → OperationResult // pure proxy ❌ duplikat                                                       
+  clearScene()                                                                                                            
+                                                                                                                          
+  // Vehicle Functions (wrapper)                                                                                          
+  addVehicle(input) → OperationResult     // pure proxy ❌ duplikat                                                       
+  removeVehicle(id) → OperationResult     // + clears queue                                                               
+  clearVehicles()                                                                                                         
+                                                                                                                          
+  // Movement Functions (wrapper)                                                                                         
+  queueMovement(vehicleId, input) → OperationResult  // pure proxy ❌ duplikat                                            
+  clearQueue(vehicleId?) → OperationResult           // pure proxy ❌ duplikat                                            
+                                                                                                                          
+  // Utility (new)                                                                                                        
+  getVehiclesOnLine(lineId): Vehicle[]                                                                                    
+  hasVehiclesOnLine(lineId): boolean                                                                                      
+                                                                                                                          
+  ---                                                                                                                     
+  Layer 3: DSL Hooks (Text-based wrappers)                                                                                
+                                                                                                                          
+  useSceneDefinition                                                                                                      
+                                                                                                                          
+  // Data                                                                                                                 
+  lines: Line[]                                                                                                           
+  curves: Curve[]                                                                                                         
+  sceneDefinitionText: string                                                                                             
+  sceneError: string | null                                                                                               
+                                                                                                                          
+  // Functions                                                                                                            
+  setSceneDefinitionText(text)                                                                                            
+  setLines(newLines)      // for canvas compatibility                                                                     
+  setCurves(newCurves)    // for canvas compatibility                                                                     
+                                                                                                                          
+  useInitialMovement                                                                                                      
+                                                                                                                          
+  // Props: { lines, wheelbase }                                                                                          
+                                                                                                                          
+  // Data                                                                                                                 
+  vehicles: Vehicle[]                                                                                                     
+  initialMovementText: string                                                                                             
+  movementError: string | null                                                                                            
+                                                                                                                          
+  // Functions                                                                                                            
+  setInitialMovementText(text)                                                                                            
+                                                                                                                          
+  useMovementSequence                                                                                                     
+                                                                                                                          
+  // Props: { lines, vehicles }                                                                                           
+                                                                                                                          
+  // Data                                                                                                                 
+  vehicleQueues: Map<string, GotoCommand[]>                                                                               
+  movementSequenceText: string                                                                                            
+  gotoCommands: MovementCommand[]                                                                                         
+  sequenceError: string | null                                                                                            
+                                                                                                                          
+  // Functions                                                                                                            
+  setMovementSequenceText(text)                                                                                           
+                                                                                                                          
+  ---                                                                                                                     
+  🔴 MASALAH YANG TERIDENTIFIKASI                                                                                         
+                                                                                                                          
+  1. Terlalu Banyak Entry Points                                                                                          
+                                                                                                                          
+  User harus pilih dari:                                                                                                  
+  ├── useScene          → scene only                                                                                      
+  ├── useVehicles       → butuh lines dari mana?                                                                          
+  ├── useMovement       → butuh vehicles dan lines                                                                        
+  ├── useVehiclePath    → all-in-one tapi missing animation                                                               
+  ├── useVehicleMovement → animation only, butuh banyak props                                                             
+  ├── useSceneDefinition → DSL wrapper                                                                                    
+  ├── useInitialMovement → DSL wrapper                                                                                    
+  └── useMovementSequence → DSL wrapper                                                                                   
+                                                                                                                          
+  2. Duplikasi API (6 methods tidak tambah value)                                                                         
+  ┌──────────────────────────┬───────────────┐                                                                            
+  │ Method di useVehiclePath │ Tambah Logic? │                                                                            
+  ├──────────────────────────┼───────────────┤                                                                            
+  │ addLine                  │ ❌ Pure proxy │                                                                            
+  ├──────────────────────────┼───────────────┤                                                                            
+  │ addConnection            │ ❌ Pure proxy │                                                                            
+  ├──────────────────────────┼───────────────┤                                                                            
+  │ removeConnection         │ ❌ Pure proxy │                                                                            
+  ├──────────────────────────┼───────────────┤                                                                            
+  │ addVehicle               │ ❌ Pure proxy │                                                                            
+  ├──────────────────────────┼───────────────┤                                                                            
+  │ queueMovement            │ ❌ Pure proxy │                                                                            
+  ├──────────────────────────┼───────────────┤                                                                            
+  │ clearQueue               │ ❌ Pure proxy │                                                                            
+  └──────────────────────────┴───────────────┘                                                                            
+  3. Missing dari useVehiclePath                                                                                          
+                                                                                                                          
+  - ❌ useVehicleMovement (animation: tick, prepare, reset)                                                               
+  - ❌ Event emitter integration                                                                                          
+  - ❌ tangentMode config                                                                                                 
+                                                                                                                          
+  4. Dependency Chain yang Membingungkan                                                                                  
+                                                                                                                          
+  // User harus manually wire ini:                                                                                        
+  const scene = useScene()                                                                                                
+  const vehicles = useVehicles({ lines: scene.lines, wheelbase })                                                         
+  const movement = useMovement({ vehicles: vehicles.vehicles, lines: scene.lines, curves: scene.curves })                 
+  const anim = useVehicleMovement({                                                                                       
+    vehicles: vehicles.vehicles,                                                                                          
+    lines: scene.lines,                                                                                                   
+    vehicleQueues: movement.vehicleQueues,                                                                                
+    wheelbase,                                                                                                            
+    tangentMode,                                                                                                          
+    curves: scene.curves,                                                                                                 
+    eventEmitter                                                                                                          
+  })                                                                                                                      
+                                                                                                                          
+  ---                                                                                                                     
+  ✅ REKOMENDASI: Single Entry Point                                                                                      
+                                                                                                                          
+  Buat satu hook utama yang mencakup SEMUA functionality:                                                                 
+                                                                                                                          
+  // PROPOSED: useVehicleSimulation (atau nama lain)                                                                      
+  const {                                                                                                                 
+    // State                                                                                                              
+    lines, curves, vehicles, vehicleQueues, movingVehicles,                                                               
+    error,                                                                                                                
+                                                                                                                          
+    // Scene (keep useful ones)                                                                                           
+    setScene, removeLine, clearScene,                                                                                     
+                                                                                                                          
+    // Vehicles                                                                                                           
+    addVehicle, removeVehicle,                                                                                            
+                                                                                                                          
+    // Movement                                                                                                           
+    queueMovement, clearQueue,                                                                                            
+                                                                                                                          
+    // Animation ← TAMBAHKAN INI                                                                                          
+    prepare, tick, reset, continueVehicle, isMoving,                                                                      
+                                                                                                                          
+    // Events ← TAMBAHKAN INI                                                                                             
+    on, off,                                                                                                              
+                                                                                                                          
+    // DSL (optional) ← GABUNGKAN                                                                                         
+    setSceneFromDSL,                                                                                                      
+    setVehiclesFromDSL,                                                                                                   
+    setMovementsFromDSL,                                                                                                  
+  } = useVehicleSimulation({ wheelbase, tangentMode })                                                                    
+                                                                                                                          
+  Mau saya buatkan implementasi single entry point ini?                                         

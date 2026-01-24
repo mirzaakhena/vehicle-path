@@ -1,0 +1,64 @@
+⏺ Berikut ringkasan hasil analisis hooks di src/react/:                                                                              
+                                                                                                                                     
+  ---                                                                                                                                
+  Ringkasan Hooks                                                                                                                    
+                                                                                                                                     
+  Hooks dengan Caller Aktif (Internal atau Demo)                                                                                     
+  ┌──────────────────────────────┬──────────────────────────────────────────────────┬───────────────┐                                
+  │             Hook             │                 Caller Internal                  │ Demo Project  │                                
+  ├──────────────────────────────┼──────────────────────────────────────────────────┼───────────────┤                                
+  │ useVehicleMovement           │ -                                                │ ✓ App.tsx:170 │                                
+  ├──────────────────────────────┼──────────────────────────────────────────────────┼───────────────┤                                
+  │ useVehicles                  │ useVehiclePath.ts:107, useInitialMovement.ts:22  │ -             │                                
+  ├──────────────────────────────┼──────────────────────────────────────────────────┼───────────────┤                                
+  │ useMovement                  │ useVehiclePath.ts:108, useMovementSequence.ts:24 │ -             │                                
+  ├──────────────────────────────┼──────────────────────────────────────────────────┼───────────────┤                                
+  │ useScene                     │ useVehiclePath.ts:106, useSceneDefinition.ts:48  │ -             │                                
+  ├──────────────────────────────┼──────────────────────────────────────────────────┼───────────────┤                                
+  │ useSceneDefinition           │ -                                                │ ✓ App.tsx:47  │                                
+  ├──────────────────────────────┼──────────────────────────────────────────────────┼───────────────┤                                
+  │ useInitialMovement           │ -                                                │ ✓ App.tsx:57  │                                
+  ├──────────────────────────────┼──────────────────────────────────────────────────┼───────────────┤                                
+  │ useMovementSequence          │ -                                                │ ✓ App.tsx:67  │                                
+  ├──────────────────────────────┼──────────────────────────────────────────────────┼───────────────┤                                
+  │ useCreateVehicleEventEmitter │ -                                                │ ✓ App.tsx:161 │                                
+  ├──────────────────────────────┼──────────────────────────────────────────────────┼───────────────┤                                
+  │ useVehicleEventEmitter       │ useVehicleEvent (internal)                       │ -             │                                
+  └──────────────────────────────┴──────────────────────────────────────────────────┴───────────────┘                                
+  Hooks Tanpa Caller Aktif ⚠️                                                                                                        
+  ┌─────────────────┬──────────────────────────────────────────────────┐                                                             
+  │      Hook       │                      Status                      │                                                             
+  ├─────────────────┼──────────────────────────────────────────────────┤                                                             
+  │ useVehiclePath  │ Hanya tests - tidak dipakai internal maupun demo │                                                             
+  ├─────────────────┼──────────────────────────────────────────────────┤                                                             
+  │ useVehicleEvent │ Hanya tests - tidak dipakai internal maupun demo │                                                             
+  └─────────────────┴──────────────────────────────────────────────────┘                                                             
+  ---                                                                                                                                
+  Detail Hooks yang Tidak Terpakai                                                                                                   
+                                                                                                                                     
+  1. useVehiclePath (hooks/useVehiclePath.ts)                                                                                        
+                                                                                                                                     
+  - Tujuan: High-level coordinated hook yang menggabungkan useScene, useVehicles, dan useMovement                                    
+  - Caller: Hanya unit tests (useVehiclePath.test.ts)                                                                                
+  - Catatan: Ini adalah API "batteries-included" untuk consumer. Demo project memilih menggunakan DSL hooks (useSceneDefinition,     
+  useInitialMovement, useMovementSequence) sebagai gantinya.                                                                         
+                                                                                                                                     
+  2. useVehicleEvent (providers/useVehicleEvents.tsx)                                                                                
+                                                                                                                                     
+  - Tujuan: Convenience hook untuk subscribe ke events via React Context                                                             
+  - Caller: Hanya unit tests (useVehicleEvents.test.tsx)                                                                             
+  - Catatan: Demo project menggunakan useCreateVehicleEventEmitter langsung dengan eventEmitter.on() daripada hook ini.              
+                                                                                                                                     
+  ---                                                                                                                                
+  Kesimpulan                                                                                                                         
+                                                                                                                                     
+  Kedua hooks ini bukan dead code dalam arti sebenarnya - mereka adalah alternative public APIs yang disediakan untuk consumer       
+  library dengan use case berbeda:                                                                                                   
+                                                                                                                                     
+  - useVehiclePath: Untuk consumer yang ingin API sederhana tanpa DSL                                                                
+  - useVehicleEvent: Untuk consumer yang menggunakan VehicleEventProvider context                                                    
+                                                                                                                                     
+  Demo project kebetulan tidak menggunakan keduanya karena memilih pendekatan lain (DSL hooks + direct emitter).                     
+                                                                                                                                     
+  ---                                                                                                                                
+  Apakah kamu tetap ingin menandai kedua hooks ini sebagai @deprecated, atau membiarkannya sebagai alternative APIs?     

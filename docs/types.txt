@@ -1,0 +1,93 @@
+⏺ Berikut ringkasan hasil analisis:                                                                                                  
+                                                                                                                                     
+  ---                                                                                                                                
+  Ringkasan Types di src/core/types/                                                                                                 
+                                                                                                                                     
+  Types yang Digunakan Aktif                                                                                                         
+  ┌─────────────┬────────────────────────┬───────────────────────────────────────────────────────────┐                               
+  │    File     │          Type          │                       Caller Aktif                        │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ geometry.ts │ Point                  │ math.ts, vehicleMovement.ts, event-emitter.ts, vehicle.ts │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ geometry.ts │ Line                   │ 21 files (banyak)                                         │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ geometry.ts │ BezierCurve            │ math.ts, pathFinding.ts, movement.ts, tests               │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ geometry.ts │ Curve                  │ 12 files                                                  │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ config.ts   │ TangentMode            │ math.ts, useVehicleMovement.ts, movement.ts               │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ vehicle.ts  │ VehicleState           │ event-emitter.ts, vehicle.ts                              │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ vehicle.ts  │ VehicleStart           │ useVehicles.ts, vehicle-helpers.ts, movement.ts           │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ vehicle.ts  │ AxleState              │ vehicleMovement.ts, vehicle-helpers.ts, tests             │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ vehicle.ts  │ Vehicle                │ 13 files                                                  │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ vehicle.ts  │ GotoCommand            │ 8 files                                                   │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ vehicle.ts  │ GotoCompletionInfo     │ event-emitter.ts, tests                                   │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ vehicle.ts  │ GotoCompletionCallback │ vehicleMovement.ts                                        │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ movement.ts │ CurveData              │ vehicleMovement.ts, tests                                 │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ movement.ts │ AxleExecutionState     │ vehicleMovement.ts, tests                                 │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ movement.ts │ PathExecutionState     │ vehicleMovement.ts                                        │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ movement.ts │ VehicleMovementState   │ vehicleMovement.ts, useVehicleMovement.ts                 │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ movement.ts │ MovementConfig         │ 7 files                                                   │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ movement.ts │ SceneContext           │ vehicleMovement.ts, useVehicleMovement.ts, tests          │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ api.ts      │ CoordinateInput        │ useScene.ts                                               │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ api.ts      │ SceneLineInput         │ 5 files                                                   │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ api.ts      │ SceneConnectionInput   │ 5 files                                                   │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ api.ts      │ SceneConfig            │ 4 files                                                   │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ api.ts      │ VehicleInput           │ 3 files                                                   │                               
+  ├─────────────┼────────────────────────┼───────────────────────────────────────────────────────────┤                               
+  │ api.ts      │ MovementInput          │ useVehiclePath.ts, useMovement.ts                         │                               
+  └─────────────┴────────────────────────┴───────────────────────────────────────────────────────────┘                               
+  ---                                                                                                                                
+  Types Tanpa Caller Aktif (Kandidat Dead Code) ⚠️                                                                                   
+  ┌─────────────┬─────────────────┬─────────────────────────────────────────────────────────────────┐                                
+  │    File     │      Type       │                             Status                              │                                
+  ├─────────────┼─────────────────┼─────────────────────────────────────────────────────────────────┤                                
+  │ movement.ts │ SceneDefinition │ Hanya di-export, tidak pernah digunakan sebagai type annotation │                                
+  ├─────────────┼─────────────────┼─────────────────────────────────────────────────────────────────┤                                
+  │ api.ts      │ ApiResult<T>    │ Hanya di-export, tidak pernah digunakan sebagai type annotation │                                
+  └─────────────┴─────────────────┴─────────────────────────────────────────────────────────────────┘                                
+  ---                                                                                                                                
+  Detail Types yang Tidak Terpakai                                                                                                   
+                                                                                                                                     
+  1. SceneDefinition (movement.ts:61)                                                                                                
+                                                                                                                                     
+  export interface SceneDefinition {                                                                                                 
+    lines: Line[]                                                                                                                    
+    curves: Curve[]                                                                                                                  
+    vehicles: VehicleStart[]                                                                                                         
+  }                                                                                                                                  
+  - Re-exported di: src/core/index.ts:43, src/index.ts:48                                                                            
+  - Penggunaan: Tidak ada - hanya export untuk public API                                                                            
+  - Catatan: Mungkin dimaksudkan untuk consumer tapi tidak dipakai internal                                                          
+                                                                                                                                     
+  2. ApiResult<T> (api.ts:118)                                                                                                       
+                                                                                                                                     
+  export interface ApiResult<T> {                                                                                                    
+    success: boolean                                                                                                                 
+    data?: T                                                                                                                         
+    error?: string                                                                                                                   
+  }                                                                                                                                  
+  - Re-exported di: src/core/index.ts:58, src/index.ts:63                                                                            
+  - Penggunaan: Tidak ada - hanya export untuk public API                                                                            
+  - Catatan: Mungkin dimaksudkan untuk consumer tapi tidak dipakai internal                                                          
+                                                                                                                                     
+  ---                                                                                                                                
+  Apakah kamu ingin saya menandai kedua types ini sebagai @deprecated juga? 

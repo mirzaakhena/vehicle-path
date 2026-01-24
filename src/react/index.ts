@@ -7,7 +7,7 @@
  * @example
  * ```typescript
  * import {
- *   useVehicleMovement,
+ *   useVehicleSimulation,
  *   useScene,
  *   useVehicles,
  *   VehicleEventProvider
@@ -16,7 +16,19 @@
  */
 
 // =============================================================================
-// Core Hooks (Programmatic API)
+// PRIMARY API - Single Entrypoint
+// =============================================================================
+
+export {
+  useVehicleSimulation,
+  type UseVehicleSimulationProps,
+  type UseVehicleSimulationResult,
+  type SimulationWarning,
+  type SimulationResult
+} from './hooks/useVehicleSimulation'
+
+// =============================================================================
+// Primitive Hooks (for advanced users)
 // =============================================================================
 
 export { useVehicleMovement } from './hooks/useVehicleMovement'
@@ -24,7 +36,13 @@ export { useScene, type UseSceneResult } from './hooks/useScene'
 export { useVehicles, type UseVehiclesResult, type UseVehiclesProps } from './hooks/useVehicles'
 export { useMovement, type UseMovementResult, type UseMovementProps } from './hooks/useMovement'
 
-// Coordinated API (combines Scene, Vehicles, Movement with edge case handling)
+// =============================================================================
+// DEPRECATED - Use useVehicleSimulation instead
+// =============================================================================
+
+/**
+ * @deprecated Use `useVehicleSimulation` instead. This hook will be removed in a future version.
+ */
 export {
   useVehiclePath,
   type UseVehiclePathProps,
@@ -33,12 +51,19 @@ export {
   type OperationResult
 } from './hooks/useVehiclePath'
 
-// =============================================================================
-// DSL Hooks (Text-based API wrappers)
-// =============================================================================
-
+/**
+ * @deprecated Use `useVehicleSimulation.loadFromDSL()` instead. This hook will be removed in a future version.
+ */
 export { useSceneDefinition } from './dsl-hooks/useSceneDefinition'
+
+/**
+ * @deprecated Use `useVehicleSimulation.loadFromDSL()` instead. This hook will be removed in a future version.
+ */
 export { useInitialMovement } from './dsl-hooks/useInitialMovement'
+
+/**
+ * @deprecated Use `useVehicleSimulation.loadFromDSL()` instead. This hook will be removed in a future version.
+ */
 export { useMovementSequence } from './dsl-hooks/useMovementSequence'
 
 // =============================================================================

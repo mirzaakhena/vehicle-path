@@ -1,0 +1,89 @@
+⏺ Berikut ringkasan hasil analisis src/utils/:                                                                                       
+                                                                                                                                     
+  ---                                                                                                                                
+  Ringkasan Utils                                                                                                                    
+                                                                                                                                     
+  Exports dengan Caller Aktif                                                                                                        
+  ┌────────────────────┬───────────────────────────┬─────────────────────────────────────────────┬──────┐                            
+  │        File        │          Export           │               Caller Internal               │ Demo │                            
+  ├────────────────────┼───────────────────────────┼─────────────────────────────────────────────┼──────┤                            
+  │ event-emitter.ts   │ VehicleEventEmitter       │ useVehicleMovement.ts, useVehicleEvents.tsx │ ✓    │                            
+  ├────────────────────┼───────────────────────────┼─────────────────────────────────────────────┼──────┤                            
+  │ event-emitter.ts   │ CommandStartInfo          │ vehicleMovement.ts                          │ -    │                            
+  ├────────────────────┼───────────────────────────┼─────────────────────────────────────────────┼──────┤                            
+  │ event-emitter.ts   │ VehiclePositionUpdate     │ useVehicleEvents.tsx                        │ -    │                            
+  ├────────────────────┼───────────────────────────┼─────────────────────────────────────────────┼──────┤                            
+  │ dsl-parser.ts      │ parseSceneDSL             │ useSceneDefinition.ts                       │ -    │                            
+  ├────────────────────┼───────────────────────────┼─────────────────────────────────────────────┼──────┤                            
+  │ dsl-parser.ts      │ parseVehiclesDSL          │ useInitialMovement.ts                       │ -    │                            
+  ├────────────────────┼───────────────────────────┼─────────────────────────────────────────────┼──────┤                            
+  │ dsl-parser.ts      │ parseMovementDSL          │ useMovementSequence.ts                      │ -    │                            
+  ├────────────────────┼───────────────────────────┼─────────────────────────────────────────────┼──────┤                            
+  │ dsl-parser.ts      │ generateSceneDSL          │ useSceneDefinition.ts                       │ -    │                            
+  ├────────────────────┼───────────────────────────┼─────────────────────────────────────────────┼──────┤                            
+  │ dsl-parser.ts      │ generateVehiclesDSL       │ -                                           │ ✓    │                            
+  ├────────────────────┼───────────────────────────┼─────────────────────────────────────────────┼──────┤                            
+  │ dsl-parser.ts      │ generateMovementDSL       │ -                                           │ ✓    │                            
+  ├────────────────────┼───────────────────────────┼─────────────────────────────────────────────┼──────┤                            
+  │ vehicle-helpers.ts │ validateAndCreateVehicles │ useVehicles.ts                              │ -    │                            
+  ├────────────────────┼───────────────────────────┼─────────────────────────────────────────────┼──────┤                            
+  │ vehicle-helpers.ts │ getNextStartVehicleId     │ -                                           │ ✓    │                            
+  ├────────────────────┼───────────────────────────┼─────────────────────────────────────────────┼──────┤                            
+  │ vehicle-helpers.ts │ getNextGotoVehicleId      │ -                                           │ ✓    │                            
+  ├────────────────────┼───────────────────────────┼─────────────────────────────────────────────┼──────┤                            
+  │ animation-loop.ts  │ createAnimationLoop       │ tests only                                  │ -    │                            
+  └────────────────────┴───────────────────────────┴─────────────────────────────────────────────┴──────┘                            
+  Exports Tanpa Caller Aktif ⚠️                                                                                                      
+  ┌────────────────────┬──────────────────────┬────────────────────────────────────────────────────────────────┐                     
+  │        File        │        Export        │                             Status                             │                     
+  ├────────────────────┼──────────────────────┼────────────────────────────────────────────────────────────────┤                     
+  │ animation-loop.ts  │ useAnimationLoop     │ Tidak ada caller - hanya definisi dan export                   │                     
+  ├────────────────────┼──────────────────────┼────────────────────────────────────────────────────────────────┤                     
+  │ dsl-parser.ts      │ parseAllDSL          │ Hanya tests - tidak dipakai internal maupun demo               │                     
+  ├────────────────────┼──────────────────────┼────────────────────────────────────────────────────────────────┤                     
+  │ vehicle-helpers.ts │ validateGotoCommands │ Tidak ada caller sama sekali (bahkan tidak ada tests!)         │                     
+  ├────────────────────┼──────────────────────┼────────────────────────────────────────────────────────────────┤                     
+  │ vehicle-helpers.ts │ GotoValidationResult │ Tidak ada caller sama sekali (type untuk validateGotoCommands) │                     
+  └────────────────────┴──────────────────────┴────────────────────────────────────────────────────────────────┘                     
+  ---                                                                                                                                
+  Detail Exports yang Tidak Terpakai                                                                                                 
+                                                                                                                                     
+  1. useAnimationLoop (animation-loop.ts:197)                                                                                        
+                                                                                                                                     
+  - Tujuan: React hook wrapper untuk createAnimationLoop                                                                             
+  - Caller: Tidak ada                                                                                                                
+  - Catatan: Public API utility, mungkin dimaksudkan untuk consumer                                                                  
+                                                                                                                                     
+  2. parseAllDSL (dsl-parser.ts:291)                                                                                                 
+                                                                                                                                     
+  - Tujuan: Parse semua DSL (scene + vehicles + movement) sekaligus                                                                  
+  - Caller: Hanya tests                                                                                                              
+  - Catatan: Convenience function, demo memilih parse terpisah                                                                       
+                                                                                                                                     
+  3. validateGotoCommands (vehicle-helpers.ts:102) ⚠️                                                                                
+                                                                                                                                     
+  - Tujuan: Validasi goto commands terhadap vehicles dan lines                                                                       
+  - Caller: TIDAK ADA (bahkan tidak ada unit tests!)                                                                                 
+  - Catatan: Kemungkinan besar dead code                                                                                             
+                                                                                                                                     
+  4. GotoValidationResult (vehicle-helpers.ts:96) ⚠️                                                                                 
+                                                                                                                                     
+  - Tujuan: Return type untuk validateGotoCommands                                                                                   
+  - Caller: TIDAK ADA                                                                                                                
+  - Catatan: Dead code (terkait dengan validateGotoCommands)                                                                         
+                                                                                                                                     
+  ---                                                                                                                                
+  Rekomendasi                                                                                                                        
+  ┌──────────────────────┬───────────────────────────────────────────────────┐                                                       
+  │        Export        │                    Rekomendasi                    │                                                       
+  ├──────────────────────┼───────────────────────────────────────────────────┤                                                       
+  │ useAnimationLoop     │ Biarkan (alternative API untuk consumers)         │                                                       
+  ├──────────────────────┼───────────────────────────────────────────────────┤                                                       
+  │ parseAllDSL          │ Biarkan (convenience function, ada tests)         │                                                       
+  ├──────────────────────┼───────────────────────────────────────────────────┤                                                       
+  │ validateGotoCommands │ Tandai @deprecated (tidak ada caller sama sekali) │                                                       
+  ├──────────────────────┼───────────────────────────────────────────────────┤                                                       
+  │ GotoValidationResult │ Tandai @deprecated (terkait validateGotoCommands) │                                                       
+  └──────────────────────┴───────────────────────────────────────────────────┘                                                       
+  ---                                                                                                                                
+  Apakah kamu ingin saya menandai validateGotoCommands dan GotoValidationResult sebagai @deprecated?  
