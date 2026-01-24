@@ -1,19 +1,23 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'happy-dom'
+  },
   build: {
     copyPublicDir: false,
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
-      name: 'VehiclePath',
-      fileName: (format) => {
-        if (format === 'es') return 'vehicle-path.js'
-        if (format === 'cjs') return 'vehicle-path.cjs'
-        return `vehicle-path.${format}.js`
+      entry: {
+        'vehicle-path': resolve(__dirname, 'src/index.ts'),
+        'core': resolve(__dirname, 'src/core/index.ts'),
+        'utils': resolve(__dirname, 'src/utils/index.ts'),
+        'react': resolve(__dirname, 'src/react/index.ts')
       },
+      name: 'VehiclePath',
       formats: ['es', 'cjs']
     },
     rollupOptions: {
