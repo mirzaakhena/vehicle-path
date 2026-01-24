@@ -1,24 +1,9 @@
 import { useState, useCallback, useRef } from 'react'
 import type { Line } from '../../core/types/geometry'
-import type { Vehicle, VehicleStart } from '../../core/types/vehicle'
+import type { Vehicle } from '../../core/types/vehicle'
 import type { VehicleInput } from '../../core/types/api'
 import { validateAndCreateVehicles } from '../../utils/vehicle-helpers'
-
-/**
- * Convert VehicleInput to internal VehicleStart format
- */
-function toVehicleStart(input: VehicleInput): VehicleStart {
-  const position = input.position ?? 0 // defaults to 0 (start of line)
-  const isPercentage = input.isPercentage !== false // defaults to true
-
-  return {
-    vehicleId: input.id,
-    lineId: input.lineId,
-    // If percentage, convert 0-1 to 0-100; if absolute, use as-is
-    offset: isPercentage ? position * 100 : position,
-    isPercentage
-  }
-}
+import { toVehicleStart } from '../../utils/type-converters'
 
 export interface UseVehiclesProps {
   lines: Line[]
@@ -28,14 +13,16 @@ export interface UseVehiclesProps {
 export interface UseVehiclesResult {
   /** Current vehicles in the scene */
   vehicles: Vehicle[]
-  /** Add a vehicle to the scene */
-  addVehicle: (input: VehicleInput) => { success: boolean; error?: string }
+  /** Add one or more vehicles to the scene */
+  addVehicles: (input: VehicleInput | VehicleInput[]) => { success: boolean; errors?: string[] }
   /** Remove a vehicle from the scene */
   removeVehicle: (vehicleId: string) => { success: boolean; error?: string }
   /** Clear all vehicles */
   clear: () => void
   /** Any error from the last operation */
   error: string | null
+  /** @internal Load pre-computed vehicles directly (for bulk loading) */
+  _loadVehicles: (vehicles: Vehicle[]) => void
 }
 
 /**
@@ -45,11 +32,16 @@ export interface UseVehiclesResult {
  *
  * @example
  * ```typescript
- * const { vehicles, addVehicle, removeVehicle } = useVehicles({ lines, wheelbase: 30 })
+ * const { vehicles, addVehicles, removeVehicle } = useVehicles({ lines, wheelbase: 30 })
  *
- * // Add vehicles
- * addVehicle({ id: 'v1', lineId: 'line001', position: 0.5, isPercentage: true })
- * addVehicle({ id: 'v2', lineId: 'line002', position: 100 }) // absolute offset
+ * // Add single vehicle
+ * addVehicles({ id: 'v1', lineId: 'line001', position: 0.5 })
+ *
+ * // Add multiple vehicles
+ * addVehicles([
+ *   { id: 'v1', lineId: 'line001', position: 0 },
+ *   { id: 'v2', lineId: 'line002', position: 0.5 }
+ * ])
  *
  * // Remove a vehicle
  * removeVehicle('v1')
@@ -60,42 +52,47 @@ export function useVehicles({ lines, wheelbase }: UseVehiclesProps): UseVehicles
   const [error, setError] = useState<string | null>(null)
 
   // Use ref to track current vehicles for immediate access (avoids stale closure issues)
-  // The ref is updated by each operation (addVehicle, removeVehicle, clear)
-  // This allows multiple operations in the same render cycle to see each other's changes
   const vehiclesRef = useRef<Vehicle[]>([])
 
-  const addVehicle = useCallback((input: VehicleInput) => {
-    // Check for duplicate ID using ref for latest state
-    const exists = vehiclesRef.current.some(v => v.id === input.id)
-    if (exists) {
-      const errorMsg = `Vehicle with ID '${input.id}' already exists`
-      setError(errorMsg)
-      return { success: false, error: errorMsg }
+  // Internal: Load pre-computed vehicles directly (for bulk loading)
+  const _loadVehicles = useCallback((newVehicles: Vehicle[]) => {
+    vehiclesRef.current = newVehicles
+    setVehicles(newVehicles)
+    setError(null)
+  }, [])
+
+  const addVehicles = useCallback((input: VehicleInput | VehicleInput[]) => {
+    const inputs = Array.isArray(input) ? input : [input]
+    const allErrors: string[] = []
+
+    // Check for duplicates
+    for (const inp of inputs) {
+      const exists = vehiclesRef.current.some(v => v.id === inp.id)
+      if (exists) {
+        allErrors.push(`Vehicle with ID '${inp.id}' already exists`)
+      }
     }
 
-    // Validate and create the vehicle
-    const vehicleStart = toVehicleStart(input)
-    const { vehicles: validatedVehicles, errors } = validateAndCreateVehicles(
-      [vehicleStart],
+    if (allErrors.length > 0) {
+      setError(allErrors.join('; '))
+      return { success: false, errors: allErrors }
+    }
+
+    // Validate and create vehicles
+    const vehicleStarts = inputs.map(toVehicleStart)
+    const { vehicles: newVehicles, errors } = validateAndCreateVehicles(
+      vehicleStarts,
       lines,
       wheelbase
     )
 
     if (errors.length > 0) {
-      const errorMsg = errors.join('; ')
-      setError(errorMsg)
-      return { success: false, error: errorMsg }
+      setError(errors.join('; '))
+      return { success: false, errors }
     }
 
-    if (validatedVehicles.length === 0) {
-      const errorMsg = 'Failed to create vehicle'
-      setError(errorMsg)
-      return { success: false, error: errorMsg }
-    }
-
-    const newVehicle = validatedVehicles[0]
-    // Update ref immediately for subsequent calls in same cycle
-    vehiclesRef.current = [...vehiclesRef.current, newVehicle]
+    // Update ref and state
+    vehiclesRef.current = [...vehiclesRef.current, ...newVehicles]
     setVehicles(vehiclesRef.current)
     setError(null)
     return { success: true }
@@ -123,9 +120,10 @@ export function useVehicles({ lines, wheelbase }: UseVehiclesProps): UseVehicles
 
   return {
     vehicles,
-    addVehicle,
+    addVehicles,
     removeVehicle,
     clear,
-    error
+    error,
+    _loadVehicles
   }
 }

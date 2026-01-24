@@ -3,12 +3,14 @@ import { useScene } from './useScene'
 import { useVehicles } from './useVehicles'
 import { useMovementQueue } from './useMovementQueue'
 import { useAnimation } from './useAnimation'
-import type { SceneLineInput, CoordinateInput, VehicleInput, MovementInput } from '../../core/types/api'
+import type { SceneLineInput, CoordinateInput, VehicleInput, GotoCommandInput } from '../../core/types/api'
 import type { Line, Curve } from '../../core/types/geometry'
 import type { Vehicle, GotoCommand } from '../../core/types/vehicle'
 import type { TangentMode } from '../../core/types/config'
 import type { VehicleEventEmitter } from '../../utils/event-emitter'
 import { parseAllDSL } from '../../utils/dsl-parser'
+import { validateAndCreateVehicles } from '../../utils/vehicle-helpers'
+import { toLine, toCurve, toVehicleStart, toGotoCommand } from '../../utils/type-converters'
 
 /**
  * Warning types for edge case detection
@@ -60,7 +62,7 @@ export interface UseVehicleSimulationResult {
   disconnect: (fromLineId: string, toLineId: string) => SimulationResult
 
   // Vehicle operations (mirrors DSL: "v1 start line001 0")
-  addVehicle: (input: VehicleInput) => SimulationResult
+  addVehicles: (input: VehicleInput | VehicleInput[]) => SimulationResult
   removeVehicle: (vehicleId: string) => SimulationResult
   clearVehicles: () => void
 
@@ -103,7 +105,7 @@ export interface UseVehicleSimulationResult {
  * sim.disconnect('line001', 'line002')
  *
  * // Vehicle (mirrors DSL: "v1 start line001 0")
- * sim.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+ * sim.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
  * sim.removeVehicle('v1')
  *
  * // Movement (mirrors DSL: "v1 goto line001 100%")
@@ -252,11 +254,11 @@ export function useVehicleSimulation({
     return { success: true }
   }, [scene])
 
-  // Vehicle: addVehicle
-  const addVehicle = useCallback((input: VehicleInput): SimulationResult => {
-    const result = vehicleHook.addVehicle(input)
+  // Vehicle: addVehicles
+  const addVehicles = useCallback((input: VehicleInput | VehicleInput[]): SimulationResult => {
+    const result = vehicleHook.addVehicles(input)
     if (!result.success) {
-      return { success: false, error: result.error }
+      return { success: false, error: result.errors?.join('; ') }
     }
     return { success: true }
   }, [vehicleHook])
@@ -299,7 +301,7 @@ export function useVehicleSimulation({
 
   // Movement: goto (simplified API)
   const goto = useCallback((vehicleId: string, targetLineId: string, targetPosition: number = 1.0): SimulationResult => {
-    const input: MovementInput = {
+    const input: GotoCommandInput = {
       targetLineId,
       targetPosition
     }
@@ -319,12 +321,12 @@ export function useVehicleSimulation({
     return { success: true }
   }, [movementQueue])
 
-  // DSL: loadFromDSL
+  // DSL: loadFromDSL - uses core functions directly for synchronous processing
   const loadFromDSL = useCallback((dsl: string): SimulationResult => {
     const warnings: SimulationWarning[] = []
     const allErrors: string[] = []
 
-    // Parse all DSL
+    // 1. Parse all DSL
     const { scene: sceneParsed, vehicles: vehiclesParsed, movements: movementsParsed } = parseAllDSL(dsl)
 
     // Collect parse errors
@@ -338,53 +340,32 @@ export function useVehicleSimulation({
       allErrors.push(...movementsParsed.errors)
     }
 
-    if (allErrors.length > 0) {
-      warnings.push({
-        type: 'dsl_parse_error',
-        message: `DSL parsing had ${allErrors.length} error(s)`,
-        details: { errors: allErrors }
-      })
+    // 2. Convert scene to internal types (synchronous)
+    const lines: Line[] = sceneParsed.data.lines.map(toLine)
+    const curves: Curve[] = (sceneParsed.data.connections || []).map(toCurve)
+
+    // 3. Create vehicles using core function (synchronous)
+    const vehicleStarts = vehiclesParsed.data.map(toVehicleStart)
+    const { vehicles, errors: vehicleErrors } = validateAndCreateVehicles(vehicleStarts, lines, wheelbase)
+    if (vehicleErrors.length > 0) {
+      allErrors.push(...vehicleErrors)
     }
 
-    // Clear existing state
-    scene.clear()
-    vehicleHook.clear()
-    movementQueue.clearQueue()
-
-    // Load scene
-    const sceneResult = scene.setScene(sceneParsed.data)
-    if (!sceneResult.success && sceneResult.errors) {
-      return {
-        success: false,
-        error: sceneResult.errors.join('; '),
-        warnings: warnings.length > 0 ? warnings : undefined
-      }
-    }
-
-    // Load vehicles
-    for (const vehicleInput of vehiclesParsed.data) {
-      const result = vehicleHook.addVehicle(vehicleInput)
-      if (!result.success) {
-        allErrors.push(result.error || `Failed to add vehicle ${vehicleInput.id}`)
-      }
-    }
-
-    // Load movements
+    // 4. Create movement queues (synchronous)
+    const queues = new Map<string, GotoCommand[]>()
     for (const cmd of movementsParsed.data) {
-      const result = movementQueue.queueMovement(cmd.vehicleId, {
-        targetLineId: cmd.targetLineId,
-        targetPosition: cmd.targetPosition,
-        isPercentage: cmd.isPercentage,
-        wait: cmd.wait,
-        payload: cmd.payload
-      })
-      if (!result.success) {
-        allErrors.push(result.error || `Failed to queue movement for ${cmd.vehicleId}`)
-      }
+      const queue = queues.get(cmd.vehicleId) || []
+      queue.push(toGotoCommand(cmd))
+      queues.set(cmd.vehicleId, queue)
     }
 
-    // Update warnings if more errors occurred
-    if (allErrors.length > 0 && warnings.length === 0) {
+    // 5. Load everything at once using the internal load methods
+    scene._loadScene(lines, curves)
+    vehicleHook._loadVehicles(vehicles)
+    movementQueue._loadQueues(queues)
+
+    // Collect warnings if there were errors
+    if (allErrors.length > 0) {
       warnings.push({
         type: 'dsl_parse_error',
         message: `DSL loading had ${allErrors.length} error(s)`,
@@ -396,7 +377,7 @@ export function useVehicleSimulation({
       success: true,
       warnings: warnings.length > 0 ? warnings : undefined
     }
-  }, [scene, vehicleHook, movementQueue])
+  }, [scene, vehicleHook, movementQueue, wheelbase])
 
   // Combined error state
   const error = useMemo(() => {
@@ -423,7 +404,7 @@ export function useVehicleSimulation({
     disconnect,
 
     // Vehicle operations
-    addVehicle,
+    addVehicles,
     removeVehicle,
     clearVehicles,
 

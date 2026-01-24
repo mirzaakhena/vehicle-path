@@ -131,7 +131,7 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
       expect(result.current.vehicles).toHaveLength(1)
@@ -156,7 +156,7 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
       act(() => {
@@ -175,7 +175,7 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
       act(() => {
@@ -220,7 +220,7 @@ describe('useVehicleSimulation', () => {
 
       // Then add vehicles via DSL or addVehicle
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
       act(() => {
@@ -281,7 +281,7 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
       let response: ReturnType<typeof result.current.removeLine>
@@ -305,8 +305,8 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
-        result.current.addVehicle({ id: 'v2', lineId: 'line002', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v2', lineId: 'line002', position: 0 })
       })
 
       expect(result.current.vehicles).toHaveLength(2)
@@ -356,7 +356,7 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
       act(() => {
@@ -389,9 +389,9 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
-        result.current.addVehicle({ id: 'v2', lineId: 'line001', position: 100, isPercentage: false })
-        result.current.addVehicle({ id: 'v3', lineId: 'line002', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v2', lineId: 'line001', position: 100, isPercentage: false })
+        result.current.addVehicles({ id: 'v3', lineId: 'line002', position: 0 })
       })
 
       const vehiclesOnLine001 = result.current.getVehiclesOnLine('line001')
@@ -415,7 +415,7 @@ describe('useVehicleSimulation', () => {
       expect(result.current.hasVehiclesOnLine('line001')).toBe(false)
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
       expect(result.current.hasVehiclesOnLine('line001')).toBe(true)
@@ -437,7 +437,7 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
       act(() => {
@@ -471,8 +471,8 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
-        result.current.addVehicle({ id: 'v2', lineId: 'line002', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v2', lineId: 'line002', position: 0 })
       })
 
       act(() => {

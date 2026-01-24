@@ -10,7 +10,7 @@
  *
  * const sim = useVehicleSimulation({ wheelbase: 30 })
  * sim.addLine({ id: 'line1', start: [0, 0], end: [400, 0] })
- * sim.addVehicle({ id: 'v1', lineId: 'line1', position: 0 })
+ * sim.addVehicles({ id: 'v1', lineId: 'line1', position: 0 })
  * sim.goto('v1', 'line1', 1.0)
  * sim.prepare()
  * sim.tick(5)

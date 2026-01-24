@@ -1,49 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { Line, Curve } from '../../core/types/geometry'
 import type { SceneConfig, SceneLineInput, SceneConnectionInput, CoordinateInput } from '../../core/types/api'
-
-/**
- * Convert coordinate input to Point
- */
-function toPoint(coord: CoordinateInput): { x: number; y: number } {
-  if (Array.isArray(coord)) {
-    return { x: coord[0], y: coord[1] }
-  }
-  return coord
-}
-
-/**
- * Convert SceneLineInput to internal Line type
- */
-function toLine(input: SceneLineInput): Line {
-  return {
-    id: input.id,
-    start: toPoint(input.start),
-    end: toPoint(input.end)
-  }
-}
-
-/**
- * Convert SceneConnectionInput to internal Curve type
- */
-function toCurve(input: SceneConnectionInput): Curve {
-  const fromIsPercentage = input.fromIsPercentage !== false // defaults to true
-  const toIsPercentage = input.toIsPercentage !== false // defaults to true
-
-  return {
-    fromLineId: input.from,
-    toLineId: input.to,
-    // If percentage, convert 0-1 to 0-100 for internal use; if absolute, use as-is
-    fromOffset: input.fromPosition !== undefined
-      ? (fromIsPercentage ? input.fromPosition * 100 : input.fromPosition)
-      : undefined,
-    fromIsPercentage: input.fromPosition !== undefined ? fromIsPercentage : undefined,
-    toOffset: input.toPosition !== undefined
-      ? (toIsPercentage ? input.toPosition * 100 : input.toPosition)
-      : undefined,
-    toIsPercentage: input.toPosition !== undefined ? toIsPercentage : undefined
-  }
-}
+import { toPoint, toLine, toCurve } from '../../utils/type-converters'
 
 /**
  * Validate scene configuration
@@ -124,6 +82,8 @@ export interface UseSceneResult {
   clear: () => void
   /** Any validation errors from the last operation */
   error: string | null
+  /** @internal Load pre-computed scene data directly (for bulk loading) */
+  _loadScene: (lines: Line[], curves: Curve[]) => void
 }
 
 /**
@@ -156,6 +116,13 @@ export function useScene(): UseSceneResult {
   const [curves, setCurves] = useState<Curve[]>([])
   const [error, setError] = useState<string | null>(null)
 
+  // Internal: Load pre-computed scene data directly (for bulk loading)
+  const _loadScene = useCallback((newLines: Line[], newCurves: Curve[]) => {
+    setLines(newLines)
+    setCurves(newCurves)
+    setError(null)
+  }, [])
+
   const setScene = useCallback((config: SceneConfig) => {
     const validation = validateSceneConfig(config)
 
@@ -167,12 +134,10 @@ export function useScene(): UseSceneResult {
     const newLines = config.lines.map(toLine)
     const newCurves = config.connections?.map(toCurve) || []
 
-    setLines(newLines)
-    setCurves(newCurves)
-    setError(null)
+    _loadScene(newLines, newCurves)
 
     return { success: true }
-  }, [])
+  }, [_loadScene])
 
   const addLine = useCallback((line: SceneLineInput) => {
     // Check for duplicate ID
@@ -301,6 +266,7 @@ export function useScene(): UseSceneResult {
     addConnection,
     removeConnection,
     clear,
-    error
+    error,
+    _loadScene
   }
 }

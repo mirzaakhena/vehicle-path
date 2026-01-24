@@ -134,7 +134,7 @@ export function parseSceneDSL(text: string): ParseResult<SceneConfig> {
 }
 
 /**
- * Parse vehicle DSL into VehicleInput[] for useVehicles.addVehicle()
+ * Parse vehicle DSL into VehicleInput[] for useVehicles.addVehicles()
  *
  * DSL Format:
  * ```

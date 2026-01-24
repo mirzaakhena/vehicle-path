@@ -1,28 +1,9 @@
 import { useState, useCallback } from 'react'
 import type { Line, Curve } from '../../core/types/geometry'
 import type { Vehicle, GotoCommand } from '../../core/types/vehicle'
-import type { MovementInput } from '../../core/types/api'
+import type { GotoCommandInput } from '../../core/types/api'
 import { distance } from '../../core/algorithms/math'
-
-/**
- * Convert MovementInput to internal GotoCommand format
- */
-function toGotoCommand(vehicleId: string, input: MovementInput): GotoCommand {
-  const isPercentage = input.isPercentage !== false // defaults to true
-  // Default targetPosition: 1.0 for percentage (end of line)
-  // Note: absolute mode requires explicit targetPosition (validated before calling this function)
-  const targetPosition = input.targetPosition ?? 1.0
-
-  return {
-    vehicleId,
-    targetLineId: input.targetLineId,
-    // If percentage, convert 0-1 to 0-100; if absolute, use as-is
-    targetOffset: isPercentage ? targetPosition * 100 : targetPosition,
-    isPercentage,
-    awaitConfirmation: input.wait,
-    payload: input.payload
-  }
-}
+import { toGotoCommand } from '../../utils/type-converters'
 
 export interface UseMovementQueueProps {
   vehicles: Vehicle[]
@@ -34,11 +15,13 @@ export interface UseMovementQueueResult {
   /** Queue of commands per vehicle */
   vehicleQueues: Map<string, GotoCommand[]>
   /** Queue a movement command for a vehicle */
-  queueMovement: (vehicleId: string, input: MovementInput) => { success: boolean; error?: string }
+  queueMovement: (vehicleId: string, input: GotoCommandInput) => { success: boolean; error?: string }
   /** Clear the queue for a specific vehicle or all vehicles */
   clearQueue: (vehicleId?: string) => { success: boolean; error?: string }
   /** Any error from the last operation */
   error: string | null
+  /** @internal Load pre-computed queues directly (for bulk loading) */
+  _loadQueues: (queues: Map<string, GotoCommand[]>) => void
 }
 
 /**
@@ -70,7 +53,13 @@ export function useMovementQueue({ vehicles, lines }: UseMovementQueueProps): Us
   const [vehicleQueues, setVehicleQueues] = useState<Map<string, GotoCommand[]>>(new Map())
   const [error, setError] = useState<string | null>(null)
 
-  const queueMovement = useCallback((vehicleId: string, input: MovementInput) => {
+  // Internal: Load pre-computed queues directly (for bulk loading)
+  const _loadQueues = useCallback((queues: Map<string, GotoCommand[]>) => {
+    setVehicleQueues(queues)
+    setError(null)
+  }, [])
+
+  const queueMovement = useCallback((vehicleId: string, input: GotoCommandInput) => {
     // Validate vehicle exists
     const vehicleExists = vehicles.some(v => v.id === vehicleId)
     if (!vehicleExists) {
@@ -123,7 +112,7 @@ export function useMovementQueue({ vehicles, lines }: UseMovementQueueProps): Us
     }
 
     // Create the command
-    const command = toGotoCommand(vehicleId, input)
+    const command = toGotoCommand({ vehicleId, ...input })
 
     // Add to queue
     setVehicleQueues(prev => {
@@ -166,6 +155,7 @@ export function useMovementQueue({ vehicles, lines }: UseMovementQueueProps): Us
     vehicleQueues,
     queueMovement,
     clearQueue,
-    error
+    error,
+    _loadQueues
   }
 }

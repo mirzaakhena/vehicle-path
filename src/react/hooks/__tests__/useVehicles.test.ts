@@ -20,14 +20,14 @@ describe('useVehicles', () => {
     })
   })
 
-  describe('addVehicle', () => {
+  describe('addVehicles', () => {
     it('should add a vehicle with default position (0) and isPercentage (true)', () => {
       const { result } = renderHook(() =>
         useVehicles({ lines: createTestLines(), wheelbase: 30 })
       )
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001' })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001' })
       })
 
       expect(result.current.vehicles).toHaveLength(1)
@@ -44,7 +44,7 @@ describe('useVehicles', () => {
       )
 
       act(() => {
-        result.current.addVehicle({
+        result.current.addVehicles({
           id: 'v1',
           lineId: 'line001',
           position: 0.5  // isPercentage defaults to true
@@ -63,7 +63,7 @@ describe('useVehicles', () => {
       )
 
       act(() => {
-        result.current.addVehicle({
+        result.current.addVehicles({
           id: 'v1',
           lineId: 'line001',
           position: 100,
@@ -83,11 +83,11 @@ describe('useVehicles', () => {
       )
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
       act(() => {
-        result.current.addVehicle({ id: 'v2', lineId: 'line002', position: 0 })
+        result.current.addVehicles({ id: 'v2', lineId: 'line002', position: 0 })
       })
 
       expect(result.current.vehicles).toHaveLength(2)
@@ -101,16 +101,16 @@ describe('useVehicles', () => {
       )
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
-      let response: { success: boolean; error?: string } | undefined
+      let response: { success: boolean; errors?: string[] } | undefined
       act(() => {
-        response = result.current.addVehicle({ id: 'v1', lineId: 'line002', position: 0 })
+        response = result.current.addVehicles({ id: 'v1', lineId: 'line002', position: 0 })
       })
 
       expect(response?.success).toBe(false)
-      expect(response?.error).toContain('already exists')
+      expect(response?.errors?.some(e => e.includes('already exists'))).toBe(true)
       expect(result.current.vehicles).toHaveLength(1)
     })
 
@@ -119,13 +119,13 @@ describe('useVehicles', () => {
         useVehicles({ lines: createTestLines(), wheelbase: 30 })
       )
 
-      let response: { success: boolean; error?: string } | undefined
+      let response: { success: boolean; errors?: string[] } | undefined
       act(() => {
-        response = result.current.addVehicle({ id: 'v1', lineId: 'nonexistent', position: 0 })
+        response = result.current.addVehicles({ id: 'v1', lineId: 'nonexistent', position: 0 })
       })
 
       expect(response?.success).toBe(false)
-      expect(response?.error).toContain('not found')
+      expect(response?.errors?.some(e => e.includes('not found'))).toBe(true)
       expect(result.current.vehicles).toHaveLength(0)
     })
 
@@ -134,9 +134,9 @@ describe('useVehicles', () => {
         useVehicles({ lines: createTestLines(), wheelbase: 30 })
       )
 
-      let response: { success: boolean; error?: string } | undefined
+      let response: { success: boolean; errors?: string[] } | undefined
       act(() => {
-        response = result.current.addVehicle({
+        response = result.current.addVehicles({
           id: 'v1',
           lineId: 'line001',
           position: 500, // exceeds line length of 400
@@ -145,7 +145,7 @@ describe('useVehicles', () => {
       })
 
       expect(response?.success).toBe(false)
-      expect(response?.error).toContain('exceeds')
+      expect(response?.errors?.some(e => e.includes('exceeds'))).toBe(true)
     })
 
     it('should return success on valid vehicle', () => {
@@ -153,13 +153,13 @@ describe('useVehicles', () => {
         useVehicles({ lines: createTestLines(), wheelbase: 30 })
       )
 
-      let response: { success: boolean; error?: string } | undefined
+      let response: { success: boolean; errors?: string[] } | undefined
       act(() => {
-        response = result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+        response = result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
       expect(response?.success).toBe(true)
-      expect(response?.error).toBeUndefined()
+      expect(response?.errors).toBeUndefined()
     })
 
     it('should calculate front axle position based on wheelbase', () => {
@@ -168,7 +168,7 @@ describe('useVehicles', () => {
       )
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
       const vehicle = result.current.vehicles[0]
@@ -185,8 +185,8 @@ describe('useVehicles', () => {
       )
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
-        result.current.addVehicle({ id: 'v2', lineId: 'line002', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v2', lineId: 'line002', position: 0 })
       })
 
       expect(result.current.vehicles).toHaveLength(2)
@@ -204,7 +204,7 @@ describe('useVehicles', () => {
         useVehicles({ lines: createTestLines(), wheelbase: 30 })
       )
 
-      let response: { success: boolean; error?: string } | undefined
+      let response: { success: boolean; errors?: string[] } | { success: boolean; error?: string } | undefined
       act(() => {
         response = result.current.removeVehicle('nonexistent')
       })
@@ -219,10 +219,10 @@ describe('useVehicles', () => {
       )
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
-      let response: { success: boolean; error?: string } | undefined
+      let response: { success: boolean; errors?: string[] } | { success: boolean; error?: string } | undefined
       act(() => {
         response = result.current.removeVehicle('v1')
       })
@@ -239,8 +239,8 @@ describe('useVehicles', () => {
       )
 
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
-        result.current.addVehicle({ id: 'v2', lineId: 'line002', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v2', lineId: 'line002', position: 0 })
       })
 
       expect(result.current.vehicles).toHaveLength(2)
@@ -269,7 +269,7 @@ describe('useVehicles', () => {
 
       // Successful operation should clear error
       act(() => {
-        result.current.addVehicle({ id: 'v1', lineId: 'line001', position: 0 })
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
       expect(result.current.error).toBeNull()
@@ -283,7 +283,7 @@ describe('useVehicles', () => {
       )
 
       act(() => {
-        result.current.addVehicle({
+        result.current.addVehicles({
           id: 'v1',
           lineId: 'line001',
           position: 100,
@@ -304,7 +304,7 @@ describe('useVehicles', () => {
       )
 
       act(() => {
-        result.current.addVehicle({
+        result.current.addVehicles({
           id: 'v1',
           lineId: 'line001',
           position: 0,
@@ -323,7 +323,7 @@ describe('useVehicles', () => {
       )
 
       act(() => {
-        result.current.addVehicle({
+        result.current.addVehicles({
           id: 'v1',
           lineId: 'line001',
           position: 1.0, // 100%

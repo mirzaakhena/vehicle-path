@@ -23,7 +23,7 @@ export function useInitialMovement({ lines, wheelbase }: UseInitialMovementProps
   const [movementError, setMovementError] = useState<string | null>(null)
 
   // Use programmatic API as single source of truth
-  const { vehicles, addVehicle, clear, error: vehiclesError } = useVehicles({ lines, wheelbase })
+  const { vehicles, addVehicles, clear, error: vehiclesError } = useVehicles({ lines, wheelbase })
 
   const isInternalUpdate = useRef(false)
 
@@ -43,10 +43,10 @@ export function useInitialMovement({ lines, wheelbase }: UseInitialMovementProps
 
       // Add each vehicle via programmatic API (already in API format)
       for (const vehicle of vehicleInputs) {
-        const result = addVehicle(vehicle)
+        const result = addVehicles(vehicle)
 
-        if (!result.success && result.error) {
-          errors.push(result.error)
+        if (!result.success && result.errors) {
+          errors.push(...result.errors)
         }
       }
 
@@ -62,7 +62,7 @@ export function useInitialMovement({ lines, wheelbase }: UseInitialMovementProps
     setTimeout(() => {
       isInternalUpdate.current = false
     }, 50)
-  }, [addVehicle, clear])
+  }, [addVehicles, clear])
 
   return {
     vehicles,

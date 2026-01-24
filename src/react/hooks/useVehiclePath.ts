@@ -224,9 +224,9 @@ export function useVehiclePath({ wheelbase }: UseVehiclePathProps): UseVehiclePa
 
   // Coordinated addVehicle
   const addVehicle = useCallback((input: VehicleInput): OperationResult => {
-    const result = vehicleHook.addVehicle(input)
+    const result = vehicleHook.addVehicles(input)
     if (!result.success) {
-      return { success: false, error: result.error }
+      return { success: false, error: result.errors?.join('; ') }
     }
     return { success: true }
   }, [vehicleHook])

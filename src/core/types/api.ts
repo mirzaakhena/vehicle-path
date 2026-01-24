@@ -87,7 +87,7 @@ export interface VehicleInput {
 // =============================================================================
 
 /**
- * Movement command input for queueMovement()
+ * Input for goto/queueMovement commands (API-friendly version of GotoCommand)
  *
  * @example
  * queueMovement('v1', { targetLineId: 'line002' })  // targetPosition defaults to 1.0 (end)
@@ -100,13 +100,18 @@ export interface VehicleInput {
  * })
  * queueMovement('v1', { targetLineId: 'line002', targetPosition: 150, isPercentage: false })
  */
-export interface MovementInput {
+export interface GotoCommandInput {
   targetLineId: string
   targetPosition?: number    // position value on target line, defaults to 1.0 (end of line)
   isPercentage?: boolean     // if true, targetPosition is 0-1 percentage; if false, absolute distance. Defaults to true
   wait?: boolean             // pause after reaching destination
   payload?: unknown          // custom data to pass through
 }
+
+/**
+ * @deprecated Use GotoCommandInput instead
+ */
+export type MovementInput = GotoCommandInput
 
 // =============================================================================
 // Utility Types
