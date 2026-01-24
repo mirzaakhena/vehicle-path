@@ -29,16 +29,44 @@ export {
 
 // =============================================================================
 // Primitive Hooks (for advanced users)
+// These are building blocks that useVehicleSimulation uses internally.
+// Use these if you need more control over individual aspects.
 // =============================================================================
 
-export { useVehicleMovement } from './hooks/useVehicleMovement'
+/** Hook for managing scene (lines & curves) */
 export { useScene, type UseSceneResult } from './hooks/useScene'
+
+/** Hook for managing vehicles */
 export { useVehicles, type UseVehiclesResult, type UseVehiclesProps } from './hooks/useVehicles'
-export { useMovement, type UseMovementResult, type UseMovementProps } from './hooks/useMovement'
+
+/** Hook for managing the queue of movement commands */
+export {
+  useMovementQueue,
+  type UseMovementQueueResult,
+  type UseMovementQueueProps
+} from './hooks/useMovementQueue'
+
+/** Hook for running animation (prepare, tick, reset) */
+export {
+  useAnimation,
+  type UseAnimationProps
+} from './hooks/useAnimation'
 
 // =============================================================================
-// DEPRECATED - Use useVehicleSimulation instead
+// DEPRECATED - Backward compatibility aliases
 // =============================================================================
+
+/**
+ * @deprecated Use `useMovementQueue` instead. This alias will be removed in a future version.
+ */
+export { useMovementQueue as useMovement } from './hooks/useMovementQueue'
+export type { UseMovementQueueResult as UseMovementResult } from './hooks/useMovementQueue'
+export type { UseMovementQueueProps as UseMovementProps } from './hooks/useMovementQueue'
+
+/**
+ * @deprecated Use `useAnimation` instead. This alias will be removed in a future version.
+ */
+export { useAnimation as useVehicleMovement } from './hooks/useAnimation'
 
 /**
  * @deprecated Use `useVehicleSimulation` instead. This hook will be removed in a future version.

@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from 'react'
 import { useScene } from './useScene'
 import { useVehicles } from './useVehicles'
-import { useMovement } from './useMovement'
-import { useVehicleMovement } from './useVehicleMovement'
+import { useMovementQueue } from './useMovementQueue'
+import { useAnimation } from './useAnimation'
 import type { SceneLineInput, CoordinateInput, VehicleInput, MovementInput } from '../../core/types/api'
 import type { Line, Curve } from '../../core/types/geometry'
 import type { Vehicle, GotoCommand } from '../../core/types/vehicle'
@@ -130,15 +130,15 @@ export function useVehicleSimulation({
   // Compose primitive hooks
   const scene = useScene()
   const vehicleHook = useVehicles({ lines: scene.lines, wheelbase })
-  const movement = useMovement({
+  const movementQueue = useMovementQueue({
     vehicles: vehicleHook.vehicles,
     lines: scene.lines,
     curves: scene.curves
   })
-  const vehicleMovement = useVehicleMovement({
+  const animation = useAnimation({
     vehicles: vehicleHook.vehicles,
     lines: scene.lines,
-    vehicleQueues: movement.vehicleQueues,
+    vehicleQueues: movementQueue.vehicleQueues,
     wheelbase,
     tangentMode,
     curves: scene.curves,
@@ -192,7 +192,7 @@ export function useVehicleSimulation({
       // Remove affected vehicles
       vehiclesOnLine.forEach(v => {
         vehicleHook.removeVehicle(v.id)
-        movement.clearQueue(v.id)
+        movementQueue.clearQueue(v.id)
       })
     }
 
@@ -220,14 +220,14 @@ export function useVehicleSimulation({
       success: true,
       warnings: warnings.length > 0 ? warnings : undefined
     }
-  }, [scene, getVehiclesOnLine, vehicleHook, movement])
+  }, [scene, getVehiclesOnLine, vehicleHook, movementQueue])
 
   // Scene: clearScene
   const clearScene = useCallback(() => {
     scene.clear()
     vehicleHook.clear()
-    movement.clearQueue()
-  }, [scene, vehicleHook, movement])
+    movementQueue.clearQueue()
+  }, [scene, vehicleHook, movementQueue])
 
   // Connection: connect (simplified API)
   const connect = useCallback((fromLineId: string, toLineId: string, options?: { from?: number; to?: number }): SimulationResult => {
@@ -266,7 +266,7 @@ export function useVehicleSimulation({
     const warnings: SimulationWarning[] = []
 
     // Check if vehicle has queued movements
-    const queue = movement.vehicleQueues.get(vehicleId)
+    const queue = movementQueue.vehicleQueues.get(vehicleId)
     if (queue && queue.length > 0) {
       warnings.push({
         type: 'movement_queue_cleared',
@@ -277,7 +277,7 @@ export function useVehicleSimulation({
       })
 
       // Clear the queue
-      movement.clearQueue(vehicleId)
+      movementQueue.clearQueue(vehicleId)
     }
 
     const result = vehicleHook.removeVehicle(vehicleId)
@@ -289,13 +289,13 @@ export function useVehicleSimulation({
       success: true,
       warnings: warnings.length > 0 ? warnings : undefined
     }
-  }, [vehicleHook, movement])
+  }, [vehicleHook, movementQueue])
 
   // Vehicle: clearVehicles
   const clearVehicles = useCallback(() => {
     vehicleHook.clear()
-    movement.clearQueue()
-  }, [vehicleHook, movement])
+    movementQueue.clearQueue()
+  }, [vehicleHook, movementQueue])
 
   // Movement: goto (simplified API)
   const goto = useCallback((vehicleId: string, targetLineId: string, targetPosition: number = 1.0): SimulationResult => {
@@ -303,21 +303,21 @@ export function useVehicleSimulation({
       targetLineId,
       targetPosition
     }
-    const result = movement.queueMovement(vehicleId, input)
+    const result = movementQueue.queueMovement(vehicleId, input)
     if (!result.success) {
       return { success: false, error: result.error }
     }
     return { success: true }
-  }, [movement])
+  }, [movementQueue])
 
   // Movement: clearQueue
   const clearQueue = useCallback((vehicleId?: string): SimulationResult => {
-    const result = movement.clearQueue(vehicleId)
+    const result = movementQueue.clearQueue(vehicleId)
     if (!result.success) {
       return { success: false, error: result.error }
     }
     return { success: true }
-  }, [movement])
+  }, [movementQueue])
 
   // DSL: loadFromDSL
   const loadFromDSL = useCallback((dsl: string): SimulationResult => {
@@ -349,7 +349,7 @@ export function useVehicleSimulation({
     // Clear existing state
     scene.clear()
     vehicleHook.clear()
-    movement.clearQueue()
+    movementQueue.clearQueue()
 
     // Load scene
     const sceneResult = scene.setScene(sceneParsed.data)
@@ -371,7 +371,7 @@ export function useVehicleSimulation({
 
     // Load movements
     for (const cmd of movementsParsed.data) {
-      const result = movement.queueMovement(cmd.vehicleId, {
+      const result = movementQueue.queueMovement(cmd.vehicleId, {
         targetLineId: cmd.targetLineId,
         targetPosition: cmd.targetPosition,
         isPercentage: cmd.isPercentage,
@@ -396,20 +396,20 @@ export function useVehicleSimulation({
       success: true,
       warnings: warnings.length > 0 ? warnings : undefined
     }
-  }, [scene, vehicleHook, movement])
+  }, [scene, vehicleHook, movementQueue])
 
   // Combined error state
   const error = useMemo(() => {
-    return scene.error || vehicleHook.error || movement.error
-  }, [scene.error, vehicleHook.error, movement.error])
+    return scene.error || vehicleHook.error || movementQueue.error
+  }, [scene.error, vehicleHook.error, movementQueue.error])
 
   return {
     // State
     lines: scene.lines,
     curves: scene.curves,
     vehicles: vehicleHook.vehicles,
-    movingVehicles: vehicleMovement.movingVehicles,
-    vehicleQueues: movement.vehicleQueues,
+    movingVehicles: animation.movingVehicles,
+    vehicleQueues: movementQueue.vehicleQueues,
     error,
 
     // Scene operations
@@ -432,11 +432,11 @@ export function useVehicleSimulation({
     clearQueue,
 
     // Animation (delegated to useVehicleMovement)
-    prepare: vehicleMovement.prepare,
-    tick: vehicleMovement.tick,
-    reset: vehicleMovement.reset,
-    continueVehicle: vehicleMovement.continueVehicle,
-    isMoving: vehicleMovement.isMoving,
+    prepare: animation.prepare,
+    tick: animation.tick,
+    reset: animation.reset,
+    continueVehicle: animation.continueVehicle,
+    isMoving: animation.isMoving,
 
     // DSL Loading
     loadFromDSL,

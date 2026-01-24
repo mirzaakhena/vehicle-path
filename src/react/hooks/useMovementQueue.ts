@@ -24,13 +24,13 @@ function toGotoCommand(vehicleId: string, input: MovementInput): GotoCommand {
   }
 }
 
-export interface UseMovementProps {
+export interface UseMovementQueueProps {
   vehicles: Vehicle[]
   lines: Line[]
   curves: Curve[]
 }
 
-export interface UseMovementResult {
+export interface UseMovementQueueResult {
   /** Queue of commands per vehicle */
   vehicleQueues: Map<string, GotoCommand[]>
   /** Queue a movement command for a vehicle */
@@ -42,13 +42,13 @@ export interface UseMovementResult {
 }
 
 /**
- * Hook for managing movement commands programmatically.
+ * Hook for managing the queue of movement commands.
  *
- * This hook provides a simple API for queuing movements at runtime.
+ * This hook provides a simple API for queuing goto commands at runtime.
  *
  * @example
  * ```typescript
- * const { vehicleQueues, queueMovement, clearQueue } = useMovement({ vehicles, lines, curves })
+ * const { vehicleQueues, queueMovement, clearQueue } = useMovementQueue({ vehicles, lines, curves })
  *
  * // Queue movements
  * queueMovement('v1', { targetLineId: 'line002', targetPosition: 0.5 })
@@ -66,7 +66,7 @@ export interface UseMovementResult {
  * clearQueue()
  * ```
  */
-export function useMovement({ vehicles, lines }: UseMovementProps): UseMovementResult {
+export function useMovementQueue({ vehicles, lines }: UseMovementQueueProps): UseMovementQueueResult {
   const [vehicleQueues, setVehicleQueues] = useState<Map<string, GotoCommand[]>>(new Map())
   const [error, setError] = useState<string | null>(null)
 

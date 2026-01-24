@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 import type { Line } from '../../core/types/geometry'
 import type { Vehicle } from '../../core/types/vehicle'
 import { parseMovementDSL, type MovementCommand } from '../../utils/dsl-parser'
-import { useMovement } from '../hooks/useMovement'
+import { useMovementQueue } from '../hooks/useMovementQueue'
 
 interface UseMovementSequenceProps {
   lines: Line[]
@@ -10,10 +10,10 @@ interface UseMovementSequenceProps {
 }
 
 /**
- * DSL wrapper for useMovement hook.
+ * DSL wrapper for useMovementQueue hook.
  *
  * This hook provides text-based movement commands that internally uses
- * the programmatic useMovement API as the single source of truth.
+ * the programmatic useMovementQueue API as the single source of truth.
  *
  * @deprecated Use `useVehicleSimulation.loadFromDSL()` instead. This hook will be removed in a future version.
  * The new unified hook provides a simpler API for loading DSL definitions that includes
@@ -25,10 +25,10 @@ export function useMovementSequence({ lines, vehicles }: UseMovementSequenceProp
   const [sequenceError, setSequenceError] = useState<string | null>(null)
 
   // Use programmatic API as single source of truth
-  const { vehicleQueues, queueMovement, clearQueue, error: movementError } = useMovement({
+  const { vehicleQueues, queueMovement, clearQueue, error: movementError } = useMovementQueue({
     vehicles,
     lines,
-    curves: []  // curves not actively used in useMovement
+    curves: []  // curves not actively used in useMovementQueue
   })
 
   const isInternalUpdate = useRef(false)

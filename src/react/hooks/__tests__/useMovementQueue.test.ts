@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useMovement } from '../useMovement'
+import { useMovementQueue } from '../useMovementQueue'
 import type { Line, Curve } from '../../../core/types/geometry'
 import type { Vehicle } from '../../../core/types/vehicle'
 
@@ -36,11 +36,11 @@ const createTestCurves = (): Curve[] => [
   { fromLineId: 'line002', toLineId: 'line003' }
 ]
 
-describe('useMovement', () => {
+describe('useMovementQueue', () => {
   describe('initial state', () => {
     it('should initialize with empty queues', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -55,7 +55,7 @@ describe('useMovement', () => {
   describe('queueMovement', () => {
     it('should queue a movement command with default targetPosition (1.0 = end of line)', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -79,7 +79,7 @@ describe('useMovement', () => {
 
     it('should queue a movement command with explicit targetPosition', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -103,7 +103,7 @@ describe('useMovement', () => {
 
     it('should queue multiple commands for same vehicle', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -129,7 +129,7 @@ describe('useMovement', () => {
 
     it('should queue commands for different vehicles', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -156,7 +156,7 @@ describe('useMovement', () => {
 
     it('should handle wait option', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -177,7 +177,7 @@ describe('useMovement', () => {
 
     it('should handle payload', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -200,7 +200,7 @@ describe('useMovement', () => {
 
     it('should fail on non-existent vehicle', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -221,7 +221,7 @@ describe('useMovement', () => {
 
     it('should fail on non-existent line', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -242,7 +242,7 @@ describe('useMovement', () => {
 
     it('should fail on invalid percentage position (negative)', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -264,7 +264,7 @@ describe('useMovement', () => {
 
     it('should fail on invalid percentage position (greater than 1)', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -286,7 +286,7 @@ describe('useMovement', () => {
 
     it('should queue movement with absolute distance', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -309,7 +309,7 @@ describe('useMovement', () => {
 
     it('should fail on absolute position exceeding line length', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -331,7 +331,7 @@ describe('useMovement', () => {
 
     it('should fail on negative absolute position', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -353,7 +353,7 @@ describe('useMovement', () => {
 
     it('should fail when isPercentage is false but targetPosition is not provided', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -374,7 +374,7 @@ describe('useMovement', () => {
 
     it('should allow absolute position at exact line length', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -398,7 +398,7 @@ describe('useMovement', () => {
 
     it('should return success on valid command', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -421,7 +421,7 @@ describe('useMovement', () => {
   describe('clearQueue', () => {
     it('should clear queue for specific vehicle', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -452,7 +452,7 @@ describe('useMovement', () => {
 
     it('should clear all queues when no vehicleId provided', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -479,7 +479,7 @@ describe('useMovement', () => {
 
     it('should fail on non-existent vehicle when clearing specific queue', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -497,7 +497,7 @@ describe('useMovement', () => {
 
     it('should return success on valid clear', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -524,7 +524,7 @@ describe('useMovement', () => {
   describe('error handling', () => {
     it('should clear error on successful operation', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -556,7 +556,7 @@ describe('useMovement', () => {
   describe('position edge cases', () => {
     it('should handle position at 0', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()
@@ -576,7 +576,7 @@ describe('useMovement', () => {
 
     it('should handle position at 1', () => {
       const { result } = renderHook(() =>
-        useMovement({
+        useMovementQueue({
           vehicles: createTestVehicles(),
           lines: createTestLines(),
           curves: createTestCurves()

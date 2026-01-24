@@ -15,7 +15,7 @@ import {
 } from '../../core/algorithms/vehicleMovement'
 import type { VehicleEventEmitter } from '../../utils/event-emitter'
 
-interface UseVehicleMovementProps {
+export interface UseAnimationProps {
   vehicles: Vehicle[]
   lines: Line[]
   vehicleQueues: Map<string, GotoCommand[]>
@@ -25,7 +25,28 @@ interface UseVehicleMovementProps {
   eventEmitter?: VehicleEventEmitter
 }
 
-export function useVehicleMovement({
+/**
+ * Hook for running vehicle animation/simulation.
+ *
+ * This hook handles the actual movement of vehicles along paths.
+ * Call prepare() before starting, then tick() in your animation loop.
+ *
+ * @example
+ * ```typescript
+ * const { movingVehicles, prepare, tick, reset, isMoving } = useAnimation({
+ *   vehicles, lines, vehicleQueues, wheelbase: 30, tangentMode: 'proportional-40', curves
+ * })
+ *
+ * // Start animation
+ * prepare()
+ *
+ * // In animation loop
+ * const animate = () => {
+ *   if (tick(5)) requestAnimationFrame(animate)
+ * }
+ * ```
+ */
+export function useAnimation({
   vehicles,
   lines,
   vehicleQueues,

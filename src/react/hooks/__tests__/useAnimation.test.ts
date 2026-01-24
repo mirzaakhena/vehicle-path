@@ -1,19 +1,19 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useVehicleMovement } from '../useVehicleMovement'
+import { useAnimation } from '../useAnimation'
 import { VehicleEventEmitter } from '../../../utils/event-emitter'
 import type { Line, Curve } from '../../../core/types/geometry'
 import type { Vehicle } from '../../../core/types/vehicle'
 
 /**
- * Note: useVehicleMovement is a complex hook that orchestrates many internal utilities.
+ * Note: useAnimation is a complex hook that orchestrates many internal utilities.
  * The internal utilities (updateAxlePosition, prepareCommandPath, handleArrival, etc.)
  * are thoroughly tested in the vehicleMovement/__tests__/ folder with 100% coverage.
  *
  * These tests focus on the hook's public API surface and basic behavior.
  */
 
-describe('useVehicleMovement', () => {
+describe('useAnimation', () => {
   // Test fixtures
   const mockLines: Line[] = [
     { id: 'line001', start: { x: 100, y: 100 }, end: { x: 500, y: 100 } },
@@ -46,7 +46,7 @@ describe('useVehicleMovement', () => {
       const vehicles = [createMockVehicle('v1', 'line001', 0)]
 
       const { result } = renderHook(() =>
-        useVehicleMovement({
+        useAnimation({
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
@@ -83,7 +83,7 @@ describe('useVehicleMovement', () => {
       const vehicles = [createMockVehicle('v1', 'line001', 0)]
 
       const { result } = renderHook(() =>
-        useVehicleMovement({
+        useAnimation({
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
@@ -107,7 +107,7 @@ describe('useVehicleMovement', () => {
       const vehicles = [createMockVehicle('v1', 'line001', 0)]
 
       const { result } = renderHook(() =>
-        useVehicleMovement({
+        useAnimation({
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
@@ -126,7 +126,7 @@ describe('useVehicleMovement', () => {
       const vehicles = [createMockVehicle('v1', 'line001', 0)]
 
       const { result } = renderHook(() =>
-        useVehicleMovement({
+        useAnimation({
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
@@ -150,7 +150,7 @@ describe('useVehicleMovement', () => {
       const vehicles = [createMockVehicle('v1', 'line001', 0)]
 
       const { result } = renderHook(() =>
-        useVehicleMovement({
+        useAnimation({
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
@@ -170,7 +170,7 @@ describe('useVehicleMovement', () => {
       const vehicles = [createMockVehicle('v1', 'line001', 0)]
 
       const { result } = renderHook(() =>
-        useVehicleMovement({
+        useAnimation({
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
@@ -192,7 +192,7 @@ describe('useVehicleMovement', () => {
       const vehicles = [createMockVehicle('v1', 'line001', 0)]
 
       const { result } = renderHook(() =>
-        useVehicleMovement({
+        useAnimation({
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
@@ -215,7 +215,7 @@ describe('useVehicleMovement', () => {
       const vehicles = [createMockVehicle('v1', 'line001', 0)]
 
       const { result } = renderHook(() =>
-        useVehicleMovement({
+        useAnimation({
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),

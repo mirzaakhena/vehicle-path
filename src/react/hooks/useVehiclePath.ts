@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { useScene } from './useScene'
 import { useVehicles } from './useVehicles'
-import { useMovement } from './useMovement'
+import { useMovementQueue } from './useMovementQueue'
 import type { SceneConfig, SceneLineInput, SceneConnectionInput, VehicleInput, MovementInput } from '../../core/types/api'
 import type { Line, Curve } from '../../core/types/geometry'
 import type { Vehicle, GotoCommand } from '../../core/types/vehicle'
@@ -109,7 +109,7 @@ export interface UseVehiclePathResult {
 export function useVehiclePath({ wheelbase }: UseVehiclePathProps): UseVehiclePathResult {
   const scene = useScene()
   const vehicleHook = useVehicles({ lines: scene.lines, wheelbase })
-  const movement = useMovement({
+  const movementQueue = useMovementQueue({
     vehicles: vehicleHook.vehicles,
     lines: scene.lines,
     curves: scene.curves
@@ -134,10 +134,10 @@ export function useVehiclePath({ wheelbase }: UseVehiclePathProps): UseVehiclePa
 
     // Clear vehicles and movements when scene is replaced
     vehicleHook.clear()
-    movement.clearQueue()
+    movementQueue.clearQueue()
 
     return { success: true }
-  }, [scene, vehicleHook, movement])
+  }, [scene, vehicleHook, movementQueue])
 
   // Coordinated addLine
   const addLine = useCallback((line: SceneLineInput): OperationResult => {
@@ -167,7 +167,7 @@ export function useVehiclePath({ wheelbase }: UseVehiclePathProps): UseVehiclePa
       // Remove affected vehicles
       vehiclesOnLine.forEach(v => {
         vehicleHook.removeVehicle(v.id)
-        movement.clearQueue(v.id)
+        movementQueue.clearQueue(v.id)
       })
     }
 
@@ -195,7 +195,7 @@ export function useVehiclePath({ wheelbase }: UseVehiclePathProps): UseVehiclePa
       success: true,
       warnings: warnings.length > 0 ? warnings : undefined
     }
-  }, [scene, getVehiclesOnLine, vehicleHook, movement])
+  }, [scene, getVehiclesOnLine, vehicleHook, movementQueue])
 
   // Coordinated addConnection
   const addConnection = useCallback((connection: SceneConnectionInput): OperationResult => {
@@ -219,8 +219,8 @@ export function useVehiclePath({ wheelbase }: UseVehiclePathProps): UseVehiclePa
   const clearScene = useCallback(() => {
     scene.clear()
     vehicleHook.clear()
-    movement.clearQueue()
-  }, [scene, vehicleHook, movement])
+    movementQueue.clearQueue()
+  }, [scene, vehicleHook, movementQueue])
 
   // Coordinated addVehicle
   const addVehicle = useCallback((input: VehicleInput): OperationResult => {
@@ -236,7 +236,7 @@ export function useVehiclePath({ wheelbase }: UseVehiclePathProps): UseVehiclePa
     const warnings: VehiclePathWarning[] = []
 
     // Check if vehicle has queued movements
-    const queue = movement.vehicleQueues.get(vehicleId)
+    const queue = movementQueue.vehicleQueues.get(vehicleId)
     if (queue && queue.length > 0) {
       warnings.push({
         type: 'movement_queue_cleared',
@@ -247,7 +247,7 @@ export function useVehiclePath({ wheelbase }: UseVehiclePathProps): UseVehiclePa
       })
 
       // Clear the queue
-      movement.clearQueue(vehicleId)
+      movementQueue.clearQueue(vehicleId)
     }
 
     const result = vehicleHook.removeVehicle(vehicleId)
@@ -259,43 +259,43 @@ export function useVehiclePath({ wheelbase }: UseVehiclePathProps): UseVehiclePa
       success: true,
       warnings: warnings.length > 0 ? warnings : undefined
     }
-  }, [vehicleHook, movement])
+  }, [vehicleHook, movementQueue])
 
   // Coordinated clearVehicles
   const clearVehicles = useCallback(() => {
     vehicleHook.clear()
-    movement.clearQueue()
-  }, [vehicleHook, movement])
+    movementQueue.clearQueue()
+  }, [vehicleHook, movementQueue])
 
   // Coordinated queueMovement
   const queueMovement = useCallback((vehicleId: string, input: MovementInput): OperationResult => {
-    const result = movement.queueMovement(vehicleId, input)
+    const result = movementQueue.queueMovement(vehicleId, input)
     if (!result.success) {
       return { success: false, error: result.error }
     }
     return { success: true }
-  }, [movement])
+  }, [movementQueue])
 
   // Coordinated clearQueue
   const clearQueue = useCallback((vehicleId?: string): OperationResult => {
-    const result = movement.clearQueue(vehicleId)
+    const result = movementQueue.clearQueue(vehicleId)
     if (!result.success) {
       return { success: false, error: result.error }
     }
     return { success: true }
-  }, [movement])
+  }, [movementQueue])
 
   // Combined error state
   const error = useMemo(() => {
-    return scene.error || vehicleHook.error || movement.error
-  }, [scene.error, vehicleHook.error, movement.error])
+    return scene.error || vehicleHook.error || movementQueue.error
+  }, [scene.error, vehicleHook.error, movementQueue.error])
 
   return {
     // State
     lines: scene.lines,
     curves: scene.curves,
     vehicles: vehicleHook.vehicles,
-    vehicleQueues: movement.vehicleQueues,
+    vehicleQueues: movementQueue.vehicleQueues,
     error,
 
     // Scene operations
