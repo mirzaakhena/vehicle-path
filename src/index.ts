@@ -203,15 +203,6 @@ export type { UseMovementQueueProps as UseMovementProps } from './react/hooks/us
 /** @deprecated Use useAnimation instead */
 export { useAnimation as useVehicleMovement } from './react/hooks/useAnimation'
 
-/** @deprecated Use useVehicleSimulation instead */
-export {
-  useVehiclePath,
-  type UseVehiclePathProps,
-  type UseVehiclePathResult,
-  type VehiclePathWarning,
-  type OperationResult
-} from './react/hooks/useVehiclePath'
-
 // =============================================================================
 // React Layer - DSL Hooks
 // =============================================================================

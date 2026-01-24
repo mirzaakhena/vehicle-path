@@ -69,17 +69,6 @@ export type { UseMovementQueueProps as UseMovementProps } from './hooks/useMovem
 export { useAnimation as useVehicleMovement } from './hooks/useAnimation'
 
 /**
- * @deprecated Use `useVehicleSimulation` instead. This hook will be removed in a future version.
- */
-export {
-  useVehiclePath,
-  type UseVehiclePathProps,
-  type UseVehiclePathResult,
-  type VehiclePathWarning,
-  type OperationResult
-} from './hooks/useVehiclePath'
-
-/**
  * @deprecated Use `useVehicleSimulation.loadFromDSL()` instead. This hook will be removed in a future version.
  */
 export { useSceneDefinition } from './dsl-hooks/useSceneDefinition'
