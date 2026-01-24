@@ -57,7 +57,8 @@ sim.clearScene()
 
 ```ts
 sim.connect('line1', 'line2')
-sim.connect('line1', 'line2', { from: 0.8, to: 0.2 })
+sim.connect('line1', 'line2', { fromOffset: 0.8, toOffset: 0.2 })
+sim.connect('line1', 'line2', { fromOffset: 150, fromIsPercentage: false, toOffset: 50, toIsPercentage: false })
 sim.disconnect('line1', 'line2')
 ```
 

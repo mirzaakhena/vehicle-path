@@ -58,7 +58,7 @@ export interface UseVehicleSimulationResult {
   clearScene: () => void
 
   // Connection operations (mirrors DSL: "line001 80% -> line002 20%")
-  connect: (fromLineId: string, toLineId: string, options?: { from?: number; to?: number }) => SimulationResult
+  connect: (fromLineId: string, toLineId: string, options?: { fromOffset?: number; fromIsPercentage?: boolean; toOffset?: number; toIsPercentage?: boolean }) => SimulationResult
   disconnect: (fromLineId: string, toLineId: string) => SimulationResult
 
   // Vehicle operations (mirrors DSL: "v1 start line001 0")
@@ -101,7 +101,8 @@ export interface UseVehicleSimulationResult {
  * sim.removeLine('line001')
  *
  * // Connection (mirrors DSL: "line001 80% -> line002 20%")
- * sim.connect('line001', 'line002', { from: 0.8, to: 0.2 })
+ * sim.connect('line001', 'line002', { fromOffset: 0.8, toOffset: 0.2 })
+ * sim.connect('line001', 'line002', { fromOffset: 150, fromIsPercentage: false, toOffset: 50, toIsPercentage: false })
  * sim.disconnect('line001', 'line002')
  *
  * // Vehicle (mirrors DSL: "v1 start line001 0")
@@ -232,12 +233,14 @@ export function useVehicleSimulation({
   }, [scene, vehicleHook, movementQueue])
 
   // Connection: connect (simplified API)
-  const connect = useCallback((fromLineId: string, toLineId: string, options?: { from?: number; to?: number }): SimulationResult => {
+  const connect = useCallback((fromLineId: string, toLineId: string, options?: { fromOffset?: number; fromIsPercentage?: boolean; toOffset?: number; toIsPercentage?: boolean }): SimulationResult => {
     const result = scene.addConnection({
       from: fromLineId,
       to: toLineId,
-      fromPosition: options?.from,
-      toPosition: options?.to
+      fromPosition: options?.fromOffset,
+      fromIsPercentage: options?.fromIsPercentage,
+      toPosition: options?.toOffset,
+      toIsPercentage: options?.toIsPercentage
     })
     if (!result.success) {
       return { success: false, error: result.error }
