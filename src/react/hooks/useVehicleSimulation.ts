@@ -77,6 +77,7 @@ export interface UseVehicleSimulationResult {
   prepare: () => boolean
   tick: (distance: number) => boolean
   reset: () => void
+  resetVehicle: (vehicleId: string) => void
   continueVehicle: (vehicleId: string) => boolean
   isMoving: () => boolean
 
@@ -516,6 +517,7 @@ export function useVehicleSimulation({
     prepare: animation.prepare,
     tick: animation.tick,
     reset: animation.reset,
+    resetVehicle: animation.resetVehicle,
     continueVehicle: animation.continueVehicle,
     isMoving: animation.isMoving,
 

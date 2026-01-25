@@ -8,6 +8,8 @@ import {
   handleArrival,
   updateAxlePosition,
   initializeAllVehicles,
+  initializeMovingVehicle,
+  createInitialMovementState,
   prepareCommandPath,
   calculateFrontAxlePosition,
   type SegmentCompletionContext,
@@ -277,9 +279,8 @@ export function useAnimation({
 
   // Prepare vehicles for movement (must be called before tick)
   // Returns true if at least one vehicle was prepared
+  // Can be called multiple times to add new vehicles while others are already moving
   const prepare = useCallback((): boolean => {
-    if (isPreparedRef.current) return true
-
     const graph = graphRef.current
     if (!graph) return false
 
@@ -295,9 +296,13 @@ export function useAnimation({
 
     let anyPrepared = false
 
-    // Prepare all vehicles
+    // Prepare vehicles that are not already moving
     for (const [vehicleId, state] of movementStateRef.current) {
       const vehicle = state.vehicle
+
+      // Skip vehicles that are already moving
+      if (vehicle.state === 'moving') continue
+
       const queue = currentQueues.get(vehicleId)
       if (!queue || queue.length === 0) continue
 
@@ -328,18 +333,17 @@ export function useAnimation({
 
       anyPrepared = true
 
-      if (vehicle.state !== 'moving') {
-        vehiclesToStart.push({
-          id: vehicleId,
-          fromState: vehicle.state as 'idle' | 'waiting',
-          command,
-          startPosition: {
-            lineId: vehicle.rear.lineId,
-            absoluteOffset: vehicle.rear.absoluteOffset,
-            position: vehicle.rear.position
-          }
-        })
-      }
+      // Vehicle was not moving, so track it for event emission
+      vehiclesToStart.push({
+        id: vehicleId,
+        fromState: vehicle.state as 'idle' | 'waiting',
+        command,
+        startPosition: {
+          lineId: vehicle.rear.lineId,
+          absoluteOffset: vehicle.rear.absoluteOffset,
+          position: vehicle.rear.position
+        }
+      })
     }
 
     if (!anyPrepared) return false
@@ -388,6 +392,28 @@ export function useAnimation({
     const { movingVehicles: initialized, stateMap } = initializeAllVehicles(vehicles, linesMap)
     movementStateRef.current = stateMap
     updateMovingVehicles(initialized)
+  }, [vehicles, linesMap])
+
+  // Reset a single vehicle to its initial state (from vehicles prop)
+  // This does NOT affect other vehicles
+  const resetVehicle = useCallback((vehicleId: string) => {
+    const vehicle = vehicles.find(v => v.id === vehicleId)
+    if (!vehicle) return
+
+    const line = linesMap.get(vehicle.lineId)
+    if (!line) return
+
+    // Re-initialize just this vehicle
+    const movingVehicle = initializeMovingVehicle(vehicle, line)
+    const state = createInitialMovementState(movingVehicle)
+
+    // Update only this vehicle's state
+    movementStateRef.current.set(vehicleId, state)
+
+    // Update only this vehicle in movingVehicles
+    updateMovingVehicles(prev => prev.map(v =>
+      v.id === vehicleId ? movingVehicle : v
+    ))
   }, [vehicles, linesMap])
 
   // Continue a waiting vehicle (resume after awaitConfirmation)
@@ -483,6 +509,7 @@ export function useAnimation({
     prepare,
     tick,
     reset,
+    resetVehicle,
     continueVehicle,
     isMoving,
     isPrepared: isPreparedRef.current
