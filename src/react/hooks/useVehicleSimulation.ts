@@ -368,6 +368,14 @@ export function useVehicleSimulation({
     return { success: true }
   }, [movementQueue])
 
+  // Wrapper for resetVehicle that also clears the queue
+  const resetVehicle = useCallback((vehicleId: string): void => {
+    // Clear queue first to prevent vehicle from restarting on next prepare()
+    movementQueue.clearQueue(vehicleId)
+    // Then reset vehicle position
+    animation.resetVehicle(vehicleId)
+  }, [movementQueue, animation])
+
   // DSL: loadFromDSL - uses core functions directly for synchronous processing
   const loadFromDSL = useCallback((dsl: string): SimulationResult => {
     const warnings: SimulationWarning[] = []
@@ -517,7 +525,7 @@ export function useVehicleSimulation({
     prepare: animation.prepare,
     tick: animation.tick,
     reset: animation.reset,
-    resetVehicle: animation.resetVehicle,
+    resetVehicle,  // Uses wrapper that also clears queue
     continueVehicle: animation.continueVehicle,
     isMoving: animation.isMoving,
 
