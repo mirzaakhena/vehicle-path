@@ -308,7 +308,9 @@ export function useVehicleSimulation({
     const command: GotoCommandInput = {
       targetLineId: input.lineId,
       targetPosition: input.position ?? 1.0,
-      isPercentage: input.isPercentage
+      isPercentage: input.isPercentage,
+      wait: input.wait,
+      payload: input.payload
     }
     const result = movementQueue.queueMovement(input.id, command)
     if (!result.success) {

@@ -77,6 +77,8 @@ sim.clearVehicles()
 sim.goto({ id: 'v1', lineId: 'line2' })                // default position = 1.0 (ujung)
 sim.goto({ id: 'v1', lineId: 'line2', position: 0.5 }) // 0.5 = tengah line
 sim.goto({ id: 'v1', lineId: 'line2', position: 150, isPercentage: false }) // absolute
+sim.goto({ id: 'v1', lineId: 'line2', position: 0.5, wait: true })          // berhenti di tujuan
+sim.goto({ id: 'v1', lineId: 'line2', payload: { orderId: '123' } })        // dengan payload
 sim.clearQueue('v1')
 ```
 
@@ -87,6 +89,7 @@ sim.prepare()              // siapkan sebelum animasi
 sim.tick(5)                // gerakkan 5 pixel per tick
 sim.reset()                // kembali ke posisi awal
 sim.isMoving()             // cek ada yang bergerak
+sim.continueVehicle('v1')  // lanjutkan vehicle yang wait
 ```
 
 ### Load dari DSL
