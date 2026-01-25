@@ -100,7 +100,8 @@ export function getPointOnLineByOffset(
   let t: number
 
   if (isPercentage) {
-    t = offset / 100
+    // Percentage is now 0-1 format (no division needed)
+    t = offset
   } else {
     // Absolute distance
     t = lineLength > 0 ? offset / lineLength : 0

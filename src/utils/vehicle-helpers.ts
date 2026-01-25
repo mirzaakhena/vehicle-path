@@ -35,11 +35,12 @@ export function validateAndCreateVehicles(
     let effectiveOffset: number
 
     if (vs.isPercentage) {
-      if (vs.offset < 0 || vs.offset > 100) {
-        errors.push(`Vehicle ${vs.vehicleId}: Offset ${vs.offset}% must be between 0% and 100%`)
+      // Percentage is now 0-1 format
+      if (vs.offset < 0 || vs.offset > 1) {
+        errors.push(`Vehicle ${vs.vehicleId}: Offset ${vs.offset} must be between 0 and 1 for percentage`)
         continue
       }
-      effectiveOffset = (vs.offset / 100) * effectiveLineLength
+      effectiveOffset = vs.offset * effectiveLineLength
     } else {
       // For absolute offset, clamp to effective line length
       if (vs.offset < 0 || vs.offset > lineLength) {

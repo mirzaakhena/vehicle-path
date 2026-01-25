@@ -254,26 +254,21 @@ export function useScene(): UseSceneResult {
     const newFromIsPercentage = updates.fromIsPercentage ?? existingCurve.fromIsPercentage
     const newToIsPercentage = updates.toIsPercentage ?? existingCurve.toIsPercentage
 
-    // Convert existing offsets to API format for validation
-    // Internal format: percentage is 0-100, API format: percentage is 0-1
+    // Get offset values (internal format is now 0-1, same as API)
     let newFromOffset: number | undefined
     if (updates.fromOffset !== undefined) {
       newFromOffset = updates.fromOffset
     } else if (existingCurve.fromOffset !== undefined) {
-      // Convert internal format to API format
-      newFromOffset = existingCurve.fromIsPercentage !== false
-        ? existingCurve.fromOffset / 100
-        : existingCurve.fromOffset
+      // No conversion needed - internal format is now 0-1 (same as API)
+      newFromOffset = existingCurve.fromOffset
     }
 
     let newToOffset: number | undefined
     if (updates.toOffset !== undefined) {
       newToOffset = updates.toOffset
     } else if (existingCurve.toOffset !== undefined) {
-      // Convert internal format to API format
-      newToOffset = existingCurve.toIsPercentage !== false
-        ? existingCurve.toOffset / 100
-        : existingCurve.toOffset
+      // No conversion needed - internal format is now 0-1 (same as API)
+      newToOffset = existingCurve.toOffset
     }
 
     // Validate offset values

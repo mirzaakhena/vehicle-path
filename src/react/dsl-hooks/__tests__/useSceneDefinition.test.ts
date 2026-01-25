@@ -91,9 +91,9 @@ line001 80% -> line002 20%
       expect(result.current.curves[0]).toMatchObject({
         fromLineId: 'line001',
         toLineId: 'line002',
-        fromOffset: 80,
+        fromOffset: 0.8, // Internal format is now 0-1
         fromIsPercentage: true,
-        toOffset: 20,
+        toOffset: 0.2, // Internal format is now 0-1
         toIsPercentage: true
       })
     })

@@ -149,10 +149,11 @@ export function useVehicles({ lines, wheelbase }: UseVehiclesProps): UseVehicles
     }
 
     // Create and validate the updated vehicle
+    // No conversion needed - internal format is now 0-1 (same as API)
     const vehicleStart = {
       vehicleId,
       lineId: targetLineId,
-      offset: newIsPercentage ? newPosition * 100 : newPosition, // Convert to internal format (0-100 for %)
+      offset: newPosition,
       isPercentage: newIsPercentage
     }
 

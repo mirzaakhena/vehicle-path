@@ -109,9 +109,9 @@ describe('useScene', () => {
       expect(result.current.curves[0]).toMatchObject({
         fromLineId: 'line001',
         toLineId: 'line002',
-        fromOffset: 80,
+        fromOffset: 0.8, // Internal format is now 0-1
         fromIsPercentage: true,
-        toOffset: 20,
+        toOffset: 0.2, // Internal format is now 0-1
         toIsPercentage: true
       })
     })
@@ -172,9 +172,9 @@ describe('useScene', () => {
       expect(result.current.curves[0]).toMatchObject({
         fromLineId: 'line001',
         toLineId: 'line002',
-        fromOffset: 80,
+        fromOffset: 0.8, // Internal format is now 0-1 for percentage
         fromIsPercentage: true,
-        toOffset: 50,
+        toOffset: 50, // Absolute mode - stays in meters
         toIsPercentage: false
       })
     })
@@ -587,14 +587,14 @@ describe('useScene', () => {
         })
       })
 
-      expect(result.current.curves[0].fromOffset).toBe(80) // 0.8 * 100
+      expect(result.current.curves[0].fromOffset).toBe(0.8) // Internal format is now 0-1
 
       act(() => {
         result.current.updateConnection('line001', 'line002', { fromOffset: 0.5 })
       })
 
-      expect(result.current.curves[0].fromOffset).toBe(50) // 0.5 * 100
-      expect(result.current.curves[0].toOffset).toBe(20) // preserved
+      expect(result.current.curves[0].fromOffset).toBe(0.5) // Internal format is now 0-1
+      expect(result.current.curves[0].toOffset).toBe(0.2) // preserved
     })
 
     it('should update toOffset', () => {
@@ -614,8 +614,8 @@ describe('useScene', () => {
         result.current.updateConnection('line001', 'line002', { toOffset: 0.7 })
       })
 
-      expect(result.current.curves[0].fromOffset).toBe(80) // preserved
-      expect(result.current.curves[0].toOffset).toBe(70) // 0.7 * 100
+      expect(result.current.curves[0].fromOffset).toBe(0.8) // preserved
+      expect(result.current.curves[0].toOffset).toBe(0.7) // Internal format is now 0-1
     })
 
     it('should update both offsets', () => {
@@ -638,8 +638,8 @@ describe('useScene', () => {
         })
       })
 
-      expect(result.current.curves[0].fromOffset).toBe(60)
-      expect(result.current.curves[0].toOffset).toBe(40)
+      expect(result.current.curves[0].fromOffset).toBe(0.6) // Internal format is now 0-1
+      expect(result.current.curves[0].toOffset).toBe(0.4) // Internal format is now 0-1
     })
 
     it('should update to absolute mode', () => {

@@ -17,19 +17,16 @@ function linesToApi(lines: Line[]): SceneConfig['lines'] {
 
 /**
  * Convert core Curve[] to API SceneConnectionInput[] format
- * Note: Curve offset is stored as raw value (0-100 for %), API position is 0-1 for %
+ * Note: Internal format is now 0-1 for percentage (same as API)
  */
 function curvesToApi(curves: Curve[]): SceneConnectionInput[] {
   return curves.map(curve => ({
     from: curve.fromLineId,
     to: curve.toLineId,
-    fromPosition: curve.fromOffset !== undefined
-      ? (curve.fromIsPercentage ? curve.fromOffset / 100 : curve.fromOffset)
-      : undefined,
+    // No conversion needed - internal format is now 0-1 (same as API)
+    fromPosition: curve.fromOffset,
     fromIsPercentage: curve.fromIsPercentage,
-    toPosition: curve.toOffset !== undefined
-      ? (curve.toIsPercentage ? curve.toOffset / 100 : curve.toOffset)
-      : undefined,
+    toPosition: curve.toOffset,
     toIsPercentage: curve.toIsPercentage
   }))
 }

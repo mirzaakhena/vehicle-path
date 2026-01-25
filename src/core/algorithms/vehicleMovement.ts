@@ -449,7 +449,7 @@ function buildCurveDataMap(
             fromLine,
             curveSpec.fromOffset,
             curveSpec.fromIsPercentage,
-            100,
+            1, // Default: 100% = 1.0
             config.wheelbase
           )
           const toOffset = resolveToLineOffset(
@@ -509,8 +509,9 @@ export function prepareCommandPath(
   // If line is too short for the vehicle's wheelbase, no valid path exists
   if (effectiveLineLength <= 0) return null
 
+  // Percentage is now 0-1 format (no division by 100 needed)
   const targetOffset = command.isPercentage
-    ? (command.targetOffset / 100) * effectiveLineLength
+    ? command.targetOffset * effectiveLineLength
     : Math.min(command.targetOffset, effectiveLineLength)
 
   // Find path from current position to target

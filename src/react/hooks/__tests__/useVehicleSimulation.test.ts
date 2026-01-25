@@ -91,13 +91,13 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.connect('line001', 'line002', { from: 0.8, to: 0.2 })
+        result.current.connect('line001', 'line002', { fromOffset: 0.8, toOffset: 0.2 })
       })
 
       expect(result.current.curves).toHaveLength(1)
-      // Internal uses 0-100 scale
-      expect(result.current.curves[0].fromOffset).toBe(80)
-      expect(result.current.curves[0].toOffset).toBe(20)
+      // Internal format is now 0-1 (same as API)
+      expect(result.current.curves[0].fromOffset).toBe(0.8)
+      expect(result.current.curves[0].toOffset).toBe(0.2)
     })
 
     it('should disconnect two lines', () => {
@@ -160,7 +160,7 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.goto('v1', 'line002', 1.0)
+        result.current.goto({ id: 'v1', lineId: 'line002', position: 1.0 })
       })
 
       expect(result.current.vehicleQueues.get('v1')).toHaveLength(1)
@@ -179,12 +179,12 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.goto('v1', 'line001') // no targetPosition
+        result.current.goto({ id: 'v1', lineId: 'line001' }) // no targetPosition
       })
 
       const queue = result.current.vehicleQueues.get('v1')
       expect(queue).toHaveLength(1)
-      expect(queue![0].targetOffset).toBe(100) // 1.0 * 100 = 100%
+      expect(queue![0].targetOffset).toBe(1) // Internal format is now 0-1
     })
   })
 
@@ -224,7 +224,7 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.goto('v1', 'line002', 1.0)
+        result.current.goto({ id: 'v1', lineId: 'line002', position: 1.0 })
       })
 
       expect(result.current.vehicles).toHaveLength(1)
@@ -360,8 +360,8 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.goto('v1', 'line002', 0.5)
-        result.current.goto('v1', 'line002', 1.0)
+        result.current.goto({ id: 'v1', lineId: 'line002', position: 0.5 })
+        result.current.goto({ id: 'v1', lineId: 'line002', position: 1.0 })
       })
 
       expect(result.current.vehicleQueues.get('v1')).toHaveLength(2)
@@ -441,7 +441,7 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.goto('v1', 'line002', 1.0)
+        result.current.goto({ id: 'v1', lineId: 'line002', position: 1.0 })
       })
 
       expect(result.current.lines).toHaveLength(2)
@@ -476,7 +476,7 @@ describe('useVehicleSimulation', () => {
       })
 
       act(() => {
-        result.current.goto('v1', 'line002', 1.0)
+        result.current.goto({ id: 'v1', lineId: 'line002', position: 1.0 })
       })
 
       expect(result.current.vehicles).toHaveLength(2)

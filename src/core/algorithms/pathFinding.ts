@@ -100,9 +100,9 @@ export function resolveFromLineOffset(
     return Math.max(wheelbase, Math.min(offset, lineLength))
   }
 
-  // Map percentage to effective range [wheelbase, lineLength]
-  // 0% → wheelbase, 100% → lineLength
-  return wheelbase + (percentage / 100) * effectiveLength
+  // Map percentage (0-1) to effective range [wheelbase, lineLength]
+  // 0 → wheelbase, 1 → lineLength
+  return wheelbase + percentage * effectiveLength
 }
 
 /**
@@ -137,9 +137,9 @@ export function resolveToLineOffset(
     return Math.max(0, Math.min(offset, effectiveLength))
   }
 
-  // Map percentage to effective range [0, lineLength - wheelbase]
-  // 0% → 0, 100% → lineLength - wheelbase
-  return (percentage / 100) * effectiveLength
+  // Map percentage (0-1) to effective range [0, lineLength - wheelbase]
+  // 0 → 0, 1 → lineLength - wheelbase
+  return percentage * effectiveLength
 }
 
 /**
@@ -169,10 +169,10 @@ export function buildGraph(
 
     if (!fromLine || !toLine) continue
 
-    // Resolve offsets with wheelbase adjustment (default: from 100% to 0%)
-    // fromLine: 0% → wheelbase, 100% → lineLength
-    // toLine: 0% → 0, 100% → lineLength - wheelbase
-    const fromOffset = resolveFromLineOffset(fromLine, curve.fromOffset, curve.fromIsPercentage, 100, config.wheelbase)
+    // Resolve offsets with wheelbase adjustment (default: from 1.0 to 0)
+    // fromLine: 0 → wheelbase, 1 → lineLength
+    // toLine: 0 → 0, 1 → lineLength - wheelbase
+    const fromOffset = resolveFromLineOffset(fromLine, curve.fromOffset, curve.fromIsPercentage, 1, config.wheelbase)
     const toOffset = resolveToLineOffset(toLine, curve.toOffset, curve.toIsPercentage, 0, config.wheelbase)
 
     // Create bezier curve untuk menghitung arc length

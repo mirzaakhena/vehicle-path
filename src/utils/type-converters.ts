@@ -31,6 +31,7 @@ export function toLine(input: SceneLineInput): Line {
 
 /**
  * Convert SceneConnectionInput to internal Curve type
+ * Note: Percentage values are stored as 0-1 (same as API format)
  */
 export function toCurve(input: SceneConnectionInput): Curve {
   const fromIsPercentage = input.fromIsPercentage !== false
@@ -39,19 +40,17 @@ export function toCurve(input: SceneConnectionInput): Curve {
   return {
     fromLineId: input.from,
     toLineId: input.to,
-    fromOffset: input.fromPosition !== undefined
-      ? (fromIsPercentage ? input.fromPosition * 100 : input.fromPosition)
-      : undefined,
+    // No conversion needed - internal format is now 0-1 (same as API)
+    fromOffset: input.fromPosition,
     fromIsPercentage: input.fromPosition !== undefined ? fromIsPercentage : undefined,
-    toOffset: input.toPosition !== undefined
-      ? (toIsPercentage ? input.toPosition * 100 : input.toPosition)
-      : undefined,
+    toOffset: input.toPosition,
     toIsPercentage: input.toPosition !== undefined ? toIsPercentage : undefined
   }
 }
 
 /**
  * Convert VehicleInput to internal VehicleStart format
+ * Note: Percentage values are stored as 0-1 (same as API format)
  */
 export function toVehicleStart(input: VehicleInput): VehicleStart {
   const position = input.position ?? 0
@@ -60,13 +59,15 @@ export function toVehicleStart(input: VehicleInput): VehicleStart {
   return {
     vehicleId: input.id,
     lineId: input.lineId,
-    offset: isPercentage ? position * 100 : position,
+    // No conversion needed - internal format is now 0-1 (same as API)
+    offset: position,
     isPercentage
   }
 }
 
 /**
  * Convert GotoCommand input (with optional fields) to internal GotoCommand format (all required)
+ * Note: Percentage values are stored as 0-1 (same as API format)
  */
 export function toGotoCommand(cmd: {
   vehicleId: string
@@ -82,7 +83,8 @@ export function toGotoCommand(cmd: {
   return {
     vehicleId: cmd.vehicleId,
     targetLineId: cmd.targetLineId,
-    targetOffset: isPercentage ? targetPosition * 100 : targetPosition,
+    // No conversion needed - internal format is now 0-1 (same as API)
+    targetOffset: targetPosition,
     isPercentage,
     awaitConfirmation: cmd.wait,
     payload: cmd.payload

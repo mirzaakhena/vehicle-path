@@ -73,7 +73,7 @@ describe('useMovementQueue', () => {
       const command = result.current.vehicleQueues.get('v1')![0]
       expect(command.vehicleId).toBe('v1')
       expect(command.targetLineId).toBe('line002')
-      expect(command.targetOffset).toBe(100) // 1.0 * 100 = end of line
+      expect(command.targetOffset).toBe(1) // Internal format is now 0-1
       expect(command.isPercentage).toBe(true)
     })
 
@@ -97,7 +97,7 @@ describe('useMovementQueue', () => {
       const command = result.current.vehicleQueues.get('v1')![0]
       expect(command.vehicleId).toBe('v1')
       expect(command.targetLineId).toBe('line002')
-      expect(command.targetOffset).toBe(50) // 0.5 * 100
+      expect(command.targetOffset).toBe(0.5) // Internal format is now 0-1
       expect(command.isPercentage).toBe(true)
     })
 
@@ -591,7 +591,7 @@ describe('useMovementQueue', () => {
       })
 
       const command = result.current.vehicleQueues.get('v1')![0]
-      expect(command.targetOffset).toBe(100)
+      expect(command.targetOffset).toBe(1) // Internal format is now 0-1
     })
   })
 })

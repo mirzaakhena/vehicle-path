@@ -100,9 +100,9 @@ describe('buildGraph', () => {
       {
         fromLineId: 'line001',
         toLineId: 'line002',
-        fromOffset: 80,
+        fromOffset: 0.8, // Internal format is now 0-1
         fromIsPercentage: true,
-        toOffset: 20,
+        toOffset: 0.2, // Internal format is now 0-1
         toIsPercentage: true
       }
     ]
@@ -236,7 +236,7 @@ describe('findPath - directional constraint', () => {
       {
         fromLineId: 'line001',
         toLineId: 'line002',
-        fromOffset: 50,
+        fromOffset: 0.5, // Internal format is now 0-1
         fromIsPercentage: true
       }
     ]
@@ -260,7 +260,7 @@ describe('findPath - directional constraint', () => {
       {
         fromLineId: 'line001',
         toLineId: 'line002',
-        fromOffset: 80,
+        fromOffset: 0.8, // Internal format is now 0-1
         fromIsPercentage: true
       }
     ]
@@ -350,7 +350,7 @@ describe('findPath - edge cases', () => {
       {
         fromLineId: 'line001',
         toLineId: 'line002',
-        fromOffset: 50,
+        fromOffset: 0.5, // Internal format is now 0-1
         fromIsPercentage: true
       }
     ]
@@ -378,7 +378,7 @@ describe('findPath - edge cases', () => {
       {
         fromLineId: 'loop3',
         toLineId: 'loop1',
-        toOffset: 30,
+        toOffset: 0.3, // Internal format is now 0-1
         toIsPercentage: true
       }
     ]

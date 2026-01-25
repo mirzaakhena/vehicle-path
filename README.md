@@ -35,6 +35,15 @@ function App() {
 
 ## API
 
+### Format Posisi
+
+Semua nilai posisi menggunakan format **0-1** untuk persentase:
+- `0` = 0% (awal line)
+- `0.5` = 50% (tengah line)
+- `1` = 100% (ujung line)
+
+Untuk posisi absolut (dalam satuan koordinat), gunakan `isPercentage: false`.
+
 ### Setup
 
 ```ts

@@ -789,7 +789,7 @@ describe('pathPreparation', () => {
         const vehicle = createMockVehicle({ lineId: 'line1', rear: { absoluteOffset: 0 } })
         const command = createGotoCommand({
           targetLineId: 'line1',
-          targetOffset: 50,
+          targetOffset: 0.5, // Internal format is now 0-1
           isPercentage: true
         })
 
