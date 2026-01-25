@@ -162,6 +162,7 @@ export function useVehicleSimulation({
     vehicles: vehicleHook.vehicles,
     lines: scene.lines,
     vehicleQueues: movementQueue.vehicleQueues,
+    getVehicleQueues: movementQueue.getVehicleQueues,
     wheelbase,
     tangentMode,
     curves: scene.curves,

@@ -19,6 +19,8 @@ export interface UseAnimationProps {
   vehicles: Vehicle[]
   lines: Line[]
   vehicleQueues: Map<string, GotoCommand[]>
+  /** Get current queues immediately (bypasses React state timing) */
+  getVehicleQueues?: () => Map<string, GotoCommand[]>
   wheelbase: number
   tangentMode: TangentMode
   curves: import('../../core/types/geometry').Curve[]
@@ -50,6 +52,7 @@ export function useAnimation({
   vehicles,
   lines,
   vehicleQueues,
+  getVehicleQueues,
   wheelbase,
   tangentMode,
   curves,
@@ -252,6 +255,9 @@ export function useAnimation({
     const graph = graphRef.current
     if (!graph) return false
 
+    // Use getVehicleQueues() for immediate access, fall back to prop
+    const currentQueues = getVehicleQueues ? getVehicleQueues() : vehicleQueues
+
     const vehiclesToStart: Array<{
       id: string
       fromState: 'idle' | 'waiting'
@@ -264,7 +270,7 @@ export function useAnimation({
     // Prepare all vehicles
     for (const [vehicleId, state] of movementStateRef.current) {
       const vehicle = state.vehicle
-      const queue = vehicleQueues.get(vehicleId)
+      const queue = currentQueues.get(vehicleId)
       if (!queue || queue.length === 0) continue
 
       const command = queue[0]
@@ -342,7 +348,7 @@ export function useAnimation({
     }
 
     return true
-  }, [linesMap, curves, vehicleQueues, config, wheelbase, eventEmitter])
+  }, [linesMap, curves, vehicleQueues, getVehicleQueues, config, wheelbase, eventEmitter])
 
   // Reset to initial state
   const reset = useCallback(() => {

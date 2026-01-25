@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import type { Line, Curve } from '../../core/types/geometry'
 import type { Vehicle, GotoCommand } from '../../core/types/vehicle'
 import type { GotoCommandInput } from '../../core/types/api'
@@ -14,6 +14,8 @@ export interface UseMovementQueueProps {
 export interface UseMovementQueueResult {
   /** Queue of commands per vehicle */
   vehicleQueues: Map<string, GotoCommand[]>
+  /** Get current queues immediately (bypasses React state timing) */
+  getVehicleQueues: () => Map<string, GotoCommand[]>
   /** Queue a movement command for a vehicle */
   queueMovement: (vehicleId: string, input: GotoCommandInput) => { success: boolean; error?: string }
   /** Clear the queue for a specific vehicle or all vehicles */
@@ -53,8 +55,15 @@ export function useMovementQueue({ vehicles, lines }: UseMovementQueueProps): Us
   const [vehicleQueues, setVehicleQueues] = useState<Map<string, GotoCommand[]>>(new Map())
   const [error, setError] = useState<string | null>(null)
 
+  // Use ref for immediate access (bypasses React state timing)
+  const vehicleQueuesRef = useRef<Map<string, GotoCommand[]>>(new Map())
+
+  // Get current queues immediately
+  const getVehicleQueues = useCallback(() => vehicleQueuesRef.current, [])
+
   // Internal: Load pre-computed queues directly (for bulk loading)
   const _loadQueues = useCallback((queues: Map<string, GotoCommand[]>) => {
+    vehicleQueuesRef.current = queues
     setVehicleQueues(queues)
     setError(null)
   }, [])
@@ -114,13 +123,12 @@ export function useMovementQueue({ vehicles, lines }: UseMovementQueueProps): Us
     // Create the command
     const command = toGotoCommand({ vehicleId, ...input })
 
-    // Add to queue
-    setVehicleQueues(prev => {
-      const newQueues = new Map(prev)
-      const queue = newQueues.get(vehicleId) || []
-      newQueues.set(vehicleId, [...queue, command])
-      return newQueues
-    })
+    // Add to queue - update ref immediately for synchronous access
+    const newQueues = new Map(vehicleQueuesRef.current)
+    const queue = newQueues.get(vehicleId) || []
+    newQueues.set(vehicleId, [...queue, command])
+    vehicleQueuesRef.current = newQueues
+    setVehicleQueues(newQueues)
 
     setError(null)
     return { success: true }
@@ -136,14 +144,14 @@ export function useMovementQueue({ vehicles, lines }: UseMovementQueueProps): Us
         return { success: false, error: errorMsg }
       }
 
-      // Clear specific vehicle queue
-      setVehicleQueues(prev => {
-        const newQueues = new Map(prev)
-        newQueues.delete(vehicleId)
-        return newQueues
-      })
+      // Clear specific vehicle queue - update ref immediately
+      const newQueues = new Map(vehicleQueuesRef.current)
+      newQueues.delete(vehicleId)
+      vehicleQueuesRef.current = newQueues
+      setVehicleQueues(newQueues)
     } else {
-      // Clear all queues
+      // Clear all queues - update ref immediately
+      vehicleQueuesRef.current = new Map()
       setVehicleQueues(new Map())
     }
 
@@ -153,6 +161,7 @@ export function useMovementQueue({ vehicles, lines }: UseMovementQueueProps): Us
 
   return {
     vehicleQueues,
+    getVehicleQueues,
     queueMovement,
     clearQueue,
     error,
