@@ -48,6 +48,7 @@ export interface UseVehicleSimulationResult {
   curves: Curve[]
   vehicles: Vehicle[]
   movingVehicles: Vehicle[]
+  getMovingVehicles: () => Vehicle[]
   vehicleQueues: Map<string, GotoCommand[]>
   error: string | null
 
@@ -486,6 +487,7 @@ export function useVehicleSimulation({
     curves: scene.curves,
     vehicles: vehicleHook.vehicles,
     movingVehicles: animation.movingVehicles,
+    getMovingVehicles: animation.getMovingVehicles,
     vehicleQueues: movementQueue.vehicleQueues,
     error,
 

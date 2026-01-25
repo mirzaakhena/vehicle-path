@@ -60,6 +60,31 @@ export function useAnimation({
 }: UseAnimationProps) {
   const [movingVehicles, setMovingVehicles] = useState<Vehicle[]>([])
 
+  // Ref for direct access to moving vehicles (bypasses React state for animation loop)
+  // This allows useFrame to read positions without triggering React re-renders
+  const movingVehiclesRef = useRef<Vehicle[]>([])
+
+  // Helper to update both ref and state
+  // The ref is updated immediately for animation loop access
+  // The state is updated for React component re-renders (less frequent)
+  const updateMovingVehicles = useCallback((updater: Vehicle[] | ((prev: Vehicle[]) => Vehicle[])) => {
+    if (typeof updater === 'function') {
+      updateMovingVehicles(prev => {
+        const next = updater(prev)
+        movingVehiclesRef.current = next
+        return next
+      })
+    } else {
+      movingVehiclesRef.current = updater
+      setMovingVehicles(updater)
+    }
+  }, [])
+
+  // Get moving vehicles directly from ref (for animation loop)
+  const getMovingVehicles = useCallback((): Vehicle[] => {
+    return movingVehiclesRef.current
+  }, [])
+
   // Create config object for movement functions
   const config: MovementConfig = useMemo(() => ({
     wheelbase,
@@ -82,7 +107,7 @@ export function useAnimation({
 
     // Update state asynchronously to avoid cascade renders
     const timeout = setTimeout(() => {
-      setMovingVehicles(initialized)
+      updateMovingVehicles(initialized)
     }, 0)
 
     return () => clearTimeout(timeout)
@@ -220,7 +245,7 @@ export function useAnimation({
     }
 
     // Update React state
-    setMovingVehicles(prevVehicles => {
+    updateMovingVehicles(prevVehicles => {
       return prevVehicles.map(vehicle => {
         const state = movementStateRef.current.get(vehicle.id)
         return state ? state.vehicle : vehicle
@@ -322,7 +347,7 @@ export function useAnimation({
     isPreparedRef.current = true
 
     // Update React state
-    setMovingVehicles(prevVehicles => {
+    updateMovingVehicles(prevVehicles => {
       return prevVehicles.map(vehicle => {
         const state = movementStateRef.current.get(vehicle.id)
         return state ? state.vehicle : vehicle
@@ -362,7 +387,7 @@ export function useAnimation({
     // Re-initialize from vehicles prop
     const { movingVehicles: initialized, stateMap } = initializeAllVehicles(vehicles, linesMap)
     movementStateRef.current = stateMap
-    setMovingVehicles(initialized)
+    updateMovingVehicles(initialized)
   }, [vehicles, linesMap])
 
   // Continue a waiting vehicle (resume after awaitConfirmation)
@@ -400,7 +425,7 @@ export function useAnimation({
           }
           state.vehicle = { ...state.vehicle, state: 'moving' }
 
-          setMovingVehicles(prev => prev.map(v => v.id === vehicleId ? state.vehicle : v))
+          updateMovingVehicles(prev => prev.map(v => v.id === vehicleId ? state.vehicle : v))
 
           // Emit stateChange event
           if (eventEmitter) {
@@ -424,7 +449,7 @@ export function useAnimation({
     state.vehicle = { ...state.vehicle, state: 'idle' }
     state.execution = null
 
-    setMovingVehicles(prev => prev.map(v => v.id === vehicleId ? state.vehicle : v))
+    updateMovingVehicles(prev => prev.map(v => v.id === vehicleId ? state.vehicle : v))
 
     // Emit stateChange event
     if (eventEmitter) {
@@ -454,6 +479,7 @@ export function useAnimation({
 
   return {
     movingVehicles,
+    getMovingVehicles,
     prepare,
     tick,
     reset,
