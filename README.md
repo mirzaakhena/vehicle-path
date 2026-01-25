@@ -1,17 +1,17 @@
-# vehicle-path
+# vehicle-path2
 
 Library untuk simulasi pergerakan kendaraan dual-axle sepanjang jalur.
 
 ## Instalasi
 
 ```bash
-npm install vehicle-path
+npm install vehicle-path2
 ```
 
 ## Quick Start
 
 ```tsx
-import { useVehicleSimulation } from 'vehicle-path/react'
+import { useVehicleSimulation } from 'vehicle-path2/react'
 
 function App() {
   const sim = useVehicleSimulation({ wheelbase: 30 })
@@ -119,7 +119,7 @@ sim.movingVehicles // kendaraan (posisi saat animasi)
 ## Contoh Lengkap
 
 ```tsx
-import { useVehicleSimulation } from 'vehicle-path/react'
+import { useVehicleSimulation } from 'vehicle-path2/react'
 import { useEffect } from 'react'
 
 function AnimatedVehicle() {
