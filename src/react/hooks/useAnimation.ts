@@ -244,6 +244,9 @@ export function useAnimation({
         return true
       }
     }
+
+    // Animation completed naturally - reset isPreparedRef so new animation can start
+    isPreparedRef.current = false
     return false
   }, [linesMap, curves, config, vehicleQueues, eventEmitter])
 
