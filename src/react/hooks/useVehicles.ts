@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
 import type { Line } from '../../core/types/geometry'
 import type { Vehicle } from '../../core/types/vehicle'
-import type { VehicleInput } from '../../core/types/api'
+import type { VehicleInput, VehicleUpdateInput } from '../../core/types/api'
 import { validateAndCreateVehicles } from '../../utils/vehicle-helpers'
 import { toVehicleStart } from '../../utils/type-converters'
 
@@ -15,6 +15,8 @@ export interface UseVehiclesResult {
   vehicles: Vehicle[]
   /** Add one or more vehicles to the scene */
   addVehicles: (input: VehicleInput | VehicleInput[]) => { success: boolean; errors?: string[] }
+  /** Update a vehicle's position or line (only when idle) */
+  updateVehicle: (vehicleId: string, updates: VehicleUpdateInput) => { success: boolean; error?: string }
   /** Remove a vehicle from the scene */
   removeVehicle: (vehicleId: string) => { success: boolean; error?: string }
   /** Clear all vehicles */
@@ -98,6 +100,82 @@ export function useVehicles({ lines, wheelbase }: UseVehiclesProps): UseVehicles
     return { success: true }
   }, [lines, wheelbase])
 
+  const updateVehicle = useCallback((vehicleId: string, updates: VehicleUpdateInput) => {
+    // Find the vehicle
+    const vehicleIndex = vehiclesRef.current.findIndex(v => v.id === vehicleId)
+    if (vehicleIndex === -1) {
+      const errorMsg = `Vehicle with ID '${vehicleId}' not found`
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
+
+    const vehicle = vehiclesRef.current[vehicleIndex]
+
+    // Only allow updates when vehicle is idle
+    if (vehicle.state !== 'idle') {
+      const errorMsg = `Cannot update vehicle '${vehicleId}' while it is ${vehicle.state}. Vehicle must be idle.`
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
+
+    // Determine the target line and position
+    const targetLineId = updates.lineId ?? vehicle.lineId
+    const targetLine = lines.find(l => l.id === targetLineId)
+
+    if (!targetLine) {
+      const errorMsg = `Line '${targetLineId}' not found`
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
+
+    // Determine new position values
+    // If lineId changes and no position specified, reset to 0
+    // If only position changes, use new position with appropriate isPercentage
+    let newPosition: number
+    let newIsPercentage: boolean
+
+    if (updates.lineId !== undefined && updates.position === undefined) {
+      // Changing line without specifying position: reset to start
+      newPosition = 0
+      newIsPercentage = true
+    } else if (updates.position !== undefined) {
+      // Position explicitly provided
+      newPosition = updates.position
+      newIsPercentage = updates.isPercentage ?? true
+    } else {
+      // No changes to position
+      newPosition = vehicle.offset
+      newIsPercentage = vehicle.isPercentage
+    }
+
+    // Create and validate the updated vehicle
+    const vehicleStart = {
+      vehicleId,
+      lineId: targetLineId,
+      offset: newIsPercentage ? newPosition * 100 : newPosition, // Convert to internal format (0-100 for %)
+      isPercentage: newIsPercentage
+    }
+
+    const { vehicles: updatedVehicles, errors } = validateAndCreateVehicles(
+      [vehicleStart],
+      lines,
+      wheelbase
+    )
+
+    if (errors.length > 0) {
+      setError(errors.join('; '))
+      return { success: false, error: errors.join('; ') }
+    }
+
+    // Replace the vehicle in the array
+    vehiclesRef.current = vehiclesRef.current.map((v, i) =>
+      i === vehicleIndex ? updatedVehicles[0] : v
+    )
+    setVehicles(vehiclesRef.current)
+    setError(null)
+    return { success: true }
+  }, [lines, wheelbase])
+
   const removeVehicle = useCallback((vehicleId: string) => {
     const exists = vehiclesRef.current.some(v => v.id === vehicleId)
     if (!exists) {
@@ -121,6 +199,7 @@ export function useVehicles({ lines, wheelbase }: UseVehiclesProps): UseVehicles
   return {
     vehicles,
     addVehicles,
+    updateVehicle,
     removeVehicle,
     clear,
     error,

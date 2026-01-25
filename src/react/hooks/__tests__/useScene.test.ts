@@ -573,6 +573,168 @@ describe('useScene', () => {
     })
   })
 
+  describe('updateConnection', () => {
+    it('should update fromOffset', () => {
+      const { result } = renderHook(() => useScene())
+
+      act(() => {
+        result.current.setScene({
+          lines: [
+            { id: 'line001', start: [0, 0], end: [100, 100] },
+            { id: 'line002', start: [100, 100], end: [200, 100] }
+          ],
+          connections: [{ from: 'line001', fromPosition: 0.8, to: 'line002', toPosition: 0.2 }]
+        })
+      })
+
+      expect(result.current.curves[0].fromOffset).toBe(80) // 0.8 * 100
+
+      act(() => {
+        result.current.updateConnection('line001', 'line002', { fromOffset: 0.5 })
+      })
+
+      expect(result.current.curves[0].fromOffset).toBe(50) // 0.5 * 100
+      expect(result.current.curves[0].toOffset).toBe(20) // preserved
+    })
+
+    it('should update toOffset', () => {
+      const { result } = renderHook(() => useScene())
+
+      act(() => {
+        result.current.setScene({
+          lines: [
+            { id: 'line001', start: [0, 0], end: [100, 100] },
+            { id: 'line002', start: [100, 100], end: [200, 100] }
+          ],
+          connections: [{ from: 'line001', fromPosition: 0.8, to: 'line002', toPosition: 0.2 }]
+        })
+      })
+
+      act(() => {
+        result.current.updateConnection('line001', 'line002', { toOffset: 0.7 })
+      })
+
+      expect(result.current.curves[0].fromOffset).toBe(80) // preserved
+      expect(result.current.curves[0].toOffset).toBe(70) // 0.7 * 100
+    })
+
+    it('should update both offsets', () => {
+      const { result } = renderHook(() => useScene())
+
+      act(() => {
+        result.current.setScene({
+          lines: [
+            { id: 'line001', start: [0, 0], end: [100, 100] },
+            { id: 'line002', start: [100, 100], end: [200, 100] }
+          ],
+          connections: [{ from: 'line001', to: 'line002' }]
+        })
+      })
+
+      act(() => {
+        result.current.updateConnection('line001', 'line002', {
+          fromOffset: 0.6,
+          toOffset: 0.4
+        })
+      })
+
+      expect(result.current.curves[0].fromOffset).toBe(60)
+      expect(result.current.curves[0].toOffset).toBe(40)
+    })
+
+    it('should update to absolute mode', () => {
+      const { result } = renderHook(() => useScene())
+
+      act(() => {
+        result.current.setScene({
+          lines: [
+            { id: 'line001', start: [0, 0], end: [100, 100] },
+            { id: 'line002', start: [100, 100], end: [200, 100] }
+          ],
+          connections: [{ from: 'line001', to: 'line002' }]
+        })
+      })
+
+      act(() => {
+        result.current.updateConnection('line001', 'line002', {
+          fromOffset: 150,
+          fromIsPercentage: false
+        })
+      })
+
+      expect(result.current.curves[0].fromOffset).toBe(150)
+      expect(result.current.curves[0].fromIsPercentage).toBe(false)
+    })
+
+    it('should fail on non-existent connection', () => {
+      const { result } = renderHook(() => useScene())
+
+      act(() => {
+        result.current.setScene({
+          lines: [
+            { id: 'line001', start: [0, 0], end: [100, 100] },
+            { id: 'line002', start: [100, 100], end: [200, 100] }
+          ]
+        })
+      })
+
+      let response: { success: boolean; error?: string } | undefined
+      act(() => {
+        response = result.current.updateConnection('line001', 'line002', { fromOffset: 0.5 })
+      })
+
+      expect(response?.success).toBe(false)
+      expect(response?.error).toContain('not found')
+    })
+
+    it('should fail on invalid percentage range', () => {
+      const { result } = renderHook(() => useScene())
+
+      act(() => {
+        result.current.setScene({
+          lines: [
+            { id: 'line001', start: [0, 0], end: [100, 100] },
+            { id: 'line002', start: [100, 100], end: [200, 100] }
+          ],
+          connections: [{ from: 'line001', to: 'line002' }]
+        })
+      })
+
+      let response: { success: boolean; error?: string } | undefined
+      act(() => {
+        response = result.current.updateConnection('line001', 'line002', { fromOffset: 1.5 })
+      })
+
+      expect(response?.success).toBe(false)
+      expect(response?.error).toContain('must be 0-1 for percentage')
+    })
+
+    it('should fail on negative absolute offset', () => {
+      const { result } = renderHook(() => useScene())
+
+      act(() => {
+        result.current.setScene({
+          lines: [
+            { id: 'line001', start: [0, 0], end: [100, 100] },
+            { id: 'line002', start: [100, 100], end: [200, 100] }
+          ],
+          connections: [{ from: 'line001', to: 'line002' }]
+        })
+      })
+
+      let response: { success: boolean; error?: string } | undefined
+      act(() => {
+        response = result.current.updateConnection('line001', 'line002', {
+          fromOffset: -50,
+          fromIsPercentage: false
+        })
+      })
+
+      expect(response?.success).toBe(false)
+      expect(response?.error).toContain('must be >= 0 for absolute distance')
+    })
+  })
+
   describe('removeConnection', () => {
     it('should remove a connection', () => {
       const { result } = renderHook(() => useScene())

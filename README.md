@@ -59,6 +59,8 @@ sim.clearScene()
 sim.connect('line1', 'line2')
 sim.connect('line1', 'line2', { fromOffset: 0.8, toOffset: 0.2 })
 sim.connect('line1', 'line2', { fromOffset: 150, fromIsPercentage: false, toOffset: 50, toIsPercentage: false })
+sim.updateConnection('line1', 'line2', { fromOffset: 0.5 })              // update offset
+sim.updateConnection('line1', 'line2', { toOffset: 100, toIsPercentage: false }) // absolute
 sim.disconnect('line1', 'line2')
 ```
 
@@ -67,6 +69,9 @@ sim.disconnect('line1', 'line2')
 ```ts
 sim.addVehicles({ id: 'v1', lineId: 'line1', position: 0 })
 sim.addVehicles({ id: 'v2', lineId: 'line1', position: 150, isPercentage: false }) // absolute
+sim.updateVehicle('v1', { position: 0.5 })                    // pindah ke 50%
+sim.updateVehicle('v1', { lineId: 'line2' })                  // pindah ke line lain
+sim.updateVehicle('v1', { lineId: 'line2', position: 0.8 })   // pindah ke 80% di line2
 sim.removeVehicle('v1')
 sim.clearVehicles()
 ```

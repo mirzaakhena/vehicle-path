@@ -82,6 +82,36 @@ export interface VehicleInput {
   isPercentage?: boolean // if true, position is 0-1 percentage; if false, absolute distance. Defaults to true
 }
 
+/**
+ * Vehicle update input for updateVehicle()
+ *
+ * @example
+ * updateVehicle('v1', { lineId: 'line002' })  // move to different line (keeps position 0)
+ * updateVehicle('v1', { position: 0.5 })  // move to 50% on current line
+ * updateVehicle('v1', { lineId: 'line002', position: 0.8 })  // move to 80% on line002
+ * updateVehicle('v1', { position: 150, isPercentage: false })  // move to absolute 150
+ */
+export interface VehicleUpdateInput {
+  lineId?: string
+  position?: number
+  isPercentage?: boolean
+}
+
+/**
+ * Connection update input for updateConnection()
+ *
+ * @example
+ * updateConnection('line001', 'line002', { fromOffset: 0.8 })  // change from offset to 80%
+ * updateConnection('line001', 'line002', { toOffset: 0.2 })    // change to offset to 20%
+ * updateConnection('line001', 'line002', { fromOffset: 150, fromIsPercentage: false })  // absolute offset
+ */
+export interface ConnectionUpdateInput {
+  fromOffset?: number
+  fromIsPercentage?: boolean
+  toOffset?: number
+  toIsPercentage?: boolean
+}
+
 // =============================================================================
 // Movement API Types
 // =============================================================================

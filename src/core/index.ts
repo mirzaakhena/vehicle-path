@@ -53,6 +53,8 @@ export type {
   SceneConnectionInput,
   SceneConfig,
   VehicleInput,
+  VehicleUpdateInput,
+  ConnectionUpdateInput,
   GotoCommandInput
 } from './types/api'
 

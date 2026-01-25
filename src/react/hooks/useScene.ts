@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import type { Line, Curve } from '../../core/types/geometry'
-import type { SceneConfig, SceneLineInput, SceneConnectionInput, CoordinateInput } from '../../core/types/api'
+import type { SceneConfig, SceneLineInput, SceneConnectionInput, CoordinateInput, ConnectionUpdateInput } from '../../core/types/api'
 import { toPoint, toLine, toCurve } from '../../utils/type-converters'
 
 /**
@@ -76,6 +76,8 @@ export interface UseSceneResult {
   removeLine: (lineId: string) => { success: boolean; error?: string }
   /** Add a connection between two lines */
   addConnection: (connection: SceneConnectionInput) => { success: boolean; error?: string }
+  /** Update a connection's offset values */
+  updateConnection: (fromLineId: string, toLineId: string, updates: ConnectionUpdateInput) => { success: boolean; error?: string }
   /** Remove a connection */
   removeConnection: (fromLineId: string, toLineId: string) => { success: boolean; error?: string }
   /** Clear all lines and curves */
@@ -237,6 +239,99 @@ export function useScene(): UseSceneResult {
     return { success: true }
   }, [lines, curves])
 
+  const updateConnection = useCallback((fromLineId: string, toLineId: string, updates: ConnectionUpdateInput) => {
+    // Find the connection
+    const curveIndex = curves.findIndex(c => c.fromLineId === fromLineId && c.toLineId === toLineId)
+    if (curveIndex === -1) {
+      const errorMsg = `Connection from '${fromLineId}' to '${toLineId}' not found`
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
+
+    const existingCurve = curves[curveIndex]
+
+    // Determine new values, preserving existing if not provided
+    const newFromIsPercentage = updates.fromIsPercentage ?? existingCurve.fromIsPercentage
+    const newToIsPercentage = updates.toIsPercentage ?? existingCurve.toIsPercentage
+
+    // Convert existing offsets to API format for validation
+    // Internal format: percentage is 0-100, API format: percentage is 0-1
+    let newFromOffset: number | undefined
+    if (updates.fromOffset !== undefined) {
+      newFromOffset = updates.fromOffset
+    } else if (existingCurve.fromOffset !== undefined) {
+      // Convert internal format to API format
+      newFromOffset = existingCurve.fromIsPercentage !== false
+        ? existingCurve.fromOffset / 100
+        : existingCurve.fromOffset
+    }
+
+    let newToOffset: number | undefined
+    if (updates.toOffset !== undefined) {
+      newToOffset = updates.toOffset
+    } else if (existingCurve.toOffset !== undefined) {
+      // Convert internal format to API format
+      newToOffset = existingCurve.toIsPercentage !== false
+        ? existingCurve.toOffset / 100
+        : existingCurve.toOffset
+    }
+
+    // Validate offset values
+    if (newFromOffset !== undefined) {
+      if (newFromIsPercentage !== false && (newFromOffset < 0 || newFromOffset > 1)) {
+        const errorMsg = `Invalid fromOffset: ${newFromOffset} (must be 0-1 for percentage)`
+        setError(errorMsg)
+        return { success: false, error: errorMsg }
+      }
+      if (newFromIsPercentage === false && newFromOffset < 0) {
+        const errorMsg = `Invalid fromOffset: ${newFromOffset} (must be >= 0 for absolute distance)`
+        setError(errorMsg)
+        return { success: false, error: errorMsg }
+      }
+    }
+
+    if (newToOffset !== undefined) {
+      if (newToIsPercentage !== false && (newToOffset < 0 || newToOffset > 1)) {
+        const errorMsg = `Invalid toOffset: ${newToOffset} (must be 0-1 for percentage)`
+        setError(errorMsg)
+        return { success: false, error: errorMsg }
+      }
+      if (newToIsPercentage === false && newToOffset < 0) {
+        const errorMsg = `Invalid toOffset: ${newToOffset} (must be >= 0 for absolute distance)`
+        setError(errorMsg)
+        return { success: false, error: errorMsg }
+      }
+    }
+
+    // When isPercentage is false, position must be explicitly provided
+    if (newFromIsPercentage === false && newFromOffset === undefined) {
+      const errorMsg = `fromOffset is required when fromIsPercentage is false`
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
+    if (newToIsPercentage === false && newToOffset === undefined) {
+      const errorMsg = `toOffset is required when toIsPercentage is false`
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
+
+    // Create updated curve using toCurve for consistent conversion
+    const updatedConnection: SceneConnectionInput = {
+      from: fromLineId,
+      to: toLineId,
+      fromPosition: newFromOffset,
+      fromIsPercentage: newFromIsPercentage,
+      toPosition: newToOffset,
+      toIsPercentage: newToIsPercentage
+    }
+
+    setCurves(prev => prev.map((c, i) =>
+      i === curveIndex ? toCurve(updatedConnection) : c
+    ))
+    setError(null)
+    return { success: true }
+  }, [curves])
+
   const removeConnection = useCallback((fromLineId: string, toLineId: string) => {
     const exists = curves.some(c => c.fromLineId === fromLineId && c.toLineId === toLineId)
     if (!exists) {
@@ -264,6 +359,7 @@ export function useScene(): UseSceneResult {
     updateLine,
     removeLine,
     addConnection,
+    updateConnection,
     removeConnection,
     clear,
     error,

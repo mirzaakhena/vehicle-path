@@ -3,7 +3,7 @@ import { useScene } from './useScene'
 import { useVehicles } from './useVehicles'
 import { useMovementQueue } from './useMovementQueue'
 import { useAnimation } from './useAnimation'
-import type { SceneLineInput, CoordinateInput, VehicleInput, GotoInput, GotoCommandInput, SimulationConfig } from '../../core/types/api'
+import type { SceneLineInput, CoordinateInput, VehicleInput, VehicleUpdateInput, GotoInput, GotoCommandInput, SimulationConfig, ConnectionUpdateInput } from '../../core/types/api'
 import type { Line, Curve } from '../../core/types/geometry'
 import type { Vehicle, GotoCommand } from '../../core/types/vehicle'
 import type { TangentMode } from '../../core/types/config'
@@ -59,10 +59,12 @@ export interface UseVehicleSimulationResult {
 
   // Connection operations (mirrors DSL: "line001 80% -> line002 20%")
   connect: (fromLineId: string, toLineId: string, options?: { fromOffset?: number; fromIsPercentage?: boolean; toOffset?: number; toIsPercentage?: boolean }) => SimulationResult
+  updateConnection: (fromLineId: string, toLineId: string, updates: ConnectionUpdateInput) => SimulationResult
   disconnect: (fromLineId: string, toLineId: string) => SimulationResult
 
   // Vehicle operations (mirrors DSL: "v1 start line001 0")
   addVehicles: (input: VehicleInput | VehicleInput[]) => SimulationResult
+  updateVehicle: (vehicleId: string, updates: VehicleUpdateInput) => SimulationResult
   removeVehicle: (vehicleId: string) => SimulationResult
   clearVehicles: () => void
 
@@ -266,6 +268,15 @@ export function useVehicleSimulation({
     return { success: true }
   }, [scene])
 
+  // Connection: updateConnection
+  const updateConnection = useCallback((fromLineId: string, toLineId: string, updates: ConnectionUpdateInput): SimulationResult => {
+    const result = scene.updateConnection(fromLineId, toLineId, updates)
+    if (!result.success) {
+      return { success: false, error: result.error }
+    }
+    return { success: true }
+  }, [scene])
+
   // Connection: disconnect
   const disconnect = useCallback((fromLineId: string, toLineId: string): SimulationResult => {
     const result = scene.removeConnection(fromLineId, toLineId)
@@ -280,6 +291,15 @@ export function useVehicleSimulation({
     const result = vehicleHook.addVehicles(input)
     if (!result.success) {
       return { success: false, error: result.errors?.join('; ') }
+    }
+    return { success: true }
+  }, [vehicleHook])
+
+  // Vehicle: updateVehicle
+  const updateVehicle = useCallback((vehicleId: string, updates: VehicleUpdateInput): SimulationResult => {
+    const result = vehicleHook.updateVehicle(vehicleId, updates)
+    if (!result.success) {
+      return { success: false, error: result.error }
     }
     return { success: true }
   }, [vehicleHook])
@@ -476,10 +496,12 @@ export function useVehicleSimulation({
 
     // Connection operations
     connect,
+    updateConnection,
     disconnect,
 
     // Vehicle operations
     addVehicles,
+    updateVehicle,
     removeVehicle,
     clearVehicles,
 

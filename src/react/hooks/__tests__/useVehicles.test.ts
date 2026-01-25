@@ -178,6 +178,203 @@ describe('useVehicles', () => {
     })
   })
 
+  describe('updateVehicle', () => {
+    it('should update position on same line', () => {
+      const { result } = renderHook(() =>
+        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+      )
+
+      act(() => {
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
+      })
+
+      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(0)
+
+      act(() => {
+        result.current.updateVehicle('v1', { position: 0.5 })
+      })
+
+      // Line length is 400, effective length = 400 - 30 = 370
+      // 50% of 370 = 185
+      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(185)
+    })
+
+    it('should update lineId and reset position to 0', () => {
+      const { result } = renderHook(() =>
+        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+      )
+
+      act(() => {
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0.5 })
+      })
+
+      expect(result.current.vehicles[0].lineId).toBe('line001')
+
+      act(() => {
+        result.current.updateVehicle('v1', { lineId: 'line002' })
+      })
+
+      expect(result.current.vehicles[0].lineId).toBe('line002')
+      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(0)
+    })
+
+    it('should update lineId with specific position', () => {
+      const { result } = renderHook(() =>
+        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+      )
+
+      act(() => {
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
+      })
+
+      act(() => {
+        result.current.updateVehicle('v1', { lineId: 'line002', position: 0.5 })
+      })
+
+      expect(result.current.vehicles[0].lineId).toBe('line002')
+      // line002 length is 300, effective = 300 - 30 = 270
+      // 50% of 270 = 135
+      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(135)
+    })
+
+    it('should update with absolute position', () => {
+      const { result } = renderHook(() =>
+        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+      )
+
+      act(() => {
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
+      })
+
+      act(() => {
+        result.current.updateVehicle('v1', { position: 100, isPercentage: false })
+      })
+
+      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(100)
+    })
+
+    it('should fail on non-existent vehicle', () => {
+      const { result } = renderHook(() =>
+        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+      )
+
+      let response: { success: boolean; error?: string } | undefined
+      act(() => {
+        response = result.current.updateVehicle('nonexistent', { position: 0.5 })
+      })
+
+      expect(response?.success).toBe(false)
+      expect(response?.error).toContain('not found')
+    })
+
+    it('should fail on non-existent line', () => {
+      const { result } = renderHook(() =>
+        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+      )
+
+      act(() => {
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
+      })
+
+      let response: { success: boolean; error?: string } | undefined
+      act(() => {
+        response = result.current.updateVehicle('v1', { lineId: 'nonexistent' })
+      })
+
+      expect(response?.success).toBe(false)
+      expect(response?.error).toContain('not found')
+    })
+
+    it('should fail when vehicle is moving', () => {
+      const { result } = renderHook(() =>
+        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+      )
+
+      act(() => {
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
+      })
+
+      // Simulate moving state by loading vehicles directly
+      act(() => {
+        const currentVehicle = result.current.vehicles[0]
+        result.current._loadVehicles([
+          { ...currentVehicle, state: 'moving' }
+        ])
+      })
+
+      let response: { success: boolean; error?: string } | undefined
+      act(() => {
+        response = result.current.updateVehicle('v1', { position: 0.5 })
+      })
+
+      expect(response?.success).toBe(false)
+      expect(response?.error).toContain('must be idle')
+    })
+
+    it('should fail when vehicle is waiting', () => {
+      const { result } = renderHook(() =>
+        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+      )
+
+      act(() => {
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
+      })
+
+      // Simulate waiting state by loading vehicles directly
+      act(() => {
+        const currentVehicle = result.current.vehicles[0]
+        result.current._loadVehicles([
+          { ...currentVehicle, state: 'waiting' }
+        ])
+      })
+
+      let response: { success: boolean; error?: string } | undefined
+      act(() => {
+        response = result.current.updateVehicle('v1', { position: 0.5 })
+      })
+
+      expect(response?.success).toBe(false)
+      expect(response?.error).toContain('must be idle')
+    })
+
+    it('should preserve vehicle id after update', () => {
+      const { result } = renderHook(() =>
+        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+      )
+
+      act(() => {
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
+      })
+
+      act(() => {
+        result.current.updateVehicle('v1', { position: 0.5 })
+      })
+
+      expect(result.current.vehicles[0].id).toBe('v1')
+    })
+
+    it('should recalculate front axle position', () => {
+      const { result } = renderHook(() =>
+        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+      )
+
+      act(() => {
+        result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
+      })
+
+      const oldFrontOffset = result.current.vehicles[0].front.absoluteOffset
+
+      act(() => {
+        result.current.updateVehicle('v1', { position: 100, isPercentage: false })
+      })
+
+      // Front should move with rear
+      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(100)
+      expect(result.current.vehicles[0].front.absoluteOffset).toBe(130) // 100 + wheelbase
+      expect(result.current.vehicles[0].front.absoluteOffset).not.toBe(oldFrontOffset)
+    })
+  })
+
   describe('removeVehicle', () => {
     it('should remove a vehicle', () => {
       const { result } = renderHook(() =>

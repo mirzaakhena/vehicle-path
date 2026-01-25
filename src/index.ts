@@ -59,6 +59,8 @@ export type {
   SceneConnectionInput,
   SceneConfig,
   VehicleInput,
+  VehicleUpdateInput,
+  ConnectionUpdateInput,
   GotoInput,
   GotoCommandInput,
   MovementCommandInput,
