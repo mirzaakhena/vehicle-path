@@ -127,3 +127,54 @@ export interface GotoCommandInput {
   payload?: unknown          // custom data to pass through
 }
 
+// =============================================================================
+// Simulation Config Types (for JSON loading)
+// =============================================================================
+
+/**
+ * Movement command input for SimulationConfig
+ *
+ * @example
+ * { vehicleId: 'v1', targetLineId: 'line002' }  // position defaults to 1.0 (end)
+ * { vehicleId: 'v1', targetLineId: 'line002', targetPosition: 0.5 }  // 50% of line
+ * { vehicleId: 'v1', targetLineId: 'line002', targetPosition: 150, isPercentage: false }
+ */
+export interface MovementCommandInput {
+  vehicleId: string
+  targetLineId: string
+  targetPosition?: number    // position value on target line, defaults to 1.0 (end of line)
+  isPercentage?: boolean     // if true, targetPosition is 0-1 percentage; if false, absolute distance. Defaults to true
+  wait?: boolean             // pause after reaching destination
+  payload?: unknown          // custom data to pass through
+}
+
+/**
+ * Full simulation configuration for loadFromJSON()
+ *
+ * Allows loading an entire simulation state from a JSON object,
+ * including lines, connections, vehicles, and movement commands.
+ *
+ * @example
+ * loadFromJSON({
+ *   lines: [
+ *     { id: 'line001', start: [100, 100], end: [500, 100] },
+ *     { id: 'line002', start: [500, 100], end: [500, 400] }
+ *   ],
+ *   connections: [
+ *     { from: 'line001', to: 'line002' }
+ *   ],
+ *   vehicles: [
+ *     { id: 'v1', lineId: 'line001', position: 0 }
+ *   ],
+ *   movements: [
+ *     { vehicleId: 'v1', targetLineId: 'line002', targetPosition: 1.0 }
+ *   ]
+ * })
+ */
+export interface SimulationConfig {
+  lines: SceneLineInput[]
+  connections?: SceneConnectionInput[]
+  vehicles?: VehicleInput[]
+  movements?: MovementCommandInput[]
+}
+

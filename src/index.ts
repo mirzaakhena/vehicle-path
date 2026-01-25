@@ -59,7 +59,10 @@ export type {
   SceneConnectionInput,
   SceneConfig,
   VehicleInput,
-  GotoCommandInput
+  GotoInput,
+  GotoCommandInput,
+  MovementCommandInput,
+  SimulationConfig
 } from './core/types/api'
 
 // =============================================================================

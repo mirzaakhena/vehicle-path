@@ -3,7 +3,7 @@ import { useScene } from './useScene'
 import { useVehicles } from './useVehicles'
 import { useMovementQueue } from './useMovementQueue'
 import { useAnimation } from './useAnimation'
-import type { SceneLineInput, CoordinateInput, VehicleInput, GotoInput, GotoCommandInput } from '../../core/types/api'
+import type { SceneLineInput, CoordinateInput, VehicleInput, GotoInput, GotoCommandInput, SimulationConfig } from '../../core/types/api'
 import type { Line, Curve } from '../../core/types/geometry'
 import type { Vehicle, GotoCommand } from '../../core/types/vehicle'
 import type { TangentMode } from '../../core/types/config'
@@ -80,6 +80,9 @@ export interface UseVehicleSimulationResult {
   // DSL Loading
   loadFromDSL: (dsl: string) => SimulationResult
 
+  // JSON Loading
+  loadFromJSON: (config: SimulationConfig) => SimulationResult
+
   // Utility
   getVehiclesOnLine: (lineId: string) => Vehicle[]
   hasVehiclesOnLine: (lineId: string) => boolean
@@ -124,6 +127,20 @@ export interface UseVehicleSimulationResult {
  *   v1 start line001 0%
  *   v1 goto line001 100%
  * \`)
+ *
+ * // JSON Loading
+ * sim.loadFromJSON({
+ *   lines: [
+ *     { id: 'line001', start: [0, 0], end: [400, 0] },
+ *     { id: 'line002', start: [400, 0], end: [400, 300] }
+ *   ],
+ *   connections: [{ from: 'line001', to: 'line002' }],
+ *   vehicles: [{ id: 'v1', lineId: 'line001', position: 0 }],
+ *   movements: [
+ *     { vehicleId: 'v1', targetLineId: 'line001', targetPosition: 1.0 },
+ *     { vehicleId: 'v1', targetLineId: 'line002', targetPosition: 1.0 }
+ *   ]
+ * })
  * ```
  */
 export function useVehicleSimulation({
@@ -386,6 +403,57 @@ export function useVehicleSimulation({
     }
   }, [scene, vehicleHook, movementQueue, wheelbase])
 
+  // JSON: loadFromJSON - loads entire simulation from a JSON configuration object
+  const loadFromJSON = useCallback((config: SimulationConfig): SimulationResult => {
+    const warnings: SimulationWarning[] = []
+    const allErrors: string[] = []
+
+    // 1. Convert lines to internal types
+    const lines: Line[] = config.lines.map(toLine)
+    const curves: Curve[] = (config.connections || []).map(toCurve)
+
+    // 2. Create vehicles using core function
+    const vehicleStarts = (config.vehicles || []).map(toVehicleStart)
+    const { vehicles, errors: vehicleErrors } = validateAndCreateVehicles(vehicleStarts, lines, wheelbase)
+    if (vehicleErrors.length > 0) {
+      allErrors.push(...vehicleErrors)
+    }
+
+    // 3. Create movement queues
+    const queues = new Map<string, GotoCommand[]>()
+    for (const cmd of (config.movements || [])) {
+      const queue = queues.get(cmd.vehicleId) || []
+      queue.push(toGotoCommand({
+        vehicleId: cmd.vehicleId,
+        targetLineId: cmd.targetLineId,
+        targetPosition: cmd.targetPosition,
+        isPercentage: cmd.isPercentage,
+        wait: cmd.wait,
+        payload: cmd.payload
+      }))
+      queues.set(cmd.vehicleId, queue)
+    }
+
+    // 4. Load everything at once using the internal load methods
+    scene._loadScene(lines, curves)
+    vehicleHook._loadVehicles(vehicles)
+    movementQueue._loadQueues(queues)
+
+    // Collect warnings if there were errors
+    if (allErrors.length > 0) {
+      warnings.push({
+        type: 'dsl_parse_error',
+        message: `JSON loading had ${allErrors.length} error(s)`,
+        details: { errors: allErrors }
+      })
+    }
+
+    return {
+      success: true,
+      warnings: warnings.length > 0 ? warnings : undefined
+    }
+  }, [scene, vehicleHook, movementQueue, wheelbase])
+
   // Combined error state
   const error = useMemo(() => {
     return scene.error || vehicleHook.error || movementQueue.error
@@ -428,6 +496,9 @@ export function useVehicleSimulation({
 
     // DSL Loading
     loadFromDSL,
+
+    // JSON Loading
+    loadFromJSON,
 
     // Utility
     getVehiclesOnLine,
