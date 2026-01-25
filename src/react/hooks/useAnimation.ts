@@ -69,7 +69,7 @@ export function useAnimation({
   // The state is updated for React component re-renders (less frequent)
   const updateMovingVehicles = useCallback((updater: Vehicle[] | ((prev: Vehicle[]) => Vehicle[])) => {
     if (typeof updater === 'function') {
-      updateMovingVehicles(prev => {
+      setMovingVehicles(prev => {
         const next = updater(prev)
         movingVehiclesRef.current = next
         return next
