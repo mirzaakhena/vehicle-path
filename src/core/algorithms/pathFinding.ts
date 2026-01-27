@@ -96,8 +96,10 @@ export function resolveFromLineOffset(
   } else if (isPercentage) {
     percentage = offset
   } else {
-    // Absolute offset - clamp to valid range
-    return Math.max(wheelbase, Math.min(offset, lineLength))
+    // Distance input: 0 → wheelbase, effectiveLength → lineLength
+    // Clamp distance to valid range [0, effectiveLength], then add wheelbase
+    const clampedDistance = Math.max(0, Math.min(offset, effectiveLength))
+    return wheelbase + clampedDistance
   }
 
   // Map percentage (0-1) to effective range [wheelbase, lineLength]
