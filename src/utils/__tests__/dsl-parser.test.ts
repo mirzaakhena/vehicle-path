@@ -94,6 +94,7 @@ describe('parseSceneDSL', () => {
       expect(result.data.connections![0]).toEqual({
         from: 'line001',
         fromPosition: 0.8,
+        fromIsPercentage: true,
         to: 'line002'
       })
     })
@@ -104,7 +105,8 @@ describe('parseSceneDSL', () => {
       expect(result.data.connections![0]).toEqual({
         from: 'line001',
         to: 'line002',
-        toPosition: 0.2
+        toPosition: 0.2,
+        toIsPercentage: true
       })
     })
 
@@ -114,8 +116,23 @@ describe('parseSceneDSL', () => {
       expect(result.data.connections![0]).toEqual({
         from: 'line001',
         fromPosition: 0.8,
+        fromIsPercentage: true,
         to: 'line002',
-        toPosition: 0.2
+        toPosition: 0.2,
+        toIsPercentage: true
+      })
+    })
+
+    it('should parse connection with distance-based positions', () => {
+      const result = parseSceneDSL('line001 150.5 -> line002 25')
+
+      expect(result.data.connections![0]).toEqual({
+        from: 'line001',
+        fromPosition: 150.5,
+        fromIsPercentage: false,
+        to: 'line002',
+        toPosition: 25,
+        toIsPercentage: false
       })
     })
 

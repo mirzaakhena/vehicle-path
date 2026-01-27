@@ -94,16 +94,22 @@ export function parseSceneDSL(text: string): ParseResult<SceneConfig> {
         to: connMatch[4]
       }
 
-      // Parse from position if present (convert 0-100% to 0-1)
+      // Parse from position if present
       if (connMatch[2]) {
         const fromValue = parseFloat(connMatch[2])
-        connection.fromPosition = connMatch[3] === '%' ? fromValue / 100 : fromValue / 100
+        const isPercentage = connMatch[3] === '%'
+        // Only convert to 0-1 if percentage (0-100% → 0-1), keep distance as-is
+        connection.fromPosition = isPercentage ? fromValue / 100 : fromValue
+        connection.fromIsPercentage = isPercentage
       }
 
-      // Parse to position if present (convert 0-100% to 0-1)
+      // Parse to position if present
       if (connMatch[5]) {
         const toValue = parseFloat(connMatch[5])
-        connection.toPosition = connMatch[6] === '%' ? toValue / 100 : toValue / 100
+        const isPercentage = connMatch[6] === '%'
+        // Only convert to 0-1 if percentage (0-100% → 0-1), keep distance as-is
+        connection.toPosition = isPercentage ? toValue / 100 : toValue
+        connection.toIsPercentage = isPercentage
       }
 
       connections.push(connection)
