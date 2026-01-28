@@ -36,6 +36,7 @@ export interface PathSegment {
 export interface PathResult {
   segments: PathSegment[]
   totalDistance: number
+  curveCount: number          // Jumlah kurva yang ditempuh
 }
 
 export interface VehiclePosition {
@@ -217,7 +218,19 @@ interface DijkstraNode {
   lineId: string
   entryOffset: number         // Posisi masuk ke line ini
   totalDistance: number
+  curveCount: number          // Jumlah kurva yang ditempuh
   path: PathSegment[]
+}
+
+/**
+ * Comparator untuk lexicographic ordering: (curveCount, totalDistance)
+ * Prioritas: kurva lebih sedikit dulu, jika sama baru bandingkan jarak
+ */
+function compareDijkstraNodes(a: DijkstraNode, b: DijkstraNode): number {
+  if (a.curveCount !== b.curveCount) {
+    return a.curveCount - b.curveCount
+  }
+  return a.totalDistance - b.totalDistance
 }
 
 /**
@@ -243,14 +256,15 @@ export function findPath(
     ? (targetOffset / 100) * targetLineLength
     : targetOffset
 
-  // Priority queue (simple array, sorted by totalDistance)
+  // Priority queue (simple array, sorted by lexicographic ordering: curveCount, then totalDistance)
   // Dalam production, gunakan proper min-heap untuk performa lebih baik
   const queue: DijkstraNode[] = []
 
-  // Track visited: "lineId:entryOffset" -> minimum distance yang sudah dicapai
+  // Track visited: "lineId:entryOffset" -> {curveCount, distance}
   // We need to track entry offset because entering the same line at different offsets
   // results in different reachability (can only move forward on a line)
-  const visited = new Map<string, number>()
+  // Node is dominated if existing has fewer curves, or same curves with less/equal distance
+  const visited = new Map<string, { curveCount: number; distance: number }>()
 
   // Helper to create visited key
   const makeVisitedKey = (lineId: string, entryOffset: number) => `${lineId}:${Math.round(entryOffset)}`
@@ -266,7 +280,8 @@ export function findPath(
         endOffset: resolvedTargetOffset,
         length: distanceToTarget
       }],
-      totalDistance: distanceToTarget
+      totalDistance: distanceToTarget,
+      curveCount: 0
     }
   }
 
@@ -302,23 +317,27 @@ export function findPath(
       lineId: edge.toLineId,
       entryOffset: edge.toOffset,
       totalDistance: distThroughCurve,
+      curveCount: 1,
       path: [lineSegment, curveSegment]
     })
   }
 
-  // Sort queue by totalDistance (ascending)
-  queue.sort((a, b) => a.totalDistance - b.totalDistance)
+  // Sort queue by lexicographic ordering: (curveCount, totalDistance)
+  queue.sort(compareDijkstraNodes)
 
   while (queue.length > 0) {
     const current = queue.shift()!
 
-    // Skip jika sudah ada path lebih pendek ke line ini dengan entry offset yang sama
+    // Skip jika sudah ada path lebih baik ke line ini dengan entry offset yang sama
+    // "Lebih baik" = kurva lebih sedikit, atau kurva sama dengan jarak lebih pendek/sama
     const visitedKey = makeVisitedKey(current.lineId, current.entryOffset)
-    const prevDist = visited.get(visitedKey)
-    if (prevDist !== undefined && prevDist <= current.totalDistance) {
-      continue
+    const prev = visited.get(visitedKey)
+    if (prev !== undefined) {
+      const dominated = prev.curveCount < current.curveCount ||
+        (prev.curveCount === current.curveCount && prev.distance <= current.totalDistance)
+      if (dominated) continue
     }
-    visited.set(visitedKey, current.totalDistance)
+    visited.set(visitedKey, { curveCount: current.curveCount, distance: current.totalDistance })
 
     // Cek apakah sudah sampai target line
     if (current.lineId === targetLineId) {
@@ -337,7 +356,8 @@ export function findPath(
 
         return {
           segments: [...current.path, finalSegment],
-          totalDistance: current.totalDistance + distToTarget
+          totalDistance: current.totalDistance + distToTarget,
+          curveCount: current.curveCount
         }
       }
       // Jika target di belakang entry point, kita perlu mencari jalan memutar
@@ -353,12 +373,15 @@ export function findPath(
 
       const distInLine = edge.fromOffset - current.entryOffset
       const newTotalDist = current.totalDistance + distInLine + edge.curveLength
+      const newCurveCount = current.curveCount + 1
 
-      // Skip jika sudah ada path lebih pendek ke target line dengan entry offset yang sama
+      // Skip jika sudah ada path lebih baik ke target line dengan entry offset yang sama
       const targetVisitedKey = makeVisitedKey(edge.toLineId, edge.toOffset)
-      const prevTargetDist = visited.get(targetVisitedKey)
-      if (prevTargetDist !== undefined && prevTargetDist <= newTotalDist) {
-        continue
+      const prevTarget = visited.get(targetVisitedKey)
+      if (prevTarget !== undefined) {
+        const dominated = prevTarget.curveCount < newCurveCount ||
+          (prevTarget.curveCount === newCurveCount && prevTarget.distance <= newTotalDist)
+        if (dominated) continue
       }
 
       // Segment: dari entry ke kurva
@@ -383,12 +406,13 @@ export function findPath(
         lineId: edge.toLineId,
         entryOffset: edge.toOffset,
         totalDistance: newTotalDist,
+        curveCount: newCurveCount,
         path: [...current.path, lineSegment, curveSegment]
       })
     }
 
-    // Re-sort queue
-    queue.sort((a, b) => a.totalDistance - b.totalDistance)
+    // Re-sort queue by lexicographic ordering: (curveCount, totalDistance)
+    queue.sort(compareDijkstraNodes)
   }
 
   // Tidak ada path yang ditemukan
