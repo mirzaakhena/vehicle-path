@@ -123,7 +123,6 @@ export interface ConnectionUpdateInput {
  * goto({ id: 'v1', lineId: 'line002' })  // position defaults to 1.0 (end)
  * goto({ id: 'v1', lineId: 'line002', position: 0.5 })  // 50% of line
  * goto({ id: 'v1', lineId: 'line002', position: 150, isPercentage: false })  // absolute 150
- * goto({ id: 'v1', lineId: 'line002', position: 0.5, wait: true })  // wait at destination
  * goto({ id: 'v1', lineId: 'line002', payload: { orderId: '123' } })  // with payload
  */
 export interface GotoInput {
@@ -131,7 +130,6 @@ export interface GotoInput {
   lineId: string           // target line id
   position?: number        // position value on target line, defaults to 1.0 (end of line)
   isPercentage?: boolean   // if true, position is 0-1 percentage; if false, absolute distance. Defaults to true
-  wait?: boolean           // pause after reaching destination, requires continueVehicle() to resume
   payload?: unknown        // custom data to pass through events
 }
 
@@ -144,7 +142,6 @@ export interface GotoInput {
  * queueMovement('v1', {
  *   targetLineId: 'line002',
  *   targetPosition: 0.5,
- *   wait: true,
  *   payload: { orderId: '123' }
  * })
  * queueMovement('v1', { targetLineId: 'line002', targetPosition: 150, isPercentage: false })
@@ -153,7 +150,6 @@ export interface GotoCommandInput {
   targetLineId: string
   targetPosition?: number    // position value on target line, defaults to 1.0 (end of line)
   isPercentage?: boolean     // if true, targetPosition is 0-1 percentage; if false, absolute distance. Defaults to true
-  wait?: boolean             // pause after reaching destination
   payload?: unknown          // custom data to pass through
 }
 
@@ -174,7 +170,6 @@ export interface MovementCommandInput {
   targetLineId: string
   targetPosition?: number    // position value on target line, defaults to 1.0 (end of line)
   isPercentage?: boolean     // if true, targetPosition is 0-1 percentage; if false, absolute distance. Defaults to true
-  wait?: boolean             // pause after reaching destination
   payload?: unknown          // custom data to pass through
 }
 

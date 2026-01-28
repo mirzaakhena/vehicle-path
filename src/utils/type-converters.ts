@@ -74,7 +74,6 @@ export function toGotoCommand(cmd: {
   targetLineId: string
   targetPosition?: number
   isPercentage?: boolean
-  wait?: boolean
   payload?: unknown
 }): GotoCommand {
   const isPercentage = cmd.isPercentage !== false
@@ -86,7 +85,6 @@ export function toGotoCommand(cmd: {
     // No conversion needed - internal format is now 0-1 (same as API)
     targetOffset: targetPosition,
     isPercentage,
-    awaitConfirmation: cmd.wait,
     payload: cmd.payload
   }
 }

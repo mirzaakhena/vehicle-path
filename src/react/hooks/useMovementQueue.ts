@@ -40,7 +40,6 @@ export interface UseMovementQueueResult {
  * queueMovement('v1', {
  *   targetLineId: 'line003',
  *   targetPosition: 1.0,
- *   wait: true,
  *   payload: { orderId: '123' }
  * })
  *

@@ -90,18 +90,6 @@ v1 goto line002 100%
       expect(result.current.gotoCommands).toHaveLength(3)
     })
 
-    it('should parse goto command with --wait flag', async () => {
-      const { result } = renderHook(() =>
-        useMovementSequence({ lines: mockLines, vehicles: mockVehicles })
-      )
-
-      act(() => {
-        result.current.setMovementSequenceText('v1 goto line001 100% --wait')
-      })
-
-      expect(result.current.gotoCommands).toHaveLength(1)
-      expect(result.current.gotoCommands[0].wait).toBe(true)
-    })
 
     it('should parse goto command with --payload', async () => {
       const { result } = renderHook(() =>
@@ -119,19 +107,6 @@ v1 goto line002 100%
       })
     })
 
-    it('should parse goto command with both --wait and --payload', async () => {
-      const { result } = renderHook(() =>
-        useMovementSequence({ lines: mockLines, vehicles: mockVehicles })
-      )
-
-      act(() => {
-        result.current.setMovementSequenceText('v1 goto line001 100% --wait --payload {"msg": "hello"}')
-      })
-
-      expect(result.current.gotoCommands).toHaveLength(1)
-      expect(result.current.gotoCommands[0].wait).toBe(true)
-      expect(result.current.gotoCommands[0].payload).toEqual({ msg: 'hello' })
-    })
 
     it('should parse absolute offset (non-percentage)', async () => {
       const { result } = renderHook(() =>
@@ -210,7 +185,7 @@ v1 goto line002 100%
       )
 
       act(() => {
-        result.current.setMovementSequenceText('v1 goto line002 75% --wait --payload {"key": "value"}')
+        result.current.setMovementSequenceText('v1 goto line002 75% --payload {"key": "value"}')
       })
 
       const command = result.current.gotoCommands[0]
@@ -220,14 +195,12 @@ v1 goto line002 100%
       expect(command).toHaveProperty('targetLineId')
       expect(command).toHaveProperty('targetPosition')
       expect(command).toHaveProperty('isPercentage')
-      expect(command).toHaveProperty('wait')
       expect(command).toHaveProperty('payload')
 
       expect(command.vehicleId).toBe('v1')
       expect(command.targetLineId).toBe('line002')
       expect(command.targetPosition).toBe(0.75)  // 75% converted to 0.75
       expect(command.isPercentage).toBe(true)
-      expect(command.wait).toBe(true)
       expect(command.payload).toEqual({ key: 'value' })
     })
   })

@@ -588,91 +588,13 @@ export function handleArrival(
     })
   }
 
-  // 2. Check if should wait for confirmation
-  if (completedCommand?.awaitConfirmation) {
-    return {
-      handled: true,
-      vehicle: { ...state.vehicle, state: 'waiting' },
-      newExecution: exec, // Keep execution state for resume
-      isWaiting: true
-    }
+  // 2. ALWAYS wait for confirmation - consumer must call continueVehicle()
+  return {
+    handled: true,
+    vehicle: { ...state.vehicle, state: 'waiting' },
+    newExecution: exec, // Keep execution state for resume
+    isWaiting: true
   }
-
-  // Check if there's a next command in the queue
-  const nextCommandIndex = exec.currentCommandIndex + 1
-
-  if (queue && nextCommandIndex < queue.length) {
-    // Prepare next command
-    const nextCommand = queue[nextCommandIndex]
-    const graph = ctx.graphRef.current
-    if (graph) {
-      // Vehicle is already at the arrival position (handled by updateAxlePosition)
-      const sceneCtx: SceneContext = {
-        graph,
-        linesMap: ctx.linesMap,
-        curves: ctx.curves,
-        config: ctx.config
-      }
-      const prepared = ctx.prepareCommandPath(
-        state.vehicle,
-        nextCommand,
-        sceneCtx
-      )
-
-      if (prepared) {
-        // Calculate front axle position
-        const frontPosition = calculateFrontAxlePosition(
-          prepared.path,
-          0,
-          0,
-          ctx.config.wheelbase
-        )
-
-        // Emit commandStart event
-        if (ctx.onCommandStart) {
-          ctx.onCommandStart({
-            vehicleId: state.vehicle.id,
-            command: nextCommand,
-            commandIndex: nextCommandIndex,
-            startPosition: {
-              lineId: state.vehicle.rear.lineId,
-              absoluteOffset: state.vehicle.rear.absoluteOffset,
-              position: state.vehicle.rear.position
-            }
-          })
-        }
-
-        // Start next command - return new execution state
-        const newExecution: PathExecutionState = {
-          path: prepared.path,
-          curveDataMap: prepared.curveDataMap,
-          currentCommandIndex: nextCommandIndex,
-          rear: {
-            currentSegmentIndex: 0,
-            segmentDistance: 0
-          },
-          front: frontPosition
-            ? {
-                currentSegmentIndex: frontPosition.segmentIndex,
-                segmentDistance: frontPosition.segmentDistance
-              }
-            : {
-                currentSegmentIndex: 0,
-                segmentDistance: 0
-              }
-        }
-        const newVehicle = { ...state.vehicle, state: 'moving' as const }
-        return { handled: true, vehicle: newVehicle, newExecution }
-      }
-    }
-  }
-
-  // No more commands or path not found - set to idle
-  const arrivedVehicle: Vehicle = {
-    ...state.vehicle,
-    state: 'idle'
-  }
-  return { handled: true, vehicle: arrivedVehicle, newExecution: null }
 }
 
 export type { VehicleMovementState as SegmentVehicleState }

@@ -52,7 +52,6 @@ export interface GotoCommand {
   targetLineId: string
   targetOffset: number
   isPercentage: boolean
-  awaitConfirmation?: boolean
   payload?: unknown
 }
 

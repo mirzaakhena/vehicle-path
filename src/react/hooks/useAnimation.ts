@@ -416,7 +416,7 @@ export function useAnimation({
     ))
   }, [vehicles, linesMap])
 
-  // Continue a waiting vehicle (resume after awaitConfirmation)
+  // Continue a waiting vehicle (resume to next command after arrival)
   // Returns true if vehicle was continued, false otherwise
   const continueVehicle = useCallback((vehicleId: string): boolean => {
     const state = movementStateRef.current.get(vehicleId)

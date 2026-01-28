@@ -287,15 +287,8 @@ describe('parseMovementDSL', () => {
         targetLineId: 'line001',
         targetPosition: 1.0,
         isPercentage: true,
-        wait: undefined,
         payload: undefined
       })
-    })
-
-    it('should parse goto with --wait flag', () => {
-      const result = parseMovementDSL('v1 goto line001 50% --wait')
-
-      expect(result.data[0].wait).toBe(true)
     })
 
     it('should parse goto with payload', () => {
@@ -304,10 +297,9 @@ describe('parseMovementDSL', () => {
       expect(result.data[0].payload).toEqual({ orderId: '123' })
     })
 
-    it('should parse goto with both wait and payload', () => {
-      const result = parseMovementDSL('v1 goto line001 100% --wait --payload {"message": "hello"}')
+    it('should parse goto with payload', () => {
+      const result = parseMovementDSL('v1 goto line001 100% --payload {"message": "hello"}')
 
-      expect(result.data[0].wait).toBe(true)
       expect(result.data[0].payload).toEqual({ message: 'hello' })
     })
 
@@ -567,28 +559,12 @@ describe('generateMovementDSL', () => {
     expect(result).toBe('v1 goto line001 100%')
   })
 
-  it('should generate goto with --wait flag', () => {
-    const result = generateMovementDSL([
-      { vehicleId: 'v1', targetLineId: 'line001', targetPosition: 0.5, wait: true }
-    ])
-
-    expect(result).toBe('v1 goto line001 50% --wait')
-  })
-
   it('should generate goto with payload', () => {
     const result = generateMovementDSL([
       { vehicleId: 'v1', targetLineId: 'line001', targetPosition: 1.0, payload: { orderId: '123' } }
     ])
 
     expect(result).toBe('v1 goto line001 100% --payload {"orderId":"123"}')
-  })
-
-  it('should generate goto with both wait and payload', () => {
-    const result = generateMovementDSL([
-      { vehicleId: 'v1', targetLineId: 'line001', targetPosition: 1.0, wait: true, payload: { task: 'pickup' } }
-    ])
-
-    expect(result).toBe('v1 goto line001 100% --wait --payload {"task":"pickup"}')
   })
 
   it('should generate goto with absolute position', () => {
@@ -663,7 +639,7 @@ v2 start line002 50%`
   describe('movements round-trip', () => {
     it('should round-trip movements correctly', () => {
       const original = `v1 goto line001 50%
-v1 goto line002 100% --wait`
+v1 goto line002 100%`
       const parsed = parseMovementDSL(original)
       const generated = generateMovementDSL(parsed.data)
       const reparsed = parseMovementDSL(generated)
@@ -672,7 +648,7 @@ v1 goto line002 100% --wait`
     })
 
     it('should round-trip movements with payload correctly', () => {
-      const original = 'v1 goto line001 100% --wait --payload {"orderId":"123"}'
+      const original = 'v1 goto line001 100% --payload {"orderId":"123"}'
       const parsed = parseMovementDSL(original)
       const generated = generateMovementDSL(parsed.data)
       const reparsed = parseMovementDSL(generated)

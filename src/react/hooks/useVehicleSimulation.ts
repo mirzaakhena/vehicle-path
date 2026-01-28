@@ -349,7 +349,6 @@ export function useVehicleSimulation({
       targetLineId: input.lineId,
       targetPosition: input.position ?? 1.0,
       isPercentage: input.isPercentage,
-      wait: input.wait,
       payload: input.payload
     }
     const result = movementQueue.queueMovement(input.id, command)
@@ -459,7 +458,6 @@ export function useVehicleSimulation({
         targetLineId: cmd.targetLineId,
         targetPosition: cmd.targetPosition,
         isPercentage: cmd.isPercentage,
-        wait: cmd.wait,
         payload: cmd.payload
       }))
       queues.set(cmd.vehicleId, queue)

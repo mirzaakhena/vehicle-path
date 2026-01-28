@@ -22,7 +22,7 @@
  * vehicles.forEach(v => addVehicle(v))
  *
  * const movements = parseMovementDSL(`
- *   v1 goto line002 100% --wait
+ *   v1 goto line002 100%
  * `)
  * movements.forEach(m => queueMovement(m.vehicleId, m))
  * ```
@@ -208,9 +208,8 @@ export function parseVehiclesDSL(text: string): ParseResult<VehicleInput[]> {
  * DSL Format:
  * ```
  * v1 goto line001 100%
- * v1 goto line002 50% --wait
  * v2 goto line001 0% --payload {"orderId": "123"}
- * v1 goto line003 100% --wait --payload {"message": "hello"}
+ * v1 goto line003 100% --payload {"message": "hello"}
  * ```
  *
  * @param text - DSL text to parse
@@ -234,9 +233,6 @@ export function parseMovementDSL(text: string): ParseResult<MovementCommand[]> {
       // Get remainder after base command for flags
       const remainder = trimmed.slice(baseMatch[0].length)
 
-      // Check for --wait flag
-      const hasWait = remainder.includes('--wait')
-
       // Check for --payload JSON
       let payload: unknown
       const payloadMatch = remainder.match(/--payload\s+(\{.*\})/)
@@ -258,7 +254,6 @@ export function parseMovementDSL(text: string): ParseResult<MovementCommand[]> {
         // For absolute offsets, keep the raw value
         targetPosition: isPercentage ? offset / 100 : offset,
         isPercentage,
-        wait: hasWait || undefined,
         payload
       })
       continue
@@ -425,9 +420,9 @@ export function generateVehiclesDSL(vehicles: VehicleInput[]): string {
  * @example
  * ```typescript
  * const dsl = generateMovementDSL([
- *   { vehicleId: 'v1', targetLineId: 'line002', targetPosition: 1.0, wait: true }
+ *   { vehicleId: 'v1', targetLineId: 'line002', targetPosition: 1.0 }
  * ])
- * // Returns: "v1 goto line002 100% --wait"
+ * // Returns: "v1 goto line002 100%"
  * ```
  */
 export function generateMovementDSL(commands: MovementCommand[]): string {
@@ -443,10 +438,6 @@ export function generateMovementDSL(commands: MovementCommand[]): string {
       cmdStr += ` ${targetPosition * 100}%`
     } else {
       cmdStr += ` ${targetPosition}`
-    }
-
-    if (cmd.wait) {
-      cmdStr += ' --wait'
     }
 
     if (cmd.payload !== undefined) {

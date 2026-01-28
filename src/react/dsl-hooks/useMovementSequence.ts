@@ -53,7 +53,6 @@ export function useMovementSequence({ lines, vehicles }: UseMovementSequenceProp
           targetLineId: cmd.targetLineId,
           targetPosition: cmd.targetPosition,
           isPercentage: cmd.isPercentage,
-          wait: cmd.wait,
           payload: cmd.payload
         })
 

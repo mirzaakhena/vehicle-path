@@ -154,26 +154,6 @@ describe('useMovementQueue', () => {
       expect(result.current.vehicleQueues.get('v2')).toHaveLength(1)
     })
 
-    it('should handle wait option', () => {
-      const { result } = renderHook(() =>
-        useMovementQueue({
-          vehicles: createTestVehicles(),
-          lines: createTestLines(),
-          curves: createTestCurves()
-        })
-      )
-
-      act(() => {
-        result.current.queueMovement('v1', {
-          targetLineId: 'line002',
-          targetPosition: 0.5,
-          wait: true
-        })
-      })
-
-      const command = result.current.vehicleQueues.get('v1')![0]
-      expect(command.awaitConfirmation).toBe(true)
-    })
 
     it('should handle payload', () => {
       const { result } = renderHook(() =>
