@@ -1,0 +1,126 @@
+PATH ENGINE MIGRATION — SESSION SUMMARY
+========================================
+Date: 2026-03-05
+
+
+BACKGROUND
+----------
+Project yard-planning menggunakan vehicle-path2 sebagai dependency untuk
+simulasi pergerakan truk. Dalam sesi ini dilakukan analisis cross-project
+untuk memahami pola penggunaan dan menemukan kode yang seharusnya hidup
+di vehicle-path2, bukan di yard-planning.
+
+
+ANALISIS: APA YANG DIPAKAI YARD-PLANNING DARI VEHICLE-PATH2
+-------------------------------------------------------------
+yard-planning hanya menggunakan entry point `vehicle-path2/core` (bukan
+/react atau /utils). Fungsi yang dipakai:
+
+  Dari pathFinding.ts:
+    - buildGraph
+
+  Dari vehicleMovement.ts:
+    - prepareCommandPath
+    - calculateInitialFrontPosition
+    - getLineLength
+    - moveVehicle  <-- BUG: fungsi ini TIDAK ADA di vehicle-path2
+
+  Dari math.ts:
+    - createBezierCurve
+    - getPointOnBezier
+    - resolveFromLineOffset
+    - resolveToLineOffset
+
+Seluruh React layer (useVehicleSimulation, useScene, useVehicles, dll.)
+dan utils layer (DSL parser, event emitter, animation loop) tidak dipakai
+sama sekali.
+
+
+ALASAN: KENAPA YARD-PLANNING TIDAK PAKAI REACT HOOKS
+------------------------------------------------------
+yard-planning menggunakan arsitektur Orchestrator (singleton class) sebagai
+sumber kebenaran tunggal — bukan React state. useVehicleSimulation dirancang
+untuk owns state-nya sendiri via React hooks, sehingga tidak kompatibel
+dengan pola imperative class ini.
+
+Akibatnya, yard-planning membuat PathEngine class sendiri di
+src/core2/path-engine.ts sebagai stateful wrapper atas vehicle-path2 core
+functions.
+
+
+TEMUAN: GAP DI VEHICLE-PATH2
+------------------------------
+1. Tidak ada class-based / imperative API
+   vehicle-path2 hanya menyediakan: functional core ATAU React hooks.
+   Tidak ada pilihan untuk non-React consumers.
+
+2. Fungsi moveVehicle tidak ada
+   yard-planning mencoba import `moveVehicle` dari vehicle-path2/core tapi
+   fungsi ini belum exist. Ini menyebabkan runtime error. Fungsi ini
+   seharusnya membungkus dua panggilan updateAxlePosition (rear + front)
+   menjadi satu call sederhana dengan arrival detection.
+
+
+PERUBAHAN YANG DILAKUKAN
+-------------------------
+File baru: src/core/engine.ts
+
+  Berisi dua export:
+
+  1. moveVehicle(rear, front, rearExec, frontExec, path, distance, linesMap, curveDataMap)
+     Fungsi standalone yang:
+     - Memanggil updateAxlePosition untuk rear axle
+     - Memanggil updateAxlePosition untuk front axle (dengan frontMaxOffset)
+     - Mengembalikan { rear, front, rearExecution, frontExecution, arrived }
+     Mengimplementasi logic yang hilang yang selama ini dicoba di-import
+     oleh yard-planning.
+
+  2. PathEngine class
+     Diadaptasi dari yard-planning/src/core2/path-engine.ts dengan adaptasi:
+     - Import `moveVehicle as coreMoveVehicle` yang buggy → diganti
+       implementasi nyata menggunakan updateAxlePosition
+     - Private helper getPositionOnLine() → diganti getPositionFromOffset()
+       yang sudah ada di vehicleMovement.ts
+     - Semua import diubah dari 'vehicle-path2/core' ke relative imports
+
+     Methods yang tersedia:
+       Scene:   setScene, addLine, updateLine, updateLineEndpoint,
+                renameLine, removeLine, addCurve, updateCurve, removeCurve
+       Vehicle: initializeVehicle, preparePath, moveVehicle
+
+File diupdate: src/core/index.ts
+  - Tambah export: PathEngine, moveVehicle, PathEngineConfig,
+                   VehiclePathState, PathExecution
+  - Tambah export type: AxleExecutionState (sebelumnya tidak di-export)
+
+File diupdate: src/index.ts
+  - Mirror exports yang sama dari core/engine ke main entry point
+
+
+CARA PENGGUNAAN (SETELAH PERUBAHAN)
+------------------------------------
+  import { PathEngine } from 'vehicle-path2/core'
+
+  const engine = new PathEngine({ wheelbase: 30, tangentMode: 'proportional-40' })
+  engine.setScene(lines, curves)
+
+  let state = engine.initializeVehicle('line-1', 0)
+  let exec  = engine.preparePath(state, 'line-3', 1.0, true)
+
+  // Di game loop / useFrame:
+  function tick(deltaTime) {
+    const result = engine.moveVehicle(state, exec, speed * deltaTime)
+    state = result.state
+    exec  = result.execution
+    if (result.arrived) { /* handle arrival */ }
+  }
+
+
+DAMPAK KE YARD-PLANNING
+------------------------
+yard-planning dapat:
+1. Hapus src/core2/path-engine.ts seluruhnya
+2. Update import di orchestrator.ts dan path-engine-related files:
+   - Sebelum: import { buildGraph, prepareCommandPath, moveVehicle, ... }
+   - Sesudah:  import { PathEngine } from 'vehicle-path2/core'
+3. Bug moveVehicle yang selama ini crash di runtime menjadi terperbaiki

@@ -43,6 +43,7 @@ export type {
 // Movement state types
 export type {
   CurveData,
+  AxleExecutionState,
   PathExecutionState,
   VehicleMovementState,
   MovementConfig,
@@ -118,6 +119,15 @@ export {
   getPositionFromOffset,
   getLineLength
 } from './core/algorithms/vehicleMovement'
+
+// PathEngine - Imperative class-based API
+export {
+  PathEngine,
+  moveVehicle,
+  type PathEngineConfig,
+  type VehiclePathState,
+  type PathExecution
+} from './core/engine'
 
 // Math Utilities
 export {
