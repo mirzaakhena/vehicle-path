@@ -115,6 +115,9 @@ export {
   type SegmentCompletionResult,
   type SegmentVehicleState,
 
+  // Dual-axle tick primitive
+  moveVehicle,
+
   // Shared utilities
   getPositionFromOffset,
   getLineLength
@@ -123,7 +126,6 @@ export {
 // PathEngine - Imperative class-based API
 export {
   PathEngine,
-  moveVehicle,
   type PathEngineConfig,
   type VehiclePathState,
   type PathExecution

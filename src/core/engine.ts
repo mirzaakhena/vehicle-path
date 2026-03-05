@@ -33,7 +33,7 @@ import type { PathResult, Graph } from './algorithms/pathFinding'
 import type { TangentMode } from './types/config'
 import { buildGraph } from './algorithms/pathFinding'
 import {
-  updateAxlePosition,
+  moveVehicle,
   prepareCommandPath,
   calculateInitialFrontPosition,
   getLineLength,
@@ -74,65 +74,8 @@ export interface PathExecution {
   targetOffset: number
 }
 
-// =============================================================================
-// Standalone moveVehicle function
-// =============================================================================
-
-/**
- * Advance both axles of a vehicle by `distance` along a prepared path.
- *
- * This is the low-level tick primitive. It updates both rear and front axles
- * using arc-length parameterization and returns whether the rear axle has
- * reached the end of the path (arrived).
- *
- * @param rear - Current rear axle state
- * @param front - Current front axle state
- * @param rearExecution - Current rear axle execution position in path
- * @param frontExecution - Current front axle execution position in path
- * @param path - The path to follow
- * @param distance - Distance to advance this tick
- * @param linesMap - Scene lines map for position calculation
- * @param curveDataMap - Pre-built bezier curve data for the path's curve segments
- * @returns Updated axle states, execution states, and arrival flag
- */
-export function moveVehicle(
-  rear: AxleState,
-  front: AxleState,
-  rearExecution: AxleExecutionState,
-  frontExecution: AxleExecutionState,
-  path: PathResult,
-  distance: number,
-  linesMap: Map<string, Line>,
-  curveDataMap: Map<number, CurveData>
-): {
-  rear: AxleState
-  front: AxleState
-  rearExecution: AxleExecutionState
-  frontExecution: AxleExecutionState
-  arrived: boolean
-} {
-  // Front axle may extend beyond the rear's path end on the final line segment
-  // (it physically hangs over the target while the rear arrives)
-  let frontMaxOffset: number | undefined
-  if (frontExecution.currentSegmentIndex < path.segments.length) {
-    const seg = path.segments[frontExecution.currentSegmentIndex]
-    if (seg.type === 'line') {
-      const line = linesMap.get(seg.lineId!)
-      if (line) frontMaxOffset = getLineLength(line)
-    }
-  }
-
-  const rearResult = updateAxlePosition(rear, rearExecution, path, distance, linesMap, curveDataMap)
-  const frontResult = updateAxlePosition(front, frontExecution, path, distance, linesMap, curveDataMap, frontMaxOffset)
-
-  return {
-    rear: rearResult.axleState,
-    front: frontResult.axleState,
-    rearExecution: rearResult.execution,
-    frontExecution: frontResult.execution,
-    arrived: rearResult.completed
-  }
-}
+// Re-export moveVehicle so consumers can import from the same module
+export { moveVehicle } from './algorithms/vehicleMovement'
 
 // =============================================================================
 // PathEngine class
