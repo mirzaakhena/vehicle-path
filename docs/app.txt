@@ -1,0 +1,44 @@
+coba kamu buat sebuah aplikasi dengan vitejs, react, typescript yang akan menggunakan library vehicle-path ini.\
+
+Saya ingin kamu follow spesifikasi yang saya tuliskan berikut ini :
+
+bentuk aplikasi 
+
+- ada canvas selebar 3/4 screen yang berada di sebelah kiri
+- pada 1/4 bagiannya lagi yang berada di sebelah kanan, 
+  - ada slider wheelbase dengan value default 10px 
+  - ada 3 button state yaitu : drag, line dan curve
+    - state default adalah drag
+    - jika state line diklik, maka user bisa menggambar line di canvas dengan drag and drop (seperti membuat line pada aplikasi menggambar pada umumnya). daftarkan line tersebut pada vehicle-path2
+      - line memiliki ujung START dan ujung END. pada bagian START buat bulatan kecil seperti donat. pada bagian END buat tanda panah
+    - jika state curve diklik, maka user bisa membuat bezier curve antara 2 line. daftarkan juga curve tersebut pada vehicle-path2
+      - cara membuatnya adalah juga dengan drag and drop. misal kita ingin membuat curvev dari line A ke line B, jika user hover line A maka munculkan visual feedback berupa satu titik kecil yang akan menjadi awal mula kurva.
+      - titik pada line A HANYA VALID mulai dari ujung [START line A + wheelbase] hingga ke ujung akhir END line (PENTING! silakan bertanya jika tidak paham)
+      - saat user mulai mendrag berikan visual feedback berupa garis (mirip seperti saat membuat line)
+      - masih dalam keadaan mendrag tetapi menghover ke line B, maka tampilkan bezier curve. ujung akhir berikan visual feedback berupa titik juga pada ujung curve di line B
+      - titik pada line B HANYA VALID mulai dari ujung START line B hingga ke ujung akhir [END line B + wheelbase] (PENTING! silakan bertanya jika tidak paham)
+
+
+      
+coba kamu buat sebuah aplikasi dengan vitejs, react, typescript yang akan menggunakan library vehicle-path ini.\
+
+Saya ingin kamu follow spesifikasi yang saya tuliskan berikut ini :
+
+bentuk aplikasi 
+
+- ada canvas selebar 3/4 screen yang berada di sebelah kiri
+- pada 1/4 bagiannya lagi yang berada di sebelah kanan, 
+  - ada slider wheelbase dengan value default 10px 
+  - ada 3 button state yaitu : drag, line dan curve
+    - state default adalah drag
+    - jika state line diklik, maka user bisa menggambar line di canvas dengan drag and drop (seperti membuat line pada aplikasi menggambar pada umumnya). daftarkan line tersebut pada vehicle-path2
+      - line memiliki ujung START dan ujung END. pada bagian START buat bulatan kecil seperti donat. pada bagian END buat tanda panah
+    - jika state curve diklik, maka user bisa membuat bezier curve antara 2 line. daftarkan juga curve tersebut pada vehicle-path2
+      - cara membuatnya adalah juga dengan drag and drop. misal kita ingin membuat curvev dari line A ke line B, jika user hover line A maka munculkan visual feedback berupa satu titik kecil yang akan menjadi awal mula kurva.
+      - titik pada line A HANYA VALID mulai dari ujung [START line A + wheelbase] hingga ke ujung akhir END line (PENTING! silakan bertanya jika tidak paham)
+      - saat user mulai mendrag berikan visual feedback berupa garis (mirip seperti saat membuat line)
+      - masih dalam keadaan mendrag tetapi menghover ke line B, maka tampilkan bezier curve. ujung akhir berikan visual feedback berupa titik juga pada ujung curve di line B
+      - titik pada line B HANYA VALID mulai dari ujung START line B hingga ke ujung akhir [END line B + wheelbase] (PENTING! silakan bertanya jika tidak paham)
+
+
+      

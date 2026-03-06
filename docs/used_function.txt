@@ -1,0 +1,108 @@
+● Saya sudah punya semua data. Sekarang saya bisa membuat analisis lengkap.                                                                                                                                                                                                                                            
+                                                                                                                                                                                                                                                                                                                       
+  ---                                                                                                                                                                                                                                                                                                                  
+  Analisis Cross-Project: vehicle-path2 di yard-planning                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+  Konteks: Cara yard-planning menggunakan library                                                                                                                                                                                                                                                                      
+
+  yard-planning TIDAK menggunakan React hooks dari vehicle-path2. Sebaliknya, mereka membangun class PathEngine sendiri (src/core2/path-engine.ts) yang membungkus fungsi core secara langsung — tanpa state management React dari library.
+
+  ---
+  Yang DIGUNAKAN dari vehicle-path2/core
+
+  Fungsi:
+
+  ┌───────────────────────────────┬──────────────────────────────────────────────────────────────┐
+  │            Fungsi             │                         Digunakan di                         │
+  ├───────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ buildGraph                    │ path-engine.ts — rebuild graph setiap kali scene berubah     │
+  ├───────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ prepareCommandPath            │ path-engine.ts — cari path dari vehicle ke target            │
+  ├───────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ calculateInitialFrontPosition │ path-engine.ts — posisi front axle saat inisialisasi vehicle │
+  ├───────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ getLineLength                 │ path-engine.ts, PathRenderer.tsx, LineAndCurvePanel.tsx      │
+  ├───────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ createBezierCurve             │ PathRenderer.tsx — render kurva di 3D scene                  │
+  ├───────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ getPointOnBezier              │ PathRenderer.tsx — sample titik-titik kurva untuk rendering  │
+  ├───────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ resolveFromLineOffset         │ PathRenderer.tsx — konsisten dengan wheelbase constraint     │
+  ├───────────────────────────────┼──────────────────────────────────────────────────────────────┤
+  │ resolveToLineOffset           │ PathRenderer.tsx — konsisten dengan wheelbase constraint     │
+  └───────────────────────────────┴──────────────────────────────────────────────────────────────┘
+
+  Types (di-re-export lewat src/core2/types.ts):
+  Point, Line, Curve, BezierCurve, CurveData, Vehicle (VPVehicle), VehicleState (VPVehicleState), AxleState, GotoCommand (VPGotoCommand), Graph, PathResult, PathSegment, MovementConfig, SceneContext
+
+  ⚠️ BUG DITEMUKAN: path-engine.ts baris 2 meng-import moveVehicle dari vehicle-path2/core, tapi fungsi ini tidak ada di exports vehicle-path2. Ini kemungkinan besar akan crash di runtime.
+
+  ---
+  Yang SAMA SEKALI TIDAK DIPAKAI
+
+  Core Layer (vehicle-path2/core)
+
+  ┌────────────────────────────────────────────────────────────────────────────────┬───────────────────────────────────────────────────────────────────┐
+  │                                     Fungsi                                     │                            Keterangan                             │
+  ├────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤
+  │ findPath                                                                       │ Digantikan oleh prepareCommandPath secara implisit                │
+  ├────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤
+  │ updateAxlePosition                                                             │ yard-planning punya coreMoveVehicle (yang sebenarnya tidak exist) │
+  ├────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤
+  │ initializeMovingVehicle, createInitialMovementState, initializeAllVehicles     │ Vehicle management dilakukan manual                               │
+  ├────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤
+  │ calculatePositionOnLine, calculatePositionOnCurve                              │ Tidak dipakai                                                     │
+  ├────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤
+  │ calculateFrontAxlePosition, getCumulativeArcLength, arcLengthToSegmentPosition │ Tidak dipakai                                                     │
+  ├────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤
+  │ handleArrival                                                                  │ Arrival detection dilakukan sendiri di path-engine.ts             │
+  ├────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤
+  │ getPositionFromOffset                                                          │ Tidak dipakai                                                     │
+  ├────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤
+  │ distance, normalize, getPointOnLine, getPointOnLineByOffset                    │ Tidak dipakai                                                     │
+  ├────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤
+  │ buildArcLengthTable, distanceToT, getArcLength                                 │ Tidak dipakai                                                     │
+  ├────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────┤
+  │ calculateTangentLength, isPointNearPoint, calculateBezierArcLength             │ Tidak dipakai                                                     │
+  └────────────────────────────────────────────────────────────────────────────────┴───────────────────────────────────────────────────────────────────┘
+
+  Seluruh React Layer — TIDAK DIPAKAI SAMA SEKALI
+
+  useVehicleSimulation    ← Primary API, tidak disentuh
+  useScene
+  useVehicles
+  useMovementQueue
+  useAnimation
+  useSceneDefinition      ← DSL hooks
+  useInitialMovement
+  useMovementSequence
+  VehicleEventProvider    ← Event provider
+  useVehicleEvent
+  useVehicleEventEmitter
+
+  Seluruh Utils Layer — TIDAK DIPAKAI SAMA SEKALI
+
+  VehicleEventEmitter
+  parseSceneDSL / parseVehiclesDSL / parseMovementDSL / parseAllDSL
+  generateSceneDSL / generateVehiclesDSL / generateMovementDSL
+  createAnimationLoop / useAnimationLoop
+  validateAndCreateVehicles
+  getNextStartVehicleId / getNextGotoVehicleId
+
+  ---
+  Ringkasan
+
+  vehicle-path2
+  ├── /core
+  │   ├── algorithms    ✅ ~30% dipakai (8 dari ~25 fungsi)
+  │   └── types         ✅ ~60% type dipakai
+  ├── /react            ❌ 0% dipakai
+  └── /utils            ❌ 0% dipakai
+
+  ★ Insight ─────────────────────────────────────
+  Kenapa yard-planning tidak pakai React hooks dari vehicle-path2?
+
+  yard-planning menggunakan arsitektur yang berbeda fundamental: mereka punya Orchestrator class (bukan React state) sebagai sumber kebenaran tunggal, yang di-share ke seluruh app lewat useOrchestrator(). Karena useVehicleSimulation dirancang untuk owns state-nya sendiri lewat React hooks, ia tidak kompatibel 
+  dengan pola imperative class ini. Makanya PathEngine dibuat sebagai wrapper tipis di atas core functions saja.
+
+  Ini juga menjelaskan kenapa moveVehicle yang non-existent itu di-import — kemungkinan ada rencana untuk membungkus updateAxlePosition dengan nama yang lebih ringkas, tapi belum di-implement di sisi vehicle-path2.
+  
