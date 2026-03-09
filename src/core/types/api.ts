@@ -80,6 +80,15 @@ export interface VehicleInput {
   lineId: string
   position?: number      // position value, defaults to 0 (start of line)
   isPercentage?: boolean // if true, position is 0-1 percentage; if false, absolute distance. Defaults to true
+  /**
+   * Jarak arc-length antar axle berurutan.
+   * axleSpacings[i] = jarak antara axles[i] dan axles[i+1].
+   * axles[0] = terdepan, axles[N-1] = paling belakang.
+   * Contoh truk biasa: [30]  →  2 axle, jarak 30px
+   * Contoh truck+trailer: [20, 45]  →  3 axle
+   * Total panjang vehicle = sum(axleSpacings) harus ≤ maxWheelbase
+   */
+  axleSpacings: number[]
 }
 
 /**

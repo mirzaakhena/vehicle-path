@@ -33,15 +33,16 @@ export interface AxleState {
  */
 export interface Vehicle {
   id: string
-  // Initial configuration (for R)
+  // Initial configuration (for rearmost axle)
   lineId: string
   offset: number
   isPercentage: boolean
   // Runtime state
   state: VehicleState
-  // Separate axle states
-  rear: AxleState
-  front: AxleState
+  // Multi-axle: axles[0] = terdepan, axles[N-1] = paling belakang
+  axles: AxleState[]
+  // N-1 jarak antar axle berurutan, axleSpacings[i] = jarak axles[i] ke axles[i+1]
+  axleSpacings: number[]
 }
 
 /**
