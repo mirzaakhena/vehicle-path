@@ -138,3 +138,9 @@ export {
   type ArcLengthEntry,
   type CurveOffsetOptions
 } from './algorithms/math'
+
+// Scene Snapshot
+export {
+  serializeScene,
+  type SceneSnapshot
+} from './snapshot'
