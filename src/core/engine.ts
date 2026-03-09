@@ -35,9 +35,8 @@ import { buildGraph } from './algorithms/pathFinding'
 import {
   moveVehicle,
   prepareCommandPath,
-  calculateInitialFrontPosition,
-  getLineLength,
-  getPositionFromOffset
+  calculateInitialAxlePositions,
+  getLineLength
 } from './algorithms/vehicleMovement'
 
 // =============================================================================
@@ -50,12 +49,13 @@ export interface PathEngineConfig {
 }
 
 /**
- * Simplified dual-axle position state for use with PathEngine.
- * A flatter alternative to the internal Vehicle type.
+ * Multi-axle position state for use with PathEngine.
+ * axles[0] = terdepan, axles[N-1] = paling belakang.
  */
 export interface VehiclePathState {
-  rear: { lineId: string; offset: number; position: Point }
-  front: { lineId: string; offset: number; position: Point }
+  axles: Array<{ lineId: string; offset: number; position: Point }>
+  /** N-1 jarak arc-length antar axle berurutan */
+  axleSpacings: number[]
 }
 
 /**
@@ -65,11 +65,8 @@ export interface VehiclePathState {
 export interface PathExecution {
   path: PathResult
   curveDataMap: Map<number, CurveData>
-  rearSegmentIndex: number
-  rearSegmentDistance: number
-  frontSegmentIndex: number
-  frontSegmentDistance: number
-  /** Resolved absolute target offset for rear axle arrival detection */
+  /** Execution state per axle, sesuai urutan VehiclePathState.axles */
+  axleExecutions: Array<{ segmentIndex: number; segmentDistance: number }>
   targetLineId: string
   targetOffset: number
 }
@@ -234,24 +231,25 @@ export class PathEngine {
   // ---------------------------------------------------------------------------
 
   /**
-   * Initialize a vehicle's dual-axle position on a line.
+   * Initialize a vehicle's N-axle position on a line.
    *
    * @param lineId - The line to place the vehicle on
-   * @param offset - Absolute distance offset along the line
+   * @param rearOffset - Absolute distance offset untuk axle paling belakang
+   * @param axleSpacings - Jarak antar axle berurutan (N-1 nilai untuk N axle)
    * @returns Initial VehiclePathState, or null if lineId does not exist
    */
-  initializeVehicle(lineId: string, offset: number): VehiclePathState | null {
+  initializeVehicle(lineId: string, rearOffset: number, axleSpacings: number[]): VehiclePathState | null {
     const line = this.linesMap.get(lineId)
     if (!line) return null
 
+    const totalVehicleLength = axleSpacings.reduce((a, b) => a + b, 0)
     const lineLen = getLineLength(line)
-    const rearOffset = Math.min(offset, lineLen - this.config.maxWheelbase)
-    const rearPos = getPositionFromOffset(line, rearOffset)
-    const front = calculateInitialFrontPosition(lineId, rearOffset, this.config.maxWheelbase, line)
+    const clampedRear = Math.min(rearOffset, lineLen - totalVehicleLength)
+    const axleStates = calculateInitialAxlePositions(lineId, clampedRear, axleSpacings, line)
 
     return {
-      rear: { lineId, offset: rearOffset, position: rearPos },
-      front: { lineId: front.lineId, offset: front.absoluteOffset, position: front.position }
+      axles: axleStates.map(a => ({ lineId: a.lineId, offset: a.absoluteOffset, position: a.position })),
+      axleSpacings
     }
   }
 
@@ -273,61 +271,62 @@ export class PathEngine {
   ): PathExecution | null {
     if (!this.graph) return null
 
-    // Build a minimal Vehicle object to reuse prepareCommandPath
+    const totalVehicleLength = vehicleState.axleSpacings.reduce((a, b) => a + b, 0)
+    const rearmost = vehicleState.axles[vehicleState.axles.length - 1]
+
+    // Build minimal Vehicle untuk prepareCommandPath
     const vehicle = {
       id: '_engine_temp',
-      lineId: vehicleState.rear.lineId,
-      offset: vehicleState.rear.offset,
+      lineId: rearmost.lineId,
+      offset: rearmost.offset,
       isPercentage: false,
       state: 'idle' as const,
-      rear: {
-        lineId: vehicleState.rear.lineId,
-        position: vehicleState.rear.position,
-        absoluteOffset: vehicleState.rear.offset
-      },
-      front: {
-        lineId: vehicleState.front.lineId,
-        position: vehicleState.front.position,
-        absoluteOffset: vehicleState.front.offset
-      }
+      axles: vehicleState.axles.map(a => ({
+        lineId: a.lineId,
+        position: a.position,
+        absoluteOffset: a.offset
+      })),
+      axleSpacings: vehicleState.axleSpacings
     }
 
-    const command = {
+    const result = prepareCommandPath(vehicle, {
       vehicleId: '_engine_temp',
       targetLineId,
       targetOffset,
       isPercentage
-    }
-
-    const ctx = {
+    }, {
       graph: this.graph,
       linesMap: this.linesMap,
       curves: this.curves,
       config: this.config
-    }
-
-    const result = prepareCommandPath(vehicle, command, ctx)
+    })
     if (!result) return null
 
-    // Resolve the actual target offset the rear axle will stop at
-    // (mirrors the logic inside prepareCommandPath)
+    // Resolve actual target offset (mirrors logic di prepareCommandPath)
     let actualTargetOffset = targetOffset
     const targetLine = this.linesMap.get(targetLineId)
     if (targetLine) {
-      const lineLen = getLineLength(targetLine)
-      const effectiveLen = Math.max(0, lineLen - this.config.maxWheelbase)
+      const effectiveLen = Math.max(0, getLineLength(targetLine) - totalVehicleLength)
       actualTargetOffset = isPercentage
         ? targetOffset * effectiveLen
         : Math.min(targetOffset, effectiveLen)
     }
 
+    // axles[0] (front) mulai di totalVehicleLength dalam path
+    // axles[k] mulai di totalVehicleLength - sum(axleSpacings[0..k-1])
+    let cumulative = 0
+    const axleExecutions: Array<{ segmentIndex: number; segmentDistance: number }> = [
+      { segmentIndex: 0, segmentDistance: totalVehicleLength } // axles[0] = front
+    ]
+    for (let i = 0; i < vehicleState.axleSpacings.length; i++) {
+      cumulative += vehicleState.axleSpacings[i]
+      axleExecutions.push({ segmentIndex: 0, segmentDistance: totalVehicleLength - cumulative })
+    }
+
     return {
       path: result.path,
       curveDataMap: result.curveDataMap,
-      rearSegmentIndex: 0,
-      rearSegmentDistance: 0,
-      frontSegmentIndex: 0,
-      frontSegmentDistance: this.config.maxWheelbase,
+      axleExecutions,
       targetLineId,
       targetOffset: actualTargetOffset
     }
@@ -348,38 +347,29 @@ export class PathEngine {
     execution: PathExecution,
     distance: number
   ): { state: VehiclePathState; execution: PathExecution; arrived: boolean } {
-    const rear: AxleState = {
-      lineId: state.rear.lineId,
-      position: state.rear.position,
-      absoluteOffset: state.rear.offset
-    }
-    const front: AxleState = {
-      lineId: state.front.lineId,
-      position: state.front.position,
-      absoluteOffset: state.front.offset
-    }
-    const rearExec: AxleExecutionState = {
-      currentSegmentIndex: execution.rearSegmentIndex,
-      segmentDistance: execution.rearSegmentDistance
-    }
-    const frontExec: AxleExecutionState = {
-      currentSegmentIndex: execution.frontSegmentIndex,
-      segmentDistance: execution.frontSegmentDistance
-    }
+    const axleStates: AxleState[] = state.axles.map(a => ({
+      lineId: a.lineId,
+      position: a.position,
+      absoluteOffset: a.offset
+    }))
+    const axleExecs: AxleExecutionState[] = execution.axleExecutions.map(e => ({
+      currentSegmentIndex: e.segmentIndex,
+      segmentDistance: e.segmentDistance
+    }))
 
-    const result = moveVehicle(rear, front, rearExec, frontExec, execution.path, distance, this.linesMap, execution.curveDataMap)
+    const result = moveVehicle(axleStates, axleExecs, execution.path, distance, this.linesMap, execution.curveDataMap)
 
     return {
       state: {
-        rear: { lineId: result.rear.lineId, offset: result.rear.absoluteOffset, position: result.rear.position },
-        front: { lineId: result.front.lineId, offset: result.front.absoluteOffset, position: result.front.position }
+        axles: result.axles.map(a => ({ lineId: a.lineId, offset: a.absoluteOffset, position: a.position })),
+        axleSpacings: state.axleSpacings
       },
       execution: {
         ...execution,
-        rearSegmentIndex: result.rearExecution.currentSegmentIndex,
-        rearSegmentDistance: result.rearExecution.segmentDistance,
-        frontSegmentIndex: result.frontExecution.currentSegmentIndex,
-        frontSegmentDistance: result.frontExecution.segmentDistance
+        axleExecutions: result.axleExecutions.map(e => ({
+          segmentIndex: e.currentSegmentIndex,
+          segmentDistance: e.segmentDistance
+        }))
       },
       arrived: result.arrived
     }

@@ -621,9 +621,9 @@ export function handleArrival(
       vehicleId: state.vehicle.id,
       command: completedCommand,
       finalPosition: {
-        lineId: state.vehicle.rear.lineId,
-        absoluteOffset: state.vehicle.rear.absoluteOffset,
-        position: state.vehicle.rear.position
+        lineId: state.vehicle.axles[state.vehicle.axles.length - 1].lineId,
+        absoluteOffset: state.vehicle.axles[state.vehicle.axles.length - 1].absoluteOffset,
+        position: state.vehicle.axles[state.vehicle.axles.length - 1].position
       },
       payload: completedCommand.payload
     })

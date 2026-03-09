@@ -13,9 +13,7 @@ export default defineConfig({
     lib: {
       entry: {
         'vehicle-path': resolve(__dirname, 'src/index.ts'),
-        'core': resolve(__dirname, 'src/core/index.ts'),
-        'utils': resolve(__dirname, 'src/utils/index.ts'),
-        'react': resolve(__dirname, 'src/react/index.ts')
+        'core': resolve(__dirname, 'src/core/index.ts')
       },
       name: 'VehiclePath',
       formats: ['es', 'cjs']

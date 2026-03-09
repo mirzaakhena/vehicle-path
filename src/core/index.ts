@@ -83,7 +83,7 @@ export {
   initializeMovingVehicle,
   createInitialMovementState,
   initializeAllVehicles,
-  calculateInitialFrontPosition,
+  calculateInitialAxlePositions,
   type InitializationResult,
 
   // Position updates
@@ -106,7 +106,7 @@ export {
   type SegmentCompletionResult,
   type SegmentVehicleState,
 
-  // Dual-axle tick primitive
+  // N-axle tick primitive
   moveVehicle,
 
   // Shared utilities
