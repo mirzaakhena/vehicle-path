@@ -99,31 +99,40 @@ type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
 }
 
-function createMockVehicle(overrides: DeepPartial<Vehicle> = {}): Vehicle {
-  const defaultVehicle: Vehicle = {
+function createMockVehicle(overrides: DeepPartial<Vehicle> & {
+  axles?: AxleState[]
+  axleSpacings?: number[]
+  // Legacy shims for tests written before multi-axle refactor
+  rear?: Partial<AxleState>
+  front?: Partial<AxleState>
+} = {}): Vehicle {
+  const rearOffset = overrides.rear?.absoluteOffset ?? 10
+  const frontOffset = overrides.front?.absoluteOffset ?? 10
+  const rearLineId = overrides.rear?.lineId ?? overrides.lineId ?? 'line1'
+
+  const defaultAxles: AxleState[] = [
+    {
+      lineId: rearLineId,
+      position: overrides.front?.position ?? { x: frontOffset, y: 0 },
+      absoluteOffset: frontOffset
+    },
+    {
+      lineId: rearLineId,
+      position: overrides.rear?.position ?? { x: rearOffset, y: 0 },
+      absoluteOffset: rearOffset
+    }
+  ]
+
+  return {
     id: 'v1',
     lineId: 'line1',
     offset: 10,
     isPercentage: false,
     state: 'idle',
-    rear: {
-      lineId: 'line1',
-      position: { x: 0, y: 0 },
-      absoluteOffset: 10
-    },
-    front: {
-      lineId: 'line1',
-      position: { x: 0, y: 0 },
-      absoluteOffset: 10
-    }
-  }
-
-  return {
-    ...defaultVehicle,
-    ...overrides,
-    rear: { ...defaultVehicle.rear, ...overrides.rear },
-    front: { ...defaultVehicle.front, ...overrides.front }
-  } as Vehicle
+    axles: overrides.axles ?? defaultAxles,
+    axleSpacings: overrides.axleSpacings ?? [15],
+    ...overrides
+  } as unknown as Vehicle
 }
 
 function createGotoCommand(overrides: Partial<GotoCommand> = {}): GotoCommand {
@@ -256,16 +265,11 @@ describe('initialize', () => {
         lineId: 'line1',
         offset: 25,
         isPercentage: false,
-        rear: {
-          lineId: 'line1',
-          position: { x: 25, y: 0 },
-          absoluteOffset: 25
-        },
-        front: {
-          lineId: 'line1',
-          position: { x: 85, y: 0 },
-          absoluteOffset: 85
-        }
+        axles: [
+          { lineId: 'line1', position: { x: 85, y: 0 }, absoluteOffset: 85 },
+          { lineId: 'line1', position: { x: 25, y: 0 }, absoluteOffset: 25 }
+        ],
+        axleSpacings: [60]
       })
 
       const result = initializeMovingVehicle(vehicle, line)
@@ -273,8 +277,8 @@ describe('initialize', () => {
       expect(result.id).toBe('v1')
       expect(result.lineId).toBe('line1')
       expect(result.state).toBe('idle')
-      expect(result.rear.absoluteOffset).toBe(25)
-      expect(result.front.absoluteOffset).toBe(85)
+      expect(result.axles[1].absoluteOffset).toBe(25)  // rear = axles[N-1]
+      expect(result.axles[0].absoluteOffset).toBe(85)  // front = axles[0]
     })
 
     it('should preserve original vehicle properties', () => {

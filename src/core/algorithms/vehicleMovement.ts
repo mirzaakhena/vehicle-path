@@ -541,25 +541,25 @@ export function prepareCommandPath(
   const targetLine = linesMap.get(command.targetLineId)
   if (!targetLine) return null
 
-  // Calculate target offset
-  // Use effective line length (lineLength - wheelbase) to ensure R (rear axle)
-  // doesn't exceed the line boundary when considering the vehicle's wheelbase
+  // totalVehicleLength dari axleSpacings per-vehicle
+  const totalVehicleLength = vehicle.axleSpacings.reduce((a, b) => a + b, 0)
   const targetLineLength = getLineLength(targetLine)
-  const effectiveLineLength = targetLineLength - config.maxWheelbase
+  // effectiveLineLength: rear (axles[N-1]) berhenti di sini, front (axles[0]) "hang over"
+  const effectiveLineLength = targetLineLength - totalVehicleLength
 
-  // If line is too short for the vehicle's wheelbase, no valid path exists
+  // Jika line terlalu pendek untuk vehicle, tidak ada path valid
   if (effectiveLineLength <= 0) return null
 
-  // Percentage is now 0-1 format (no division by 100 needed)
+  // Percentage adalah format 0-1
   const targetOffset = command.isPercentage
     ? command.targetOffset * effectiveLineLength
     : Math.min(command.targetOffset, effectiveLineLength)
 
-  // Find path from current position to target
-  // Use vehicle.rear.lineId (current position) not vehicle.lineId (initial line)
+  // Path dari rearmost axle (axles[N-1]) ke target
+  const rearmost = vehicle.axles[vehicle.axles.length - 1]
   const path = findPath(
     graph,
-    { lineId: vehicle.rear.lineId, offset: vehicle.rear.absoluteOffset },
+    { lineId: rearmost.lineId, offset: rearmost.absoluteOffset },
     command.targetLineId,
     targetOffset,
     false
