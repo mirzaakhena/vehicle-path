@@ -70,79 +70,57 @@ export function calculateBezierArcLength(bezier: BezierCurve, segments: number =
 // ============================================================================
 
 /**
- * Resolve offset untuk FROM line (garis asal kurva)
- * - 0% → wheelbase (bukan 0, untuk memberi ruang vehicle)
- * - 100% → lineLength (ujung garis)
+ * Resolve offset untuk FROM line (garis asal kurva).
+ * Kurva bisa ditempatkan di mana saja pada line: range [0, lineLength].
  *
- * Effective range: [wheelbase, lineLength]
+ * Untuk absolute offset: clamp ke [0, lineLength].
+ * Untuk percentage (0-1): map ke [0, lineLength].
  */
 export function resolveFromLineOffset(
   line: Line,
   offset: number | undefined,
   isPercentage: boolean | undefined,
   defaultPercentage: number,
-  maxWheelbase: number
+  _maxWheelbase: number   // kept for API compatibility, no longer used
 ): number {
   const lineLength = distance(line.start, line.end)
-  const effectiveLength = lineLength - maxWheelbase
 
-  // Handle edge case: line too short
-  if (effectiveLength <= 0) {
-    return lineLength // Fallback to end of line
-  }
-
-  let percentage: number
   if (offset === undefined) {
-    percentage = defaultPercentage
-  } else if (isPercentage) {
-    percentage = offset
-  } else {
-    // Distance input: 0 → maxWheelbase, effectiveLength → lineLength
-    // Clamp distance to valid range [0, effectiveLength], then add maxWheelbase
-    const clampedDistance = Math.max(0, Math.min(offset, effectiveLength))
-    return maxWheelbase + clampedDistance
+    return defaultPercentage * lineLength
   }
 
-  // Map percentage (0-1) to effective range [maxWheelbase, lineLength]
-  // 0 → maxWheelbase, 1 → lineLength
-  return maxWheelbase + percentage * effectiveLength
+  if (isPercentage) {
+    return Math.max(0, Math.min(offset, 1)) * lineLength
+  }
+
+  return Math.max(0, Math.min(offset, lineLength))
 }
 
 /**
- * Resolve offset untuk TO line (garis tujuan kurva)
- * - 0% → 0 (awal garis)
- * - 100% → lineLength - wheelbase (untuk memberi ruang vehicle)
+ * Resolve offset untuk TO line (garis tujuan kurva).
+ * Kurva bisa ditempatkan di mana saja pada line: range [0, lineLength].
  *
- * Effective range: [0, lineLength - wheelbase]
+ * Untuk absolute offset: clamp ke [0, lineLength].
+ * Untuk percentage (0-1): map ke [0, lineLength].
  */
 export function resolveToLineOffset(
   line: Line,
   offset: number | undefined,
   isPercentage: boolean | undefined,
   defaultPercentage: number,
-  maxWheelbase: number
+  _maxWheelbase: number   // kept for API compatibility, no longer used
 ): number {
   const lineLength = distance(line.start, line.end)
-  const effectiveLength = lineLength - maxWheelbase
 
-  // Handle edge case: line too short
-  if (effectiveLength <= 0) {
-    return 0 // Fallback to start of line
-  }
-
-  let percentage: number
   if (offset === undefined) {
-    percentage = defaultPercentage
-  } else if (isPercentage) {
-    percentage = offset
-  } else {
-    // Absolute offset - clamp to valid range
-    return Math.max(0, Math.min(offset, effectiveLength))
+    return defaultPercentage * lineLength
   }
 
-  // Map percentage (0-1) to effective range [0, lineLength - maxWheelbase]
-  // 0 → 0, 1 → lineLength - maxWheelbase
-  return percentage * effectiveLength
+  if (isPercentage) {
+    return Math.max(0, Math.min(offset, 1)) * lineLength
+  }
+
+  return Math.max(0, Math.min(offset, lineLength))
 }
 
 /**

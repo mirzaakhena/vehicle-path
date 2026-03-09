@@ -111,10 +111,10 @@ describe('buildGraph', () => {
     const graph = buildGraph(lines, curves, defaultConfig)
 
     const edges = graph.adjacency.get('line001')
-    // With wheelbase=60: fromLine effective range [60, 100], 80% = 60 + 0.8*40 = 92
-    expect(edges![0].fromOffset).toBe(92) // 80% of effective range (wheelbase to end)
-    // With wheelbase=60: toLine effective range [0, 40], 20% = 0.2*40 = 8
-    expect(edges![0].toOffset).toBe(8)   // 20% of effective range (start to lineLength-wheelbase)
+    // New behavior: full range [0, lineLength], 80% of 100 = 80
+    expect(edges![0].fromOffset).toBe(80) // 80% of full line length
+    // New behavior: full range [0, lineLength], 20% of 100 = 20
+    expect(edges![0].toOffset).toBe(20)   // 20% of full line length
   })
 
   it('should use default offsets (100% -> 0%) when not specified', () => {
@@ -380,14 +380,14 @@ describe('findPath - edge cases', () => {
       {
         fromLineId: 'loop3',
         toLineId: 'loop1',
-        toOffset: 0.3, // Internal format is now 0-1
+        toOffset: 0.1, // 10% of full line → offset 10 (before target at 20)
         toIsPercentage: true
       }
     ]
     const graph = buildGraph(lines, curves, defaultConfig)
 
-    // With wheelbase=60: toOffset 30% on loop3->loop1 maps to 0.3*40 = 12
-    // Vehicle at 50, target at 20 (behind). Loop brings vehicle to 12, then forward to 20.
+    // New behavior: toOffset 10% on loop3->loop1 maps to 0.1*100 = 10
+    // Vehicle at 50, target at 20 (behind). Loop brings vehicle to 10, then forward to 20.
     const result = findPath(
       graph,
       { lineId: 'loop1', offset: 50 },
