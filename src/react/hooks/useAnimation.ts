@@ -6,12 +6,11 @@ import { buildGraph } from '../../core/algorithms/pathFinding'
 import type { TangentMode } from '../../core/types/config'
 import {
   handleArrival,
-  updateAxlePosition,
+  moveVehicle,
   initializeAllVehicles,
   initializeMovingVehicle,
   createInitialMovementState,
   prepareCommandPath,
-  calculateFrontAxlePosition,
   type SegmentCompletionContext,
   type VehicleMovementState
 } from '../../core/algorithms/vehicleMovement'
@@ -156,54 +155,25 @@ export function useAnimation({
 
       const exec = state.execution
 
-      // Calculate maxOffset for front axle
-      let frontMaxOffset: number | undefined
-      if (exec.front.currentSegmentIndex < exec.path.segments.length) {
-        const currentFrontSegment = exec.path.segments[exec.front.currentSegmentIndex]
-        if (currentFrontSegment.type === 'line') {
-          const line = linesMap.get(currentFrontSegment.lineId!)
-          if (line) {
-            const lineLength = Math.sqrt(
-              Math.pow(line.end.x - line.start.x, 2) +
-              Math.pow(line.end.y - line.start.y, 2)
-            )
-            frontMaxOffset = lineLength
-          }
-        }
-      }
-
-      // Update rear axle
-      const rearResult = updateAxlePosition(
-        state.vehicle.rear,
-        exec.rear,
+      // Move semua axle sekaligus — arrived = axles[0] (terdepan) mencapai ujung path
+      const mvResult = moveVehicle(
+        state.vehicle.axles,
+        exec.axles,
         exec.path,
         distance,
         linesMap,
         exec.curveDataMap
       )
 
-      // Update front axle
-      const frontResult = updateAxlePosition(
-        state.vehicle.front,
-        exec.front,
-        exec.path,
-        distance,
-        linesMap,
-        exec.curveDataMap,
-        frontMaxOffset
-      )
-
       // Update vehicle state in ref
       state.vehicle = {
         ...state.vehicle,
-        rear: rearResult.axleState,
-        front: frontResult.axleState
+        axles: mvResult.axles
       }
-      state.execution.rear = rearResult.execution
-      state.execution.front = frontResult.execution
+      state.execution.axles = mvResult.axleExecutions
 
-      // Check completion (based on rear axle)
-      if (rearResult.completed) {
+      // Check completion (based on front axle = axles[0])
+      if (mvResult.arrived) {
         const segmentCtx: SegmentCompletionContext = {
           linesMap,
           config,
@@ -231,15 +201,18 @@ export function useAnimation({
         }
 
         // Queue position update for final position
-        const rear = arrivalResult.vehicle.rear.position
-        const front = arrivalResult.vehicle.front.position
+        const axlePositions = arrivalResult.vehicle.axles.map(a => a.position)
+        const front = axlePositions[0]
+        const rear  = axlePositions[axlePositions.length - 1]
         eventsToEmit.push({
           type: 'positionUpdate',
           data: {
             vehicleId,
-            rear,
-            front,
-            center: { x: (rear.x + front.x) / 2, y: (rear.y + front.y) / 2 },
+            axles: axlePositions,
+            center: {
+              x: axlePositions.reduce((s, p) => s + p.x, 0) / axlePositions.length,
+              y: axlePositions.reduce((s, p) => s + p.y, 0) / axlePositions.length
+            },
             angle: Math.atan2(front.y - rear.y, front.x - rear.x)
           }
         })
@@ -315,7 +288,16 @@ export function useAnimation({
         continue
       }
 
-      const frontPosition = calculateFrontAxlePosition(prepared.path, 0, 0, maxWheelbase)
+      // Hitung initialAxleExecutions: axles[0] (front) mulai di totalVehicleLength
+      const totalVehicleLength = vehicle.axleSpacings.reduce((a, b) => a + b, 0)
+      let cumulative = 0
+      const initialAxleExecs = [
+        { currentSegmentIndex: 0, segmentDistance: totalVehicleLength }, // axles[0] = front
+        ...vehicle.axleSpacings.map(spacing => {
+          cumulative += spacing
+          return { currentSegmentIndex: 0, segmentDistance: totalVehicleLength - cumulative }
+        })
+      ]
 
       movementStateRef.current.set(vehicleId, {
         ...state,
@@ -323,10 +305,7 @@ export function useAnimation({
           path: prepared.path,
           curveDataMap: prepared.curveDataMap,
           currentCommandIndex: 0,
-          rear: { currentSegmentIndex: 0, segmentDistance: 0 },
-          front: frontPosition
-            ? { currentSegmentIndex: frontPosition.segmentIndex, segmentDistance: frontPosition.segmentDistance }
-            : { currentSegmentIndex: 0, segmentDistance: 0 }
+          axles: initialAxleExecs
         },
         vehicle: { ...vehicle, state: 'moving' }
       })
@@ -334,14 +313,15 @@ export function useAnimation({
       anyPrepared = true
 
       // Vehicle was not moving, so track it for event emission
+      const rearmost = vehicle.axles[vehicle.axles.length - 1]
       vehiclesToStart.push({
         id: vehicleId,
         fromState: vehicle.state as 'idle' | 'waiting',
         command,
         startPosition: {
-          lineId: vehicle.rear.lineId,
-          absoluteOffset: vehicle.rear.absoluteOffset,
-          position: vehicle.rear.position
+          lineId: rearmost.lineId,
+          absoluteOffset: rearmost.absoluteOffset,
+          position: rearmost.position
         }
       })
     }
@@ -380,7 +360,7 @@ export function useAnimation({
     }
 
     return true
-  }, [linesMap, curves, vehicleQueues, getVehicleQueues, config, maxWheelbase, eventEmitter])
+  }, [linesMap, curves, vehicleQueues, getVehicleQueues, config, eventEmitter])
 
   // Reset to initial state
   const reset = useCallback(() => {
@@ -438,16 +418,21 @@ export function useAnimation({
         const prepared = prepareCommandPath(state.vehicle, nextCommand, sceneCtx)
 
         if (prepared) {
-          const frontPosition = calculateFrontAxlePosition(prepared.path, 0, 0, maxWheelbase)
+          const totalLen = state.vehicle.axleSpacings.reduce((a, b) => a + b, 0)
+          let cum = 0
+          const axleExecs = [
+            { currentSegmentIndex: 0, segmentDistance: totalLen },
+            ...state.vehicle.axleSpacings.map(s => {
+              cum += s
+              return { currentSegmentIndex: 0, segmentDistance: totalLen - cum }
+            })
+          ]
 
           state.execution = {
             path: prepared.path,
             curveDataMap: prepared.curveDataMap,
             currentCommandIndex: nextCommandIndex,
-            rear: { currentSegmentIndex: 0, segmentDistance: 0 },
-            front: frontPosition
-              ? { currentSegmentIndex: frontPosition.segmentIndex, segmentDistance: frontPosition.segmentDistance }
-              : { currentSegmentIndex: 0, segmentDistance: 0 }
+            axles: axleExecs
           }
           state.vehicle = { ...state.vehicle, state: 'moving' }
 
@@ -491,7 +476,7 @@ export function useAnimation({
     }
 
     return true
-  }, [vehicleQueues, linesMap, curves, config, maxWheelbase, eventEmitter])
+  }, [vehicleQueues, linesMap, curves, config, eventEmitter])
 
   // Check if any vehicle is currently moving
   const isMoving = useCallback((): boolean => {

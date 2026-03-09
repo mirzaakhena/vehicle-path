@@ -20,13 +20,11 @@ export interface CommandStartInfo {
  */
 export interface VehiclePositionUpdate {
   vehicleId: string
-  /** Rear axle position */
-  rear: Point
-  /** Front axle position */
-  front: Point
-  /** Center point between rear and front axles */
+  /** Posisi semua axle, axles[0] = terdepan */
+  axles: Point[]
+  /** Center vehicle (rata-rata semua axle) */
   center: Point
-  /** Angle in radians from rear to front (heading direction) */
+  /** Angle dari axle paling belakang ke terdepan */
   angle: number
 }
 
