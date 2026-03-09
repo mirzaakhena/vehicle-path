@@ -34,9 +34,8 @@ export interface PathExecutionState {
   path: import('../algorithms/pathFinding').PathResult
   curveDataMap: Map<number, CurveData>
   currentCommandIndex: number
-  // Separate execution per axle
-  rear: AxleExecutionState
-  front: AxleExecutionState
+  // Multi-axle: axles[0] = terdepan, sesuai urutan Vehicle.axles
+  axles: AxleExecutionState[]
 }
 
 /**
