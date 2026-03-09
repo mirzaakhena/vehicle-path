@@ -4,7 +4,9 @@ import type { MovementConfig } from '../types/movement'
 import {
   buildGraph,
   findPath,
-  calculateBezierArcLength
+  calculateBezierArcLength,
+  resolveFromLineOffset,
+  resolveToLineOffset,
 } from '../pathFinding'
 
 // ============================================================================
@@ -396,6 +398,62 @@ describe('findPath - edge cases', () => {
     // Should find a path through the loop
     expect(result).not.toBeNull()
     expect(result!.segments.length).toBeGreaterThan(0)
+  })
+})
+
+// ============================================================================
+// resolveFromLineOffset
+// ============================================================================
+
+describe('resolveFromLineOffset', () => {
+  const line: Line = { id: 'l1', start: { x: 0, y: 0 }, end: { x: 400, y: 0 } }
+  // lineLength = 400, maxWheelbase = 50
+
+  it('absolute: returns offset as-is, clamped to [0, lineLength]', () => {
+    expect(resolveFromLineOffset(line, 200, false, 1, 50)).toBe(200)
+    expect(resolveFromLineOffset(line, 0,   false, 1, 50)).toBe(0)
+    expect(resolveFromLineOffset(line, 400, false, 1, 50)).toBe(400)
+    expect(resolveFromLineOffset(line, 500, false, 1, 50)).toBe(400) // clamp to lineLength
+  })
+
+  it('percentage: maps 0→0, 1→lineLength regardless of maxWheelbase', () => {
+    expect(resolveFromLineOffset(line, 0,   true, 1, 50)).toBe(0)
+    expect(resolveFromLineOffset(line, 1,   true, 1, 50)).toBe(400)
+    expect(resolveFromLineOffset(line, 0.5, true, 1, 50)).toBe(200)
+  })
+
+  it('undefined offset: uses defaultPercentage, maps to [0, lineLength]', () => {
+    expect(resolveFromLineOffset(line, undefined, undefined, 1.0, 50)).toBe(400)
+    expect(resolveFromLineOffset(line, undefined, undefined, 0.0, 50)).toBe(0)
+    expect(resolveFromLineOffset(line, undefined, undefined, 0.5, 50)).toBe(200)
+  })
+})
+
+// ============================================================================
+// resolveToLineOffset
+// ============================================================================
+
+describe('resolveToLineOffset', () => {
+  const line: Line = { id: 'l1', start: { x: 0, y: 0 }, end: { x: 400, y: 0 } }
+  // lineLength = 400, maxWheelbase = 50
+
+  it('absolute: returns offset as-is, clamped to [0, lineLength]', () => {
+    expect(resolveToLineOffset(line, 200, false, 0, 50)).toBe(200)
+    expect(resolveToLineOffset(line, 0,   false, 0, 50)).toBe(0)
+    expect(resolveToLineOffset(line, 400, false, 0, 50)).toBe(400)
+    expect(resolveToLineOffset(line, 500, false, 0, 50)).toBe(400) // clamp to lineLength
+  })
+
+  it('percentage: maps 0→0, 1→lineLength regardless of maxWheelbase', () => {
+    expect(resolveToLineOffset(line, 0,   true, 0, 50)).toBe(0)
+    expect(resolveToLineOffset(line, 1,   true, 0, 50)).toBe(400)
+    expect(resolveToLineOffset(line, 0.5, true, 0, 50)).toBe(200)
+  })
+
+  it('undefined offset: uses defaultPercentage, maps to [0, lineLength]', () => {
+    expect(resolveToLineOffset(line, undefined, undefined, 0.0, 50)).toBe(0)
+    expect(resolveToLineOffset(line, undefined, undefined, 1.0, 50)).toBe(400)
+    expect(resolveToLineOffset(line, undefined, undefined, 0.5, 50)).toBe(200)
   })
 })
 
