@@ -1,7 +1,7 @@
 import type { Line } from '../core/types/geometry'
-import type { Vehicle, AxleState, VehicleStart, GotoCommand } from '../core/types/vehicle'
-import { getPointOnLineByOffset, distance } from '../core/algorithms/math'
-import { calculateInitialFrontPosition } from '../core/algorithms/vehicleMovement'
+import type { Vehicle, VehicleStart, GotoCommand } from '../core/types/vehicle'
+import { distance } from '../core/algorithms/math'
+import { calculateInitialAxlePositions } from '../core/algorithms/vehicleMovement'
 
 export function validateAndCreateVehicles(
   vehicleStarts: VehicleStart[],
@@ -27,11 +27,15 @@ export function validateAndCreateVehicles(
       continue
     }
 
+    // Gunakan axleSpacings dari VehicleStart, atau default ke [maxWheelbase]
+    const axleSpacings = vs.axleSpacings ?? [maxWheelbase]
+    const totalVehicleLength = axleSpacings.reduce((a, b) => a + b, 0)
+
     // Check offset validity
-    // Use effective line length (lineLength - maxWheelbase) so that R (rear axle)
-    // doesn't exceed the line boundary when considering the vehicle's maxWheelbase
+    // Use effective line length (lineLength - totalVehicleLength) so that rearmost axle
+    // doesn't exceed the line boundary when considering the vehicle's total length
     const lineLength = distance(line.start, line.end)
-    const effectiveLineLength = Math.max(0, lineLength - maxWheelbase)
+    const effectiveLineLength = Math.max(0, lineLength - totalVehicleLength)
     let effectiveOffset: number
 
     if (vs.isPercentage) {
@@ -50,23 +54,8 @@ export function validateAndCreateVehicles(
       effectiveOffset = Math.min(vs.offset, effectiveLineLength)
     }
 
-    // Get position on line for rear axle
-    const rearPosition = getPointOnLineByOffset(line, effectiveOffset, false)
-
-    // Create rear axle state
-    const rear: AxleState = {
-      lineId: vs.lineId,
-      position: rearPosition,
-      absoluteOffset: effectiveOffset
-    }
-
-    // Calculate front axle state
-    const front = calculateInitialFrontPosition(
-      vs.lineId,
-      effectiveOffset,
-      maxWheelbase,
-      line
-    )
+    // Hitung posisi semua axle dari rearmost axle
+    const axles = calculateInitialAxlePositions(vs.lineId, effectiveOffset, axleSpacings, line)
 
     vehicles.push({
       id: vs.vehicleId,
@@ -74,8 +63,8 @@ export function validateAndCreateVehicles(
       offset: vs.offset,
       isPercentage: vs.isPercentage,
       state: 'idle',
-      rear,
-      front
+      axles,
+      axleSpacings
     })
   }
 

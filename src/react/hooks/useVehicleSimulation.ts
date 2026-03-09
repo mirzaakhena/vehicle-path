@@ -173,7 +173,7 @@ export function useVehicleSimulation({
 
   // Utility: Get vehicles on a specific line
   const getVehiclesOnLine = useCallback((lineId: string): Vehicle[] => {
-    return vehicleHook.vehicles.filter(v => v.lineId === lineId || v.rear.lineId === lineId)
+    return vehicleHook.vehicles.filter(v => v.lineId === lineId || v.axles.some(a => a.lineId === lineId))
   }, [vehicleHook.vehicles])
 
   // Utility: Check if any vehicles are on a line

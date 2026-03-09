@@ -8,6 +8,10 @@ const createTestLines = (): Line[] => [
   { id: 'line002', start: { x: 400, y: 0 }, end: { x: 400, y: 300 } }
 ]
 
+/** Helper: rear = axles[N-1], front = axles[0] */
+const rearOffset = (v: { axles: { absoluteOffset: number }[] }) => v.axles[v.axles.length - 1].absoluteOffset
+const frontOffset = (v: { axles: { absoluteOffset: number }[] }) => v.axles[0].absoluteOffset
+
 describe('useVehicles', () => {
   describe('initial state', () => {
     it('should initialize with empty vehicles', () => {
@@ -33,7 +37,7 @@ describe('useVehicles', () => {
       expect(result.current.vehicles).toHaveLength(1)
       expect(result.current.vehicles[0].id).toBe('v1')
       expect(result.current.vehicles[0].lineId).toBe('line001')
-      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(0) // default position 0
+      expect(rearOffset(result.current.vehicles[0])).toBe(0) // default position 0
     })
 
     it('should add a vehicle with percentage position (default mode)', () => {
@@ -54,7 +58,7 @@ describe('useVehicles', () => {
       expect(result.current.vehicles).toHaveLength(1)
       // Line length is 400, effective length = 400 - 30 = 370
       // 50% of 370 = 185
-      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(185)
+      expect(rearOffset(result.current.vehicles[0])).toBe(185)
     })
 
     it('should add a vehicle with absolute position', () => {
@@ -74,7 +78,7 @@ describe('useVehicles', () => {
       expect(result.current.vehicles).toHaveLength(1)
       expect(result.current.vehicles[0].id).toBe('v1')
       expect(result.current.vehicles[0].lineId).toBe('line001')
-      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(100)
+      expect(rearOffset(result.current.vehicles[0])).toBe(100)
     })
 
     it('should add multiple vehicles', () => {
@@ -172,9 +176,9 @@ describe('useVehicles', () => {
       })
 
       const vehicle = result.current.vehicles[0]
-      expect(vehicle.rear.absoluteOffset).toBe(0)
-      // Front should be maxWheelbase ahead of rear
-      expect(vehicle.front.absoluteOffset).toBe(30)
+      // axles[N-1] = rear at 0, axles[0] = front at maxWheelbase
+      expect(rearOffset(vehicle)).toBe(0)
+      expect(frontOffset(vehicle)).toBe(30) // maxWheelbase ahead of rear
     })
   })
 
@@ -188,7 +192,7 @@ describe('useVehicles', () => {
         result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
-      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(0)
+      expect(rearOffset(result.current.vehicles[0])).toBe(0)
 
       act(() => {
         result.current.updateVehicle('v1', { position: 0.5 })
@@ -196,7 +200,7 @@ describe('useVehicles', () => {
 
       // Line length is 400, effective length = 400 - 30 = 370
       // 50% of 370 = 185
-      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(185)
+      expect(rearOffset(result.current.vehicles[0])).toBe(185)
     })
 
     it('should update lineId and reset position to 0', () => {
@@ -215,7 +219,7 @@ describe('useVehicles', () => {
       })
 
       expect(result.current.vehicles[0].lineId).toBe('line002')
-      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(0)
+      expect(rearOffset(result.current.vehicles[0])).toBe(0)
     })
 
     it('should update lineId with specific position', () => {
@@ -234,7 +238,7 @@ describe('useVehicles', () => {
       expect(result.current.vehicles[0].lineId).toBe('line002')
       // line002 length is 300, effective = 300 - 30 = 270
       // 50% of 270 = 135
-      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(135)
+      expect(rearOffset(result.current.vehicles[0])).toBe(135)
     })
 
     it('should update with absolute position', () => {
@@ -250,7 +254,7 @@ describe('useVehicles', () => {
         result.current.updateVehicle('v1', { position: 100, isPercentage: false })
       })
 
-      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(100)
+      expect(rearOffset(result.current.vehicles[0])).toBe(100)
     })
 
     it('should fail on non-existent vehicle', () => {
@@ -362,16 +366,16 @@ describe('useVehicles', () => {
         result.current.addVehicles({ id: 'v1', lineId: 'line001', position: 0 })
       })
 
-      const oldFrontOffset = result.current.vehicles[0].front.absoluteOffset
+      const oldFront = frontOffset(result.current.vehicles[0])
 
       act(() => {
         result.current.updateVehicle('v1', { position: 100, isPercentage: false })
       })
 
       // Front should move with rear
-      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(100)
-      expect(result.current.vehicles[0].front.absoluteOffset).toBe(130) // 100 + maxWheelbase
-      expect(result.current.vehicles[0].front.absoluteOffset).not.toBe(oldFrontOffset)
+      expect(rearOffset(result.current.vehicles[0])).toBe(100)
+      expect(frontOffset(result.current.vehicles[0])).toBe(130) // 100 + maxWheelbase
+      expect(frontOffset(result.current.vehicles[0])).not.toBe(oldFront)
     })
   })
 
@@ -489,8 +493,9 @@ describe('useVehicles', () => {
       })
 
       const vehicle = result.current.vehicles[0]
-      expect(vehicle.rear.absoluteOffset).toBe(100)
-      expect(vehicle.front.absoluteOffset).toBe(100) // Same as rear when maxWheelbase is 0
+      // axleSpacings defaults to [0] when maxWheelbase=0 → both axles at same position
+      expect(rearOffset(vehicle)).toBe(100)
+      expect(frontOffset(vehicle)).toBe(100)
     })
   })
 
@@ -509,7 +514,7 @@ describe('useVehicles', () => {
         })
       })
 
-      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(0)
+      expect(rearOffset(result.current.vehicles[0])).toBe(0)
     })
 
     it('should handle position at end of line (percentage)', () => {
@@ -530,7 +535,7 @@ describe('useVehicles', () => {
 
       // Line length is 400, effective length = 400 - 30 = 370
       // 100% of 370 = 370
-      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(370)
+      expect(rearOffset(result.current.vehicles[0])).toBe(370)
     })
   })
 })

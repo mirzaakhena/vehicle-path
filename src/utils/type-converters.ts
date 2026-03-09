@@ -61,7 +61,8 @@ export function toVehicleStart(input: VehicleInput): VehicleStart {
     lineId: input.lineId,
     // No conversion needed - internal format is now 0-1 (same as API)
     offset: position,
-    isPercentage
+    isPercentage,
+    axleSpacings: input.axleSpacings
   }
 }
 

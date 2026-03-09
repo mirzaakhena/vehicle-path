@@ -29,16 +29,13 @@ describe('useAnimation', () => {
     offset,
     isPercentage: false,
     state: 'idle',
-    rear: {
-      lineId,
-      absoluteOffset: offset,
-      position: { x: 100 + offset, y: 100 }
-    },
-    front: {
-      lineId,
-      absoluteOffset: offset + maxWheelbase,
-      position: { x: 100 + offset + maxWheelbase, y: 100 }
-    }
+    axleSpacings: [maxWheelbase],
+    axles: [
+      // axles[0] = terdepan (front)
+      { lineId, absoluteOffset: offset + maxWheelbase, position: { x: 100 + offset + maxWheelbase, y: 100 } },
+      // axles[1] = paling belakang (rear)
+      { lineId, absoluteOffset: offset, position: { x: 100 + offset, y: 100 } }
+    ]
   })
 
   describe('API surface', () => {

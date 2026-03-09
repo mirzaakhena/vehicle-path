@@ -17,6 +17,8 @@ export interface VehicleStart {
   lineId: string
   offset: number
   isPercentage: boolean
+  /** Optional: defaults to [maxWheelbase] jika tidak disediakan */
+  axleSpacings?: number[]
 }
 
 /**

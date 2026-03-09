@@ -46,8 +46,9 @@ describe('useInitialMovement', () => {
       expect(result.current.isDebouncing).toBe(false)
       expect(result.current.vehicles).toHaveLength(1)
       expect(result.current.vehicles[0].id).toBe('v1')
-      expect(result.current.vehicles[0].rear.lineId).toBe('line001')
-      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(0)
+      const v0 = result.current.vehicles[0]
+      expect(v0.axles[v0.axles.length - 1].lineId).toBe('line001')
+      expect(v0.axles[v0.axles.length - 1].absoluteOffset).toBe(0)
       expect(result.current.movementError).toBeNull()
     })
 
@@ -78,7 +79,8 @@ v2 start line002 50%
       })
 
       expect(result.current.vehicles).toHaveLength(1)
-      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(50)
+      const v = result.current.vehicles[0]
+      expect(v.axles[v.axles.length - 1].absoluteOffset).toBe(50)
     })
 
     it('should calculate percentage offset correctly based on effective length', async () => {
@@ -95,7 +97,8 @@ v2 start line002 50%
 
       expect(result.current.vehicles).toHaveLength(1)
       // 50% of effective length (370) = 185
-      expect(result.current.vehicles[0].rear.absoluteOffset).toBe(185)
+      const vp = result.current.vehicles[0]
+      expect(vp.axles[vp.axles.length - 1].absoluteOffset).toBe(185)
     })
 
     it('should calculate front axle position based on maxWheelbase', async () => {
@@ -110,8 +113,8 @@ v2 start line002 50%
       expect(result.current.vehicles).toHaveLength(1)
       const vehicle = result.current.vehicles[0]
 
-      // Front axle should be maxWheelbase distance ahead of rear
-      expect(vehicle.front.absoluteOffset).toBe(maxWheelbase)
+      // axles[0] = terdepan (front), harus maxWheelbase lebih depan dari rear
+      expect(vehicle.axles[0].absoluteOffset).toBe(maxWheelbase)
     })
   })
 
@@ -161,20 +164,23 @@ v1 start line002 50%
       // Check vehicle structure
       expect(vehicle).toHaveProperty('id')
       expect(vehicle).toHaveProperty('state')
-      expect(vehicle).toHaveProperty('rear')
-      expect(vehicle).toHaveProperty('front')
+      expect(vehicle).toHaveProperty('axles')
+      expect(vehicle).toHaveProperty('axleSpacings')
+      expect(vehicle.axles.length).toBeGreaterThanOrEqual(2)
 
-      // Check rear axle
-      expect(vehicle.rear).toHaveProperty('lineId')
-      expect(vehicle.rear).toHaveProperty('absoluteOffset')
-      expect(vehicle.rear).toHaveProperty('position')
-      expect(vehicle.rear.position).toHaveProperty('x')
-      expect(vehicle.rear.position).toHaveProperty('y')
+      // Check rear axle (axles[N-1])
+      const rear = vehicle.axles[vehicle.axles.length - 1]
+      expect(rear).toHaveProperty('lineId')
+      expect(rear).toHaveProperty('absoluteOffset')
+      expect(rear).toHaveProperty('position')
+      expect(rear.position).toHaveProperty('x')
+      expect(rear.position).toHaveProperty('y')
 
-      // Check front axle
-      expect(vehicle.front).toHaveProperty('lineId')
-      expect(vehicle.front).toHaveProperty('absoluteOffset')
-      expect(vehicle.front).toHaveProperty('position')
+      // Check front axle (axles[0])
+      const front = vehicle.axles[0]
+      expect(front).toHaveProperty('lineId')
+      expect(front).toHaveProperty('absoluteOffset')
+      expect(front).toHaveProperty('position')
 
       // Vehicle should start in idle state
       expect(vehicle.state).toBe('idle')
@@ -196,11 +202,12 @@ v1 start line002 50%
 
       const vehicle = result.current.vehicles[0]
 
-      // 50% of effective length puts rear at offset 185
+      // 50% of effective length puts rear (axles[N-1]) at offset 185
       // position = start + (offset/length) * (end - start)
       // x = 100 + (185/400) * 400 = 100 + 185 = 285
-      expect(vehicle.rear.position.x).toBeCloseTo(285, 1)
-      expect(vehicle.rear.position.y).toBeCloseTo(100, 1)
+      const rearAxle = vehicle.axles[vehicle.axles.length - 1]
+      expect(rearAxle.position.x).toBeCloseTo(285, 1)
+      expect(rearAxle.position.y).toBeCloseTo(100, 1)
     })
   })
 
