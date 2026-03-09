@@ -166,6 +166,47 @@ export function calculateFrontAxlePosition(
 // ============================================================================
 
 /**
+ * Hitung posisi awal semua axle dari posisi rearmost axle.
+ *
+ * @param lineId - Line ID tempat vehicle diinisialisasi
+ * @param rearOffset - Absolute offset axle paling belakang (axles[N-1])
+ * @param axleSpacings - Jarak antar axle berurutan (N-1 nilai untuk N axle)
+ * @param line - Line object untuk kalkulasi posisi
+ * @returns Array AxleState, axles[0] = terdepan, axles[N-1] = paling belakang
+ */
+export function calculateInitialAxlePositions(
+  lineId: string,
+  rearOffset: number,
+  axleSpacings: number[],
+  line: Line
+): AxleState[] {
+  const lineLength = getLineLength(line)
+  const n = axleSpacings.length + 1  // jumlah axle = jumlah spacing + 1
+  const axles: AxleState[] = new Array(n)
+
+  // axles[N-1] = rearmost, offset = rearOffset
+  axles[n - 1] = {
+    lineId,
+    absoluteOffset: rearOffset,
+    position: getPositionFromOffset(line, rearOffset)
+  }
+
+  // Hitung dari belakang ke depan
+  // axles[i] = axles[i+1] + axleSpacings[i] (lebih depan)
+  let cumulativeOffset = rearOffset
+  for (let i = n - 2; i >= 0; i--) {
+    cumulativeOffset = Math.min(cumulativeOffset + axleSpacings[i], lineLength)
+    axles[i] = {
+      lineId,
+      absoluteOffset: cumulativeOffset,
+      position: getPositionFromOffset(line, cumulativeOffset)
+    }
+  }
+
+  return axles
+}
+
+/**
  * Calculate initial front axle position from rear position
  *
  * @param rLineId - Rear axle line ID

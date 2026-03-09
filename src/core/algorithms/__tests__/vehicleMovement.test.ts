@@ -10,7 +10,8 @@ import {
   calculatePositionOnCurve,
   updateAxlePosition,
   prepareCommandPath,
-  calculateInitialFrontPosition
+  calculateInitialFrontPosition,
+  calculateInitialAxlePositions
 } from '../vehicleMovement'
 import { buildGraph } from '../pathFinding'
 import { buildArcLengthTable } from '../math'
@@ -1006,6 +1007,48 @@ describe('User Scenario: line001 with goto 100%', () => {
 
       expect(distance).toBeCloseTo(wheelbase, 1)
     })
+  })
+})
+
+// =============================================================================
+// calculateInitialAxlePositions Tests
+// =============================================================================
+
+describe('calculateInitialAxlePositions', () => {
+  const line: Line = { id: 'l1', start: { x: 0, y: 0 }, end: { x: 100, y: 0 } }
+
+  it('should return 2 axles for single spacing', () => {
+    // axleSpacings = [30] → 2 axles, spacing 30
+    // placement at offset 0 (rearmost axle)
+    const axles = calculateInitialAxlePositions('l1', 0, [30], line)
+    expect(axles).toHaveLength(2)
+    // axles[0] = terdepan = offset 30
+    expect(axles[0].absoluteOffset).toBe(30)
+    expect(axles[0].position).toEqual({ x: 30, y: 0 })
+    // axles[1] = paling belakang = offset 0
+    expect(axles[1].absoluteOffset).toBe(0)
+    expect(axles[1].position).toEqual({ x: 0, y: 0 })
+  })
+
+  it('should return 3 axles for two spacings', () => {
+    // axleSpacings = [20, 15] → 3 axles
+    const axles = calculateInitialAxlePositions('l1', 0, [20, 15], line)
+    expect(axles).toHaveLength(3)
+    expect(axles[0].absoluteOffset).toBe(35) // 0 + 15 + 20
+    expect(axles[1].absoluteOffset).toBe(15) // 0 + 15
+    expect(axles[2].absoluteOffset).toBe(0)
+  })
+
+  it('should clamp front axles to line end', () => {
+    // rear at offset 80 on 100px line, spacing [30] → front would be 110, clamp to 100
+    const axles = calculateInitialAxlePositions('l1', 80, [30], line)
+    expect(axles[0].absoluteOffset).toBe(100)
+    expect(axles[1].absoluteOffset).toBe(80)
+  })
+
+  it('should set lineId on all axles', () => {
+    const axles = calculateInitialAxlePositions('l1', 10, [20, 15], line)
+    expect(axles.every(a => a.lineId === 'l1')).toBe(true)
   })
 })
 
