@@ -142,5 +142,6 @@ export {
 // Scene Snapshot
 export {
   serializeScene,
+  deserializeScene,
   type SceneSnapshot
 } from './snapshot'
