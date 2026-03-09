@@ -135,7 +135,7 @@ function createGotoCommand(overrides: Partial<GotoCommand> = {}): GotoCommand {
 }
 
 const defaultConfig: MovementConfig = {
-  wheelbase: 15,
+  maxWheelbase: 15,
   tangentMode: 'proportional-40'
 }
 

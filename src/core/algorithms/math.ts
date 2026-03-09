@@ -35,7 +35,7 @@ export function createBezierCurve(
   willFlip: boolean = false,
   offsetOptions?: CurveOffsetOptions
 ): BezierCurve {
-  const { wheelbase, tangentMode } = config
+  const { maxWheelbase, tangentMode } = config
   // Calculate start point (p0) based on offset or default to end of line
   let baseP0: Point
   if (offsetOptions?.fromOffset !== undefined) {
@@ -57,8 +57,8 @@ export function createBezierCurve(
   const p0 = willFlip
     ? {
         // Transition with flip: kurva dimulai dari P (baseP0 - wheelbase in line direction)
-        x: baseP0.x - dir.x * wheelbase,
-        y: baseP0.y - dir.y * wheelbase
+        x: baseP0.x - dir.x * maxWheelbase,
+        y: baseP0.y - dir.y * maxWheelbase
       }
     : baseP0  // Smooth transition: kurva dimulai dari baseP0
 

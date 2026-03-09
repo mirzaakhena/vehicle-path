@@ -25,7 +25,7 @@ const line003: Line = createLine('line003', 300, 100, 400, 100)
 const line004: Line = createLine('line004', 200, 200, 300, 200)
 
 const defaultConfig: MovementConfig = {
-  wheelbase: 60,
+  maxWheelbase: 60,
   tangentMode: 'proportional-40'
 }
 

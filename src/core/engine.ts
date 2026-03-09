@@ -45,7 +45,7 @@ import {
 // =============================================================================
 
 export interface PathEngineConfig {
-  wheelbase: number
+  maxWheelbase: number
   tangentMode: TangentMode
 }
 
@@ -98,7 +98,7 @@ export class PathEngine {
 
   constructor(engineConfig: PathEngineConfig) {
     this.config = {
-      wheelbase: engineConfig.wheelbase,
+      maxWheelbase: engineConfig.maxWheelbase,
       tangentMode: engineConfig.tangentMode
     }
   }
@@ -245,9 +245,9 @@ export class PathEngine {
     if (!line) return null
 
     const lineLen = getLineLength(line)
-    const rearOffset = Math.min(offset, lineLen - this.config.wheelbase)
+    const rearOffset = Math.min(offset, lineLen - this.config.maxWheelbase)
     const rearPos = getPositionFromOffset(line, rearOffset)
-    const front = calculateInitialFrontPosition(lineId, rearOffset, this.config.wheelbase, line)
+    const front = calculateInitialFrontPosition(lineId, rearOffset, this.config.maxWheelbase, line)
 
     return {
       rear: { lineId, offset: rearOffset, position: rearPos },
@@ -315,7 +315,7 @@ export class PathEngine {
     const targetLine = this.linesMap.get(targetLineId)
     if (targetLine) {
       const lineLen = getLineLength(targetLine)
-      const effectiveLen = Math.max(0, lineLen - this.config.wheelbase)
+      const effectiveLen = Math.max(0, lineLen - this.config.maxWheelbase)
       actualTargetOffset = isPercentage
         ? targetOffset * effectiveLen
         : Math.min(targetOffset, effectiveLen)
@@ -327,7 +327,7 @@ export class PathEngine {
       rearSegmentIndex: 0,
       rearSegmentDistance: 0,
       frontSegmentIndex: 0,
-      frontSegmentDistance: this.config.wheelbase,
+      frontSegmentDistance: this.config.maxWheelbase,
       targetLineId,
       targetOffset: actualTargetOffset
     }

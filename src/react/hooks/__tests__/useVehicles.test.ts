@@ -12,7 +12,7 @@ describe('useVehicles', () => {
   describe('initial state', () => {
     it('should initialize with empty vehicles', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       expect(result.current.vehicles).toEqual([])
@@ -23,7 +23,7 @@ describe('useVehicles', () => {
   describe('addVehicles', () => {
     it('should add a vehicle with default position (0) and isPercentage (true)', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -38,9 +38,9 @@ describe('useVehicles', () => {
 
     it('should add a vehicle with percentage position (default mode)', () => {
       const lines = createTestLines()
-      const wheelbase = 30
+      const maxWheelbase = 30
       const { result } = renderHook(() =>
-        useVehicles({ lines, wheelbase })
+        useVehicles({ lines, maxWheelbase })
       )
 
       act(() => {
@@ -59,7 +59,7 @@ describe('useVehicles', () => {
 
     it('should add a vehicle with absolute position', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -79,7 +79,7 @@ describe('useVehicles', () => {
 
     it('should add multiple vehicles', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -97,7 +97,7 @@ describe('useVehicles', () => {
 
     it('should fail on duplicate vehicle ID', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -116,7 +116,7 @@ describe('useVehicles', () => {
 
     it('should fail on non-existent line', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       let response: { success: boolean; errors?: string[] } | undefined
@@ -131,7 +131,7 @@ describe('useVehicles', () => {
 
     it('should fail on invalid absolute offset', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       let response: { success: boolean; errors?: string[] } | undefined
@@ -150,7 +150,7 @@ describe('useVehicles', () => {
 
     it('should return success on valid vehicle', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       let response: { success: boolean; errors?: string[] } | undefined
@@ -162,9 +162,9 @@ describe('useVehicles', () => {
       expect(response?.errors).toBeUndefined()
     })
 
-    it('should calculate front axle position based on wheelbase', () => {
+    it('should calculate front axle position based on maxWheelbase', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -173,7 +173,7 @@ describe('useVehicles', () => {
 
       const vehicle = result.current.vehicles[0]
       expect(vehicle.rear.absoluteOffset).toBe(0)
-      // Front should be wheelbase ahead of rear
+      // Front should be maxWheelbase ahead of rear
       expect(vehicle.front.absoluteOffset).toBe(30)
     })
   })
@@ -181,7 +181,7 @@ describe('useVehicles', () => {
   describe('updateVehicle', () => {
     it('should update position on same line', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -201,7 +201,7 @@ describe('useVehicles', () => {
 
     it('should update lineId and reset position to 0', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -220,7 +220,7 @@ describe('useVehicles', () => {
 
     it('should update lineId with specific position', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -239,7 +239,7 @@ describe('useVehicles', () => {
 
     it('should update with absolute position', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -255,7 +255,7 @@ describe('useVehicles', () => {
 
     it('should fail on non-existent vehicle', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       let response: { success: boolean; error?: string } | undefined
@@ -269,7 +269,7 @@ describe('useVehicles', () => {
 
     it('should fail on non-existent line', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -287,7 +287,7 @@ describe('useVehicles', () => {
 
     it('should fail when vehicle is moving', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -313,7 +313,7 @@ describe('useVehicles', () => {
 
     it('should fail when vehicle is waiting', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -339,7 +339,7 @@ describe('useVehicles', () => {
 
     it('should preserve vehicle id after update', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -355,7 +355,7 @@ describe('useVehicles', () => {
 
     it('should recalculate front axle position', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -370,7 +370,7 @@ describe('useVehicles', () => {
 
       // Front should move with rear
       expect(result.current.vehicles[0].rear.absoluteOffset).toBe(100)
-      expect(result.current.vehicles[0].front.absoluteOffset).toBe(130) // 100 + wheelbase
+      expect(result.current.vehicles[0].front.absoluteOffset).toBe(130) // 100 + maxWheelbase
       expect(result.current.vehicles[0].front.absoluteOffset).not.toBe(oldFrontOffset)
     })
   })
@@ -378,7 +378,7 @@ describe('useVehicles', () => {
   describe('removeVehicle', () => {
     it('should remove a vehicle', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -398,7 +398,7 @@ describe('useVehicles', () => {
 
     it('should fail on non-existent vehicle', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       let response: { success: boolean; errors?: string[] } | { success: boolean; error?: string } | undefined
@@ -412,7 +412,7 @@ describe('useVehicles', () => {
 
     it('should return success on valid removal', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -432,7 +432,7 @@ describe('useVehicles', () => {
   describe('clear', () => {
     it('should clear all vehicles', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -454,7 +454,7 @@ describe('useVehicles', () => {
   describe('error handling', () => {
     it('should clear error on successful operation', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       // Cause an error
@@ -473,10 +473,10 @@ describe('useVehicles', () => {
     })
   })
 
-  describe('with zero wheelbase', () => {
-    it('should handle vehicles with zero wheelbase', () => {
+  describe('with zero maxWheelbase', () => {
+    it('should handle vehicles with zero maxWheelbase', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 0 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 0 })
       )
 
       act(() => {
@@ -490,14 +490,14 @@ describe('useVehicles', () => {
 
       const vehicle = result.current.vehicles[0]
       expect(vehicle.rear.absoluteOffset).toBe(100)
-      expect(vehicle.front.absoluteOffset).toBe(100) // Same as rear when wheelbase is 0
+      expect(vehicle.front.absoluteOffset).toBe(100) // Same as rear when maxWheelbase is 0
     })
   })
 
   describe('position calculations', () => {
     it('should handle position at start of line', () => {
       const { result } = renderHook(() =>
-        useVehicles({ lines: createTestLines(), wheelbase: 30 })
+        useVehicles({ lines: createTestLines(), maxWheelbase: 30 })
       )
 
       act(() => {
@@ -514,9 +514,9 @@ describe('useVehicles', () => {
 
     it('should handle position at end of line (percentage)', () => {
       const lines = createTestLines()
-      const wheelbase = 30
+      const maxWheelbase = 30
       const { result } = renderHook(() =>
-        useVehicles({ lines, wheelbase })
+        useVehicles({ lines, maxWheelbase })
       )
 
       act(() => {

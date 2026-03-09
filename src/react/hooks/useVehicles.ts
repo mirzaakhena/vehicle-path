@@ -7,7 +7,7 @@ import { toVehicleStart } from '../../utils/type-converters'
 
 export interface UseVehiclesProps {
   lines: Line[]
-  wheelbase: number
+  maxWheelbase: number
 }
 
 export interface UseVehiclesResult {
@@ -49,7 +49,7 @@ export interface UseVehiclesResult {
  * removeVehicle('v1')
  * ```
  */
-export function useVehicles({ lines, wheelbase }: UseVehiclesProps): UseVehiclesResult {
+export function useVehicles({ lines, maxWheelbase }: UseVehiclesProps): UseVehiclesResult {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [error, setError] = useState<string | null>(null)
 
@@ -85,7 +85,7 @@ export function useVehicles({ lines, wheelbase }: UseVehiclesProps): UseVehicles
     const { vehicles: newVehicles, errors } = validateAndCreateVehicles(
       vehicleStarts,
       lines,
-      wheelbase
+      maxWheelbase
     )
 
     if (errors.length > 0) {
@@ -98,7 +98,7 @@ export function useVehicles({ lines, wheelbase }: UseVehiclesProps): UseVehicles
     setVehicles(vehiclesRef.current)
     setError(null)
     return { success: true }
-  }, [lines, wheelbase])
+  }, [lines, maxWheelbase])
 
   const updateVehicle = useCallback((vehicleId: string, updates: VehicleUpdateInput) => {
     // Find the vehicle
@@ -160,7 +160,7 @@ export function useVehicles({ lines, wheelbase }: UseVehiclesProps): UseVehicles
     const { vehicles: updatedVehicles, errors } = validateAndCreateVehicles(
       [vehicleStart],
       lines,
-      wheelbase
+      maxWheelbase
     )
 
     if (errors.length > 0) {
@@ -175,7 +175,7 @@ export function useVehicles({ lines, wheelbase }: UseVehiclesProps): UseVehicles
     setVehicles(vehiclesRef.current)
     setError(null)
     return { success: true }
-  }, [lines, wheelbase])
+  }, [lines, maxWheelbase])
 
   const removeVehicle = useCallback((vehicleId: string) => {
     const exists = vehiclesRef.current.some(v => v.id === vehicleId)

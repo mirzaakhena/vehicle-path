@@ -23,7 +23,7 @@ export interface UseAnimationProps {
   vehicleQueues: Map<string, GotoCommand[]>
   /** Get current queues immediately (bypasses React state timing) */
   getVehicleQueues?: () => Map<string, GotoCommand[]>
-  wheelbase: number
+  maxWheelbase: number
   tangentMode: TangentMode
   curves: import('../../core/types/geometry').Curve[]
   eventEmitter?: VehicleEventEmitter
@@ -55,7 +55,7 @@ export function useAnimation({
   lines,
   vehicleQueues,
   getVehicleQueues,
-  wheelbase,
+  maxWheelbase,
   tangentMode,
   curves,
   eventEmitter
@@ -89,9 +89,9 @@ export function useAnimation({
 
   // Create config object for movement functions
   const config: MovementConfig = useMemo(() => ({
-    wheelbase,
+    maxWheelbase,
     tangentMode
-  }), [wheelbase, tangentMode])
+  }), [maxWheelbase, tangentMode])
 
   // Cache linesMap to avoid creating new Map on every frame
   const linesMap = useMemo(() =>
@@ -315,7 +315,7 @@ export function useAnimation({
         continue
       }
 
-      const frontPosition = calculateFrontAxlePosition(prepared.path, 0, 0, wheelbase)
+      const frontPosition = calculateFrontAxlePosition(prepared.path, 0, 0, maxWheelbase)
 
       movementStateRef.current.set(vehicleId, {
         ...state,
@@ -380,7 +380,7 @@ export function useAnimation({
     }
 
     return true
-  }, [linesMap, curves, vehicleQueues, getVehicleQueues, config, wheelbase, eventEmitter])
+  }, [linesMap, curves, vehicleQueues, getVehicleQueues, config, maxWheelbase, eventEmitter])
 
   // Reset to initial state
   const reset = useCallback(() => {
@@ -438,7 +438,7 @@ export function useAnimation({
         const prepared = prepareCommandPath(state.vehicle, nextCommand, sceneCtx)
 
         if (prepared) {
-          const frontPosition = calculateFrontAxlePosition(prepared.path, 0, 0, wheelbase)
+          const frontPosition = calculateFrontAxlePosition(prepared.path, 0, 0, maxWheelbase)
 
           state.execution = {
             path: prepared.path,
@@ -491,7 +491,7 @@ export function useAnimation({
     }
 
     return true
-  }, [vehicleQueues, linesMap, curves, config, wheelbase, eventEmitter])
+  }, [vehicleQueues, linesMap, curves, config, maxWheelbase, eventEmitter])
 
   // Check if any vehicle is currently moving
   const isMoving = useCallback((): boolean => {

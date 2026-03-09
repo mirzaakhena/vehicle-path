@@ -5,7 +5,7 @@ import { useVehicles } from '../hooks/useVehicles'
 
 interface UseInitialMovementProps {
   lines: Line[]
-  wheelbase: number
+  maxWheelbase: number
 }
 
 /**
@@ -18,12 +18,12 @@ interface UseInitialMovementProps {
  * The new unified hook provides a simpler API for loading DSL definitions that includes
  * scene, vehicles, and movements in a single call.
  */
-export function useInitialMovement({ lines, wheelbase }: UseInitialMovementProps) {
+export function useInitialMovement({ lines, maxWheelbase }: UseInitialMovementProps) {
   const [initialMovementText, setInitialMovementTextInternal] = useState('')
   const [movementError, setMovementError] = useState<string | null>(null)
 
   // Use programmatic API as single source of truth
-  const { vehicles, addVehicles, clear, error: vehiclesError } = useVehicles({ lines, wheelbase })
+  const { vehicles, addVehicles, clear, error: vehiclesError } = useVehicles({ lines, maxWheelbase })
 
   const isInternalUpdate = useRef(false)
 

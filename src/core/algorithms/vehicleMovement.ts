@@ -450,14 +450,14 @@ function buildCurveDataMap(
             curveSpec.fromOffset,
             curveSpec.fromIsPercentage,
             1, // Default: 100% = 1.0
-            config.wheelbase
+            config.maxWheelbase
           )
           const toOffset = resolveToLineOffset(
             toLine,
             curveSpec.toOffset,
             curveSpec.toIsPercentage,
             0,
-            config.wheelbase
+            config.maxWheelbase
           )
 
           const bezier = createBezierCurve(
@@ -504,7 +504,7 @@ export function prepareCommandPath(
   // Use effective line length (lineLength - wheelbase) to ensure R (rear axle)
   // doesn't exceed the line boundary when considering the vehicle's wheelbase
   const targetLineLength = getLineLength(targetLine)
-  const effectiveLineLength = targetLineLength - config.wheelbase
+  const effectiveLineLength = targetLineLength - config.maxWheelbase
 
   // If line is too short for the vehicle's wheelbase, no valid path exists
   if (effectiveLineLength <= 0) return null

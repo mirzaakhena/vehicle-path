@@ -6,7 +6,7 @@ import { calculateInitialFrontPosition } from '../core/algorithms/vehicleMovemen
 export function validateAndCreateVehicles(
   vehicleStarts: VehicleStart[],
   lines: Line[],
-  wheelbase: number = 0
+  maxWheelbase: number = 0
 ): { vehicles: Vehicle[]; errors: string[] } {
   const vehicles: Vehicle[] = []
   const errors: string[] = []
@@ -28,10 +28,10 @@ export function validateAndCreateVehicles(
     }
 
     // Check offset validity
-    // Use effective line length (lineLength - wheelbase) so that R (rear axle)
-    // doesn't exceed the line boundary when considering the vehicle's wheelbase
+    // Use effective line length (lineLength - maxWheelbase) so that R (rear axle)
+    // doesn't exceed the line boundary when considering the vehicle's maxWheelbase
     const lineLength = distance(line.start, line.end)
-    const effectiveLineLength = Math.max(0, lineLength - wheelbase)
+    const effectiveLineLength = Math.max(0, lineLength - maxWheelbase)
     let effectiveOffset: number
 
     if (vs.isPercentage) {
@@ -64,7 +64,7 @@ export function validateAndCreateVehicles(
     const front = calculateInitialFrontPosition(
       vs.lineId,
       effectiveOffset,
-      wheelbase,
+      maxWheelbase,
       line
     )
 

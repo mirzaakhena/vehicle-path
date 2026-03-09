@@ -21,7 +21,7 @@ describe('useAnimation', () => {
   ]
 
   const mockCurves: Curve[] = []
-  const wheelbase = 30
+  const maxWheelbase = 30
 
   const createMockVehicle = (id: string, lineId: string, offset: number): Vehicle => ({
     id,
@@ -36,8 +36,8 @@ describe('useAnimation', () => {
     },
     front: {
       lineId,
-      absoluteOffset: offset + wheelbase,
-      position: { x: 100 + offset + wheelbase, y: 100 }
+      absoluteOffset: offset + maxWheelbase,
+      position: { x: 100 + offset + maxWheelbase, y: 100 }
     }
   })
 
@@ -50,7 +50,7 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          wheelbase,
+          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves
         })
@@ -87,7 +87,7 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          wheelbase,
+          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves
         })
@@ -111,7 +111,7 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          wheelbase,
+          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves
         })
@@ -130,7 +130,7 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          wheelbase,
+          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves
         })
@@ -154,7 +154,7 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          wheelbase,
+          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves
         })
@@ -174,7 +174,7 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          wheelbase,
+          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves,
           eventEmitter: emitter
@@ -196,7 +196,7 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          wheelbase,
+          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves
         })
@@ -219,7 +219,7 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          wheelbase,
+          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves
         })

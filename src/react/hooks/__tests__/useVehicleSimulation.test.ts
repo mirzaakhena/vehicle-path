@@ -5,7 +5,7 @@ import { useVehicleSimulation } from '../useVehicleSimulation'
 describe('useVehicleSimulation', () => {
   describe('initial state', () => {
     it('should initialize with empty state', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       expect(result.current.lines).toEqual([])
       expect(result.current.curves).toEqual([])
@@ -18,7 +18,7 @@ describe('useVehicleSimulation', () => {
 
   describe('scene operations', () => {
     it('should add and remove lines', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -35,7 +35,7 @@ describe('useVehicleSimulation', () => {
     })
 
     it('should update line coordinates', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -52,7 +52,7 @@ describe('useVehicleSimulation', () => {
     })
 
     it('should fail to update non-existent line', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       let response: ReturnType<typeof result.current.updateLine>
       act(() => {
@@ -66,7 +66,7 @@ describe('useVehicleSimulation', () => {
 
   describe('connection operations (connect/disconnect)', () => {
     it('should connect two lines', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -83,7 +83,7 @@ describe('useVehicleSimulation', () => {
     })
 
     it('should connect with from/to positions', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -101,7 +101,7 @@ describe('useVehicleSimulation', () => {
     })
 
     it('should disconnect two lines', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -124,7 +124,7 @@ describe('useVehicleSimulation', () => {
 
   describe('vehicle operations', () => {
     it('should add and remove vehicles', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -147,7 +147,7 @@ describe('useVehicleSimulation', () => {
 
   describe('movement operations (goto)', () => {
     it('should queue movements with goto', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -168,7 +168,7 @@ describe('useVehicleSimulation', () => {
     })
 
     it('should use default targetPosition of 1.0', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -190,7 +190,7 @@ describe('useVehicleSimulation', () => {
 
   describe('DSL loading', () => {
     it('should load scene from DSL', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.loadFromDSL(`
@@ -205,7 +205,7 @@ describe('useVehicleSimulation', () => {
     })
 
     it('should load vehicles after scene is loaded', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       // First load scene
       act(() => {
@@ -232,7 +232,7 @@ describe('useVehicleSimulation', () => {
     })
 
     it('should warn on DSL parse errors', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       let response: ReturnType<typeof result.current.loadFromDSL>
       act(() => {
@@ -250,7 +250,7 @@ describe('useVehicleSimulation', () => {
     })
 
     it('should clear existing scene when loading DSL', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       // Initial setup
       act(() => {
@@ -273,7 +273,7 @@ describe('useVehicleSimulation', () => {
 
   describe('edge cases: line removal', () => {
     it('should warn when removing line with vehicles', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -297,7 +297,7 @@ describe('useVehicleSimulation', () => {
     })
 
     it('should remove vehicles when their line is removed', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -320,7 +320,7 @@ describe('useVehicleSimulation', () => {
     })
 
     it('should warn about orphaned connections', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -347,7 +347,7 @@ describe('useVehicleSimulation', () => {
 
   describe('edge cases: vehicle removal', () => {
     it('should warn and clear queue when removing vehicle with queued movements', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -381,7 +381,7 @@ describe('useVehicleSimulation', () => {
 
   describe('utility functions', () => {
     it('getVehiclesOnLine should return vehicles on specified line', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -405,7 +405,7 @@ describe('useVehicleSimulation', () => {
     })
 
     it('hasVehiclesOnLine should return correct boolean', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -425,7 +425,7 @@ describe('useVehicleSimulation', () => {
 
   describe('clearScene', () => {
     it('should clear everything', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -462,7 +462,7 @@ describe('useVehicleSimulation', () => {
 
   describe('clearVehicles', () => {
     it('should clear vehicles and their queues but keep lines', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       act(() => {
         result.current.addLine({ id: 'line001', start: [0, 0], end: [400, 0] })
@@ -495,7 +495,7 @@ describe('useVehicleSimulation', () => {
 
   describe('animation functions', () => {
     it('should have prepare, tick, reset, continueVehicle, isMoving', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       expect(typeof result.current.prepare).toBe('function')
       expect(typeof result.current.tick).toBe('function')
@@ -505,7 +505,7 @@ describe('useVehicleSimulation', () => {
     })
 
     it('isMoving should return false when no vehicles moving', () => {
-      const { result } = renderHook(() => useVehicleSimulation({ wheelbase: 30 }))
+      const { result } = renderHook(() => useVehicleSimulation({ maxWheelbase: 30 }))
 
       expect(result.current.isMoving()).toBe(false)
     })

@@ -37,7 +37,7 @@ export interface SimulationResult {
 }
 
 export interface UseVehicleSimulationProps {
-  wheelbase: number
+  maxWheelbase: number
   tangentMode?: TangentMode
   eventEmitter?: VehicleEventEmitter
 }
@@ -148,13 +148,13 @@ export interface UseVehicleSimulationResult {
  * ```
  */
 export function useVehicleSimulation({
-  wheelbase,
+  maxWheelbase,
   tangentMode = 'proportional-40',
   eventEmitter
 }: UseVehicleSimulationProps): UseVehicleSimulationResult {
   // Compose primitive hooks
   const scene = useScene()
-  const vehicleHook = useVehicles({ lines: scene.lines, wheelbase })
+  const vehicleHook = useVehicles({ lines: scene.lines, maxWheelbase })
   const movementQueue = useMovementQueue({
     vehicles: vehicleHook.vehicles,
     lines: scene.lines,
@@ -165,7 +165,7 @@ export function useVehicleSimulation({
     lines: scene.lines,
     vehicleQueues: movementQueue.vehicleQueues,
     getVehicleQueues: movementQueue.getVehicleQueues,
-    wheelbase,
+    maxWheelbase,
     tangentMode,
     curves: scene.curves,
     eventEmitter
@@ -400,7 +400,7 @@ export function useVehicleSimulation({
 
     // 3. Create vehicles using core function (synchronous)
     const vehicleStarts = vehiclesParsed.data.map(toVehicleStart)
-    const { vehicles, errors: vehicleErrors } = validateAndCreateVehicles(vehicleStarts, lines, wheelbase)
+    const { vehicles, errors: vehicleErrors } = validateAndCreateVehicles(vehicleStarts, lines, maxWheelbase)
     if (vehicleErrors.length > 0) {
       allErrors.push(...vehicleErrors)
     }
@@ -431,7 +431,7 @@ export function useVehicleSimulation({
       success: true,
       warnings: warnings.length > 0 ? warnings : undefined
     }
-  }, [scene, vehicleHook, movementQueue, wheelbase])
+  }, [scene, vehicleHook, movementQueue, maxWheelbase])
 
   // JSON: loadFromJSON - loads entire simulation from a JSON configuration object
   const loadFromJSON = useCallback((config: SimulationConfig): SimulationResult => {
@@ -444,7 +444,7 @@ export function useVehicleSimulation({
 
     // 2. Create vehicles using core function
     const vehicleStarts = (config.vehicles || []).map(toVehicleStart)
-    const { vehicles, errors: vehicleErrors } = validateAndCreateVehicles(vehicleStarts, lines, wheelbase)
+    const { vehicles, errors: vehicleErrors } = validateAndCreateVehicles(vehicleStarts, lines, maxWheelbase)
     if (vehicleErrors.length > 0) {
       allErrors.push(...vehicleErrors)
     }
@@ -481,7 +481,7 @@ export function useVehicleSimulation({
       success: true,
       warnings: warnings.length > 0 ? warnings : undefined
     }
-  }, [scene, vehicleHook, movementQueue, wheelbase])
+  }, [scene, vehicleHook, movementQueue, maxWheelbase])
 
   // Combined error state
   const error = useMemo(() => {
