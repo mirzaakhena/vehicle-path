@@ -11,7 +11,8 @@ import {
   updateAxlePosition,
   prepareCommandPath,
   calculateInitialFrontPosition,
-  calculateInitialAxlePositions
+  calculateInitialAxlePositions,
+  moveVehicle
 } from '../vehicleMovement'
 import { buildGraph } from '../pathFinding'
 import { buildArcLengthTable } from '../math'
@@ -1049,6 +1050,63 @@ describe('calculateInitialAxlePositions', () => {
   it('should set lineId on all axles', () => {
     const axles = calculateInitialAxlePositions('l1', 10, [20, 15], line)
     expect(axles.every(a => a.lineId === 'l1')).toBe(true)
+  })
+})
+
+// =============================================================================
+// moveVehicle (multi-axle) Tests
+// =============================================================================
+
+describe('moveVehicle (multi-axle)', () => {
+  // Setup: line 200px, vehicle dengan 3 axles, spacings [30, 25]
+  // axles[2] (rear) di offset 0, axles[1] di 25, front (axles[0]) di 55
+  const line = createLine('line1', 0, 0, 200, 0)
+  const linesMap = new Map([['line1', line]])
+  const curveDataMap = new Map<number, CurveData>()
+  const path: PathResult = {
+    segments: [{ type: 'line', lineId: 'line1', startOffset: 0, endOffset: 170, length: 170 }],
+    totalDistance: 170
+  }
+  const axleStates = [
+    createAxleState('line1', 55, 0, 55), // axles[0] = front
+    createAxleState('line1', 25, 0, 25), // axles[1] = mid
+    createAxleState('line1', 0, 0, 0)    // axles[2] = rear
+  ]
+  const axleExecutions = [
+    createAxleExecution(0, 55), // front sudah di arc-pos 55
+    createAxleExecution(0, 25),
+    createAxleExecution(0, 0)
+  ]
+
+  it('should move all axles by same distance', () => {
+    const result = moveVehicle(axleStates, axleExecutions, path, 10, linesMap, curveDataMap)
+    expect(result.axles[2].absoluteOffset).toBeCloseTo(10)   // rear moved
+    expect(result.axles[1].absoluteOffset).toBeCloseTo(35)   // mid moved
+    expect(result.axles[0].absoluteOffset).toBeCloseTo(65)   // front moved
+    expect(result.arrived).toBe(false)
+  })
+
+  it('arrived = true when axles[0] (front) completes path', () => {
+    // front execution sudah hampir di ujung, move 999 steps
+    const nearEndAxles = [
+      createAxleState('line1', 165, 0, 165), // front hampir di endOffset 170
+      createAxleState('line1', 135, 0, 135),
+      createAxleState('line1', 110, 0, 110)
+    ]
+    const nearEndExecs = [
+      createAxleExecution(0, 165),
+      createAxleExecution(0, 135),
+      createAxleExecution(0, 110)
+    ]
+    const result = moveVehicle(nearEndAxles, nearEndExecs, path, 999, linesMap, curveDataMap)
+    expect(result.arrived).toBe(true)
+  })
+
+  it('should return updated axleExecutions for all axles', () => {
+    const result = moveVehicle(axleStates, axleExecutions, path, 5, linesMap, curveDataMap)
+    expect(result.axleExecutions).toHaveLength(3)
+    expect(result.axleExecutions[0].segmentDistance).toBeCloseTo(60)
+    expect(result.axleExecutions[2].segmentDistance).toBeCloseTo(5)
   })
 })
 

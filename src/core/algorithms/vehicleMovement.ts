@@ -641,61 +641,54 @@ export function handleArrival(
 export type { VehicleMovementState as SegmentVehicleState }
 
 // ============================================================================
-// moveVehicle — Dual-Axle Tick Primitive
+// moveVehicle — N-Axle Tick Primitive
 // ============================================================================
 
 /**
- * Advance both axles of a vehicle by `distance` along a prepared path.
+ * Advance semua axle vehicle oleh `distance` sepanjang path.
  *
- * This is the low-level tick primitive. It updates both rear and front axles
- * using arc-length parameterization and returns whether the rear axle has
- * reached the end of the path (arrived).
+ * Ini adalah low-level tick primitive. Update semua axle menggunakan
+ * arc-length parameterization. Arrival = axles[0] (terdepan) mencapai ujung path.
  *
- * @param rear - Current rear axle state
- * @param front - Current front axle state
- * @param rearExecution - Current rear axle execution position in path
- * @param frontExecution - Current front axle execution position in path
- * @param path - The path to follow
- * @param distance - Distance to advance this tick
- * @param linesMap - Scene lines map for position calculation
- * @param curveDataMap - Pre-built bezier curve data for the path's curve segments
- * @returns Updated axle states, execution states, and arrival flag
+ * @param axleStates - Array AxleState saat ini, axles[0] = terdepan
+ * @param axleExecutions - Array AxleExecutionState sesuai urutan axleStates
+ * @param path - Path yang diikuti
+ * @param distance - Jarak yang dimaju per tick
+ * @param linesMap - Map line ID ke Line object
+ * @param curveDataMap - Pre-built bezier curve data
+ * @returns Updated axles, axleExecutions, dan arrival flag
  */
 export function moveVehicle(
-  rear: AxleState,
-  front: AxleState,
-  rearExecution: AxleExecutionState,
-  frontExecution: AxleExecutionState,
+  axleStates: AxleState[],
+  axleExecutions: AxleExecutionState[],
   path: PathResult,
   distance: number,
   linesMap: Map<string, Line>,
   curveDataMap: Map<number, CurveData>
 ): {
-  rear: AxleState
-  front: AxleState
-  rearExecution: AxleExecutionState
-  frontExecution: AxleExecutionState
+  axles: AxleState[]
+  axleExecutions: AxleExecutionState[]
   arrived: boolean
 } {
-  // Front axle may extend beyond the rear's path end on the final line segment
-  // (it physically hangs over the target while the rear arrives)
+  // axles[0] = terdepan, boleh "hang over" di ujung line segment terakhir
   let frontMaxOffset: number | undefined
-  if (frontExecution.currentSegmentIndex < path.segments.length) {
-    const seg = path.segments[frontExecution.currentSegmentIndex]
+  const frontExec = axleExecutions[0]
+  if (frontExec.currentSegmentIndex < path.segments.length) {
+    const seg = path.segments[frontExec.currentSegmentIndex]
     if (seg.type === 'line') {
       const line = linesMap.get(seg.lineId!)
       if (line) frontMaxOffset = getLineLength(line)
     }
   }
 
-  const rearResult = updateAxlePosition(rear, rearExecution, path, distance, linesMap, curveDataMap)
-  const frontResult = updateAxlePosition(front, frontExecution, path, distance, linesMap, curveDataMap, frontMaxOffset)
+  const results = axleStates.map((axle, i) => {
+    const maxOffset = i === 0 ? frontMaxOffset : undefined
+    return updateAxlePosition(axle, axleExecutions[i], path, distance, linesMap, curveDataMap, maxOffset)
+  })
 
   return {
-    rear: rearResult.axleState,
-    front: frontResult.axleState,
-    rearExecution: rearResult.execution,
-    frontExecution: frontResult.execution,
-    arrived: rearResult.completed
+    axles: results.map(r => r.axleState),
+    axleExecutions: results.map(r => r.execution),
+    arrived: results[0].completed  // axles[0] = terdepan menentukan arrived
   }
 }
