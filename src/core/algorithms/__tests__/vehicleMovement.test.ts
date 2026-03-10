@@ -1090,7 +1090,7 @@ describe('moveVehicle (multi-axle)', () => {
     expect(result.arrived).toBe(false)
   })
 
-  it('arrived = true when axles[0] (front) completes path', () => {
+  it('arrived = true when axles[N-1] (rear) completes path', () => {
     // front execution sudah hampir di ujung, move 999 steps
     const nearEndAxles = [
       createAxleState('line1', 165, 0, 165), // front hampir di endOffset 170

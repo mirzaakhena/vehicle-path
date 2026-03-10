@@ -648,7 +648,12 @@ export type { VehicleMovementState as SegmentVehicleState }
  * Advance semua axle vehicle oleh `distance` sepanjang path.
  *
  * Ini adalah low-level tick primitive. Update semua axle menggunakan
- * arc-length parameterization. Arrival = axles[0] (terdepan) mencapai ujung path.
+ * arc-length parameterization. Arrival = axles[N-1] (rearmost) mencapai ujung path.
+ *
+ * Semantik: path dibuat dari posisi rear axle ke targetOffset. Sehingga
+ * `arrived=true` berarti rear axle telah mencapai targetOffset — bukan
+ * front axle mencapai ujung segmennya. Front axle tetap bisa "hang over"
+ * di luar batas path (di ujung line) via maxOffset.
  *
  * @param axleStates - Array AxleState saat ini, axles[0] = terdepan
  * @param axleExecutions - Array AxleExecutionState sesuai urutan axleStates
@@ -689,6 +694,6 @@ export function moveVehicle(
   return {
     axles: results.map(r => r.axleState),
     axleExecutions: results.map(r => r.execution),
-    arrived: results[0].completed  // axles[0] = terdepan menentukan arrived
+    arrived: results[results.length - 1].completed  // axles[N-1] = rearmost menentukan arrived
   }
 }

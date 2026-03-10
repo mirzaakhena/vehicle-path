@@ -155,7 +155,7 @@ export function useAnimation({
 
       const exec = state.execution
 
-      // Move semua axle sekaligus — arrived = axles[0] (terdepan) mencapai ujung path
+      // Move semua axle sekaligus — arrived = axles[N-1] (rearmost) mencapai ujung path
       const mvResult = moveVehicle(
         state.vehicle.axles,
         exec.axles,
