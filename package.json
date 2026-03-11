@@ -1,6 +1,6 @@
 {
   "name": "vehicle-path2",
-  "version": "2.4.0",
+  "version": "3.0.0",
   "description": "Vehicle motion simulator library for dual-axle vehicle movement along paths composed of lines and Bezier curves",
   "type": "module",
   "main": "./dist/vehicle-path.cjs",
