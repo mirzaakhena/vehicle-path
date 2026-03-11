@@ -235,12 +235,16 @@ export class PathEngine {
    * @param rearOffset - Absolute distance offset untuk axle paling belakang
    * @param vehicle - VehicleDefinition (or any object extending it with axleSpacings)
    * @returns Initial VehiclePathState, or null if lineId does not exist
+   * @throws if axleSpacings is empty
    */
   initializeVehicle(lineId: string, rearOffset: number, vehicle: VehicleDefinition): VehiclePathState | null {
     const line = this.linesMap.get(lineId)
     if (!line) return null
 
     const { axleSpacings } = vehicle
+    if (axleSpacings.length === 0) {
+      throw new Error('initializeVehicle: axleSpacings must have at least one entry (vehicle needs ≥2 axles)')
+    }
     const totalVehicleLength = axleSpacings.reduce((a, b) => a + b, 0)
     const lineLen = getLineLength(line)
     const clampedRear = Math.min(rearOffset, lineLen - totalVehicleLength)

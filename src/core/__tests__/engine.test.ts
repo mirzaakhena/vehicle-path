@@ -41,7 +41,12 @@ describe('PathEngine.initializeVehicle', () => {
     // Line length = 200, total spacing = 150. Max rearOffset = 50.
     const state = engine.initializeVehicle('L1', 999, { axleSpacings: [150] })
     expect(state).not.toBeNull()
-    // Rear axle (axles[1]) offset should be clamped to 50
-    expect(state!.axles[1].offset).toBeCloseTo(50)
+    // Rear axle (axles[N-1]) offset should be clamped to 50
+    expect(state!.axles[state!.axles.length - 1].offset).toBeCloseTo(50)
+  })
+
+  it('throws if axleSpacings is empty', () => {
+    const engine = makeEngine()
+    expect(() => engine.initializeVehicle('L1', 0, { axleSpacings: [] })).toThrow('axleSpacings must have at least one entry')
   })
 })
