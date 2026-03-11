@@ -45,7 +45,7 @@ export interface AxleState {
 /**
  * Vehicle with runtime state (used during animation)
  */
-export interface Vehicle {
+export interface Vehicle extends VehicleDefinition {
   id: string
   // Initial configuration (for rearmost axle)
   lineId: string
@@ -55,8 +55,6 @@ export interface Vehicle {
   state: VehicleState
   // Multi-axle: axles[0] = terdepan, axles[N-1] = paling belakang
   axles: AxleState[]
-  // N-1 jarak antar axle berurutan, axleSpacings[i] = jarak axles[i] ke axles[i+1]
-  axleSpacings: number[]
 }
 
 /**

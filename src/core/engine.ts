@@ -13,7 +13,7 @@
  *
  * engine.setScene(lines, curves)
  *
- * const state = engine.initializeVehicle('line-1', 0, { axleSpacings: [40] })
+ * const state = engine.initializeVehicle('line-1', 0, [40])
  * const execution = engine.preparePath(state, 'line-3', 1.0, true)
  *
  * // In your animation/game loop:
