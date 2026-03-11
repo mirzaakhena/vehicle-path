@@ -9,11 +9,11 @@
  * ```typescript
  * import { PathEngine } from 'vehicle-path/core'
  *
- * const engine = new PathEngine({ wheelbase: 30, tangentMode: 'proportional-40' })
+ * const engine = new PathEngine({ maxWheelbase: 100, tangentMode: 'proportional-40' })
  *
  * engine.setScene(lines, curves)
  *
- * const state = engine.initializeVehicle('line-1', 0, [40])
+ * const state = engine.initializeVehicle('line-1', 0, { axleSpacings: [40] })
  * const execution = engine.preparePath(state, 'line-3', 1.0, true)
  *
  * // In your animation/game loop:
@@ -233,13 +233,14 @@ export class PathEngine {
    *
    * @param lineId - The line to place the vehicle on
    * @param rearOffset - Absolute distance offset untuk axle paling belakang
-   * @param axleSpacings - Jarak antar axle berurutan (N-1 nilai untuk N axle)
+   * @param vehicle - VehicleDefinition (or any object extending it with axleSpacings)
    * @returns Initial VehiclePathState, or null if lineId does not exist
    */
-  initializeVehicle(lineId: string, rearOffset: number, axleSpacings: number[]): VehiclePathState | null {
+  initializeVehicle(lineId: string, rearOffset: number, vehicle: VehicleDefinition): VehiclePathState | null {
     const line = this.linesMap.get(lineId)
     if (!line) return null
 
+    const { axleSpacings } = vehicle
     const totalVehicleLength = axleSpacings.reduce((a, b) => a + b, 0)
     const lineLen = getLineLength(line)
     const clampedRear = Math.min(rearOffset, lineLen - totalVehicleLength)
