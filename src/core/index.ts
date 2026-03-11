@@ -145,3 +145,10 @@ export {
   deserializeScene,
   type SceneSnapshot
 } from './snapshot'
+
+// Geometry Utilities
+export {
+  projectPointOnLine,
+  getValidRearOffsetRange,
+  computeMinLineLength
+} from './algorithms/geometry'
