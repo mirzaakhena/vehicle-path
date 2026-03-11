@@ -1,6 +1,6 @@
 # vehicle-path2
 
-Library untuk simulasi pergerakan kendaraan dual-axle sepanjang jalur.
+Library untuk simulasi pergerakan kendaraan multi-axle sepanjang jalur yang terdiri dari Lines dan Curves.
 
 ## Instalasi
 
@@ -8,160 +8,281 @@ Library untuk simulasi pergerakan kendaraan dual-axle sepanjang jalur.
 npm install vehicle-path2
 ```
 
-## Quick Start
+## Konsep Dasar
 
-```tsx
-import { useVehicleSimulation } from 'vehicle-path2/react'
+- **Line** — segmen garis lurus antara dua titik. Kendaraan bergerak di atas line.
+- **Curve** — koneksi antara dua line. Berbentuk kurva bezier, menghubungkan ujung satu line ke awal line berikutnya.
+- **Vehicle** — kendaraan dengan N axle yang ditempatkan di atas sebuah line. Library tidak menyimpan daftar vehicle — itu tanggung jawab client.
 
-function App() {
-  const sim = useVehicleSimulation({ wheelbase: 30 })
+Titik acuan kendaraan adalah **axle paling belakang** (`axles[N-1]`). Semua axle lainnya dihitung ke depan berdasarkan `axleSpacings`.
 
-  // Buat jalur
-  sim.addLine({ id: 'line1', start: [0, 0], end: [400, 0] })
-  sim.addLine({ id: 'line2', start: [400, 0], end: [400, 300] })
-  sim.connect('line1', 'line2')
+---
 
-  // Tambah kendaraan
-  sim.addVehicles({ id: 'v1', lineId: 'line1', position: 0 })
+## Setup
 
-  // Gerakkan ke tujuan
-  sim.goto({ id: 'v1', lineId: 'line2', position: 1.0 })
+```typescript
+import { PathEngine } from 'vehicle-path2/core'
 
-  // Jalankan animasi
-  sim.prepare()
-  sim.tick(5) // panggil di animation loop
-}
-```
-
-## API
-
-### Format Posisi
-
-Semua nilai posisi menggunakan format **0-1** untuk persentase:
-- `0` = 0% (awal line)
-- `0.5` = 50% (tengah line)
-- `1` = 100% (ujung line)
-
-Untuk posisi absolut (dalam satuan koordinat), gunakan `isPercentage: false`.
-
-### Setup
-
-```ts
-const sim = useVehicleSimulation({
-  wheelbase: 30,                    // jarak antar roda
-  tangentMode: 'proportional-40'    // mode kurva (opsional)
+const engine = new PathEngine({
+  maxWheelbase: 100,              // batas maksimum total panjang kendaraan
+  tangentMode: 'proportional-40' // mode kurva bezier
 })
 ```
 
-### Scene
+---
 
-```ts
-sim.addLine({ id: 'line1', start: [0, 0], end: [400, 0] })
-sim.updateLine('line1', { end: [500, 100] })
-sim.removeLine('line1')
-sim.clearScene()
+## Manajemen Scene
+
+### Lines
+
+```typescript
+// Tambah line
+engine.addLine({ id: 'L1', start: { x: 0, y: 0 }, end: { x: 400, y: 0 } })
+// → false jika ID sudah ada
+
+// Update posisi titik
+engine.updateLine('L1', { end: { x: 500, y: 0 } })
+engine.updateLineEndpoint('L1', 'start', { x: 10, y: 0 })
+
+// Rename — cascade: semua curve yang referensi 'L1' otomatis diupdate ke 'L1-new'
+engine.renameLine('L1', 'L1-new')
+// → { success: true } atau { success: false, error: '...' }
+
+// Hapus — cascade: semua curve yang terhubung ke line ini ikut dihapus
+engine.removeLine('L1')
+
+// Baca semua lines
+engine.lines // → Line[]
 ```
 
-### Koneksi
+> **Konsekuensi `removeLine`:** Semua curve yang `fromLineId` atau `toLineId`-nya adalah line tersebut akan otomatis ikut dihapus.
 
-```ts
-sim.connect('line1', 'line2')
-sim.connect('line1', 'line2', { fromOffset: 0.8, toOffset: 0.2 })
-sim.connect('line1', 'line2', { fromOffset: 150, fromIsPercentage: false, toOffset: 50, toIsPercentage: false })
-sim.updateConnection('line1', 'line2', { fromOffset: 0.5 })              // update offset
-sim.updateConnection('line1', 'line2', { toOffset: 100, toIsPercentage: false }) // absolute
-sim.disconnect('line1', 'line2')
+> **Konsekuensi `renameLine`:** Semua curve yang `fromLineId` atau `toLineId`-nya adalah ID lama otomatis diupdate ke ID baru. Graph di-rebuild secara otomatis.
+
+---
+
+### Curves
+
+Curve menghubungkan **ujung satu line** ke **awal line lain**. Tidak bisa berdiri sendiri — harus selalu mereferensi dua line yang valid.
+
+```typescript
+import type { Curve } from 'vehicle-path2/core'
+
+// Tambah curve
+engine.addCurve({
+  fromLineId: 'L1',
+  toLineId: 'L2',
+  fromOffset: 380,        // posisi di L1 (px dari start)
+  fromIsPercentage: false,
+  toOffset: 20,           // posisi di L2 (px dari start)
+  toIsPercentage: false,
+} as Curve)
+
+// Atau dengan offset persentase (0–1)
+engine.addCurve({
+  fromLineId: 'L1',
+  toLineId: 'L2',
+  fromOffset: 0.95,
+  fromIsPercentage: true,
+  toOffset: 0.05,
+  toIsPercentage: true,
+} as Curve)
+
+// Update curve berdasarkan index
+engine.updateCurve(0, { fromOffset: 0.9 })
+
+// Hapus curve berdasarkan index
+engine.removeCurve(0)
+
+// Baca semua curves
+engine.getCurves() // → Curve[]
 ```
 
-### Kendaraan
+> **Catatan:** Curve diidentifikasi via **array index** (bukan named ID). Gunakan `getCurves()` lalu cari index yang sesuai sebelum update/delete.
 
-```ts
-sim.addVehicles({ id: 'v1', lineId: 'line1', position: 0 })
-sim.addVehicles({ id: 'v2', lineId: 'line1', position: 150, isPercentage: false }) // absolute
-sim.updateVehicle('v1', { position: 0.5 })                    // pindah ke 50%
-sim.updateVehicle('v1', { lineId: 'line2' })                  // pindah ke line lain
-sim.updateVehicle('v1', { lineId: 'line2', position: 0.8 })   // pindah ke 80% di line2
-sim.removeVehicle('v1')
-sim.clearVehicles()
+> **Konsekuensi `removeLine`:** Curve yang terhubung ke line yang dihapus otomatis ikut terhapus, sehingga index curve-curve lainnya bisa bergeser.
+
+---
+
+### Muat Scene Sekaligus
+
+```typescript
+// Replace seluruh scene secara atomik
+engine.setScene(lines, curves)
 ```
 
-### Pergerakan
+---
 
-```ts
-sim.goto({ id: 'v1', lineId: 'line2' })                // default position = 1.0 (ujung)
-sim.goto({ id: 'v1', lineId: 'line2', position: 0.5 }) // 0.5 = tengah line
-sim.goto({ id: 'v1', lineId: 'line2', position: 150, isPercentage: false }) // absolute
-sim.goto({ id: 'v1', lineId: 'line2', payload: { orderId: '123' } })        // dengan payload
-sim.clearQueue('v1')
+## Vehicle
+
+Library menyediakan tipe dasar `VehicleDefinition`. Client bebas extend dengan field tambahan (id, name, color, dsb).
+
+```typescript
+import type { VehicleDefinition } from 'vehicle-path2/core'
+
+// Definisi minimal
+const def: VehicleDefinition = { axleSpacings: [40] } // 2 axle, jarak 40px
+
+// Client extend sesuai kebutuhan
+interface MyVehicle extends VehicleDefinition {
+  id: string
+  name: string
+}
+
+const truck: MyVehicle = { id: 'v1', name: 'Truck A', axleSpacings: [40, 40] } // 3 axle
 ```
 
-### Animasi
+> `axleSpacings[i]` = jarak arc-length antara `axles[i]` dan `axles[i+1]`. Array harus memiliki minimal 1 entry.
 
-```ts
-sim.prepare()              // siapkan sebelum animasi
-sim.tick(5)                // gerakkan 5 pixel per tick
-sim.reset()                // kembali ke posisi awal
-sim.isMoving()             // cek ada yang bergerak
-sim.continueVehicle('v1')  // lanjutkan vehicle yang wait
+---
+
+## Pergerakan Kendaraan
+
+Tiga method berikut digunakan secara berurutan:
+
+### 1. `initializeVehicle` — Tempatkan kendaraan
+
+Hitung posisi awal semua axle di atas sebuah line.
+
+```typescript
+const state = engine.initializeVehicle(
+  'L1',    // lineId: line tempat kendaraan ditempatkan
+  0,       // rearOffset: jarak dari start line ke axle paling belakang (px)
+  truck    // VehicleDefinition (atau object yang extends-nya)
+)
+
+// state → VehiclePathState | null (null jika lineId tidak ditemukan)
+// state.axles[0]   = axle terdepan
+// state.axles[N-1] = axle paling belakang (titik acuan)
+// state.axleSpacings = [40, 40]
 ```
 
-### Load dari DSL
+### 2. `preparePath` — Tentukan tujuan
 
-```ts
-sim.loadFromDSL(`
-  line1 : (0, 0) -> (400, 0)
-  line2 : (400, 0) -> (400, 300)
-  line1 -> line2
-`)
+Jalankan Dijkstra untuk mencari rute dari posisi saat ini ke tujuan. Dipanggil **sekali** sebelum animasi dimulai.
+
+```typescript
+const execution = engine.preparePath(
+  state,    // posisi vehicle sekarang (dari initializeVehicle atau tick sebelumnya)
+  'L3',     // targetLineId: line tujuan
+  0.5,      // targetOffset: posisi di line tujuan
+  true      // isPercentage: true = 50% dari panjang line, false = nilai absolut (px)
+)
+
+// execution → PathExecution | null (null jika tidak ada rute)
 ```
 
-### State
+### 3. `moveVehicle` — Jalankan per tick
 
-```ts
-sim.lines          // semua line
-sim.curves         // semua koneksi
-sim.vehicles       // kendaraan (posisi awal)
-sim.movingVehicles // kendaraan (posisi saat animasi)
-```
+Dipanggil setiap frame di animation loop. Mengembalikan posisi baru semua axle.
 
-## Contoh Lengkap
+```typescript
+const result = engine.moveVehicle(
+  state,      // posisi vehicle sekarang
+  execution,  // rencana rute (dari preparePath)
+  speed * deltaTime  // jarak yang ditempuh di frame ini (px)
+)
 
-```tsx
-import { useVehicleSimulation } from 'vehicle-path2/react'
-import { useEffect } from 'react'
+state = result.state         // posisi baru → simpan untuk tick berikutnya
+execution = result.execution // progress terbaru → simpan untuk tick berikutnya
 
-function AnimatedVehicle() {
-  const sim = useVehicleSimulation({ wheelbase: 30 })
-
-  useEffect(() => {
-    sim.addLine({ id: 'line1', start: [100, 100], end: [500, 100] })
-    sim.addVehicles({ id: 'v1', lineId: 'line1', position: 0 })
-    sim.goto({ id: 'v1', lineId: 'line1', position: 1.0 })
-    sim.prepare()
-
-    const animate = () => {
-      if (sim.tick(3)) {
-        requestAnimationFrame(animate)
-      }
-    }
-    requestAnimationFrame(animate)
-  }, [])
-
-  return (
-    <svg width={600} height={200}>
-      {sim.movingVehicles.map(v => (
-        <circle
-          key={v.id}
-          cx={v.rear.position.x}
-          cy={v.rear.position.y}
-          r={10}
-          fill="blue"
-        />
-      ))}
-    </svg>
-  )
+if (result.arrived) {
+  // Kendaraan sudah sampai tujuan
 }
 ```
+
+---
+
+### Contoh Lengkap: Animation Loop
+
+```typescript
+import { PathEngine } from 'vehicle-path2/core'
+import type { VehiclePathState, PathExecution } from 'vehicle-path2/core'
+
+const engine = new PathEngine({ maxWheelbase: 100, tangentMode: 'proportional-40' })
+
+engine.setScene(
+  [
+    { id: 'L1', start: { x: 0,   y: 0 }, end: { x: 400, y: 0 } },
+    { id: 'L2', start: { x: 400, y: 0 }, end: { x: 400, y: 300 } },
+  ],
+  [
+    { fromLineId: 'L1', toLineId: 'L2', fromOffset: 1.0, fromIsPercentage: true, toOffset: 0.0, toIsPercentage: true }
+  ]
+)
+
+// Client mengelola data vehicle sendiri
+const myVehicle = { id: 'v1', name: 'Truck', axleSpacings: [40] }
+
+// 1. Tempatkan di L1, axle belakang di posisi 0
+let state: VehiclePathState = engine.initializeVehicle('L1', 0, myVehicle)!
+
+// 2. Tentukan tujuan: ujung L2
+let execution: PathExecution = engine.preparePath(state, 'L2', 1.0, true)!
+
+const speed = 80 // px/detik
+let lastTime = performance.now()
+
+function animate() {
+  const now = performance.now()
+  const deltaTime = (now - lastTime) / 1000 // dalam detik
+  lastTime = now
+
+  // 3. Gerakkan vehicle setiap frame
+  const result = engine.moveVehicle(state, execution, speed * deltaTime)
+  state = result.state
+  execution = result.execution
+
+  // Render semua axle
+  for (const axle of state.axles) {
+    drawCircle(axle.position.x, axle.position.y)
+  }
+
+  if (!result.arrived) {
+    requestAnimationFrame(animate)
+  }
+}
+
+requestAnimationFrame(animate)
+```
+
+---
+
+## Serialisasi Scene
+
+Hanya lines dan curves yang di-serialize oleh library. **Vehicle tidak termasuk** — persistensi vehicle adalah tanggung jawab client.
+
+```typescript
+import { serializeScene, deserializeScene } from 'vehicle-path2/core'
+
+// Simpan scene ke JSON string
+const json = serializeScene(engine.lines, engine.getCurves())
+
+// Muat kembali
+const snapshot = deserializeScene(json)
+engine.setScene(snapshot.lines, snapshot.curves)
+```
+
+---
+
+## Geometry Utilities
+
+```typescript
+import { projectPointOnLine, getValidRearOffsetRange, computeMinLineLength } from 'vehicle-path2/core'
+
+// Proyeksikan mouse/pointer ke garis — berguna untuk hit detection
+const { offset, distance } = projectPointOnLine({ x: 150, y: 10 }, line)
+// offset   = jarak dari start line ke titik proyeksi (px)
+// distance = jarak tegak lurus dari point ke garis (px)
+
+// Hitung range offset yang valid untuk axle belakang agar semua axle muat di line
+const [min, max] = getValidRearOffsetRange(line, myVehicle.axleSpacings)
+
+// Hitung panjang minimum sebuah line agar semua curve offset-nya tidak keluar batas
+const minLen = computeMinLineLength('L1', engine.getCurves())
+```
+
+---
 
 ## License
 
