@@ -396,6 +396,49 @@ git commit -m "feat: export geometry utilities from core public API"
 
 ---
 
+### Task 4: Bump versi library ke 2.4.0
+
+Perubahan ini additive (fungsi baru, tidak ada breaking change) → **minor bump**: `2.3.0` → `2.4.0`.
+
+**Files:**
+- Modify: `package.json` (library)
+
+---
+
+- [ ] **Step 1: Update versi di `package.json`**
+
+Di `C:/Users/Mirza/workspace/vehicle-path/package.json`, ganti:
+
+```json
+"version": "2.3.0",
+```
+
+menjadi:
+
+```json
+"version": "2.4.0",
+```
+
+- [ ] **Step 2: Build ulang dengan versi baru**
+
+```bash
+cd C:/Users/Mirza/workspace/vehicle-path
+npm run build
+```
+
+Expected: build sukses.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add package.json
+git commit -m "chore: bump to v2.4.0 — add geometry utilities"
+```
+
+> Publish ke npm dilakukan manual oleh pemilik project, bukan bagian dari plan ini.
+
+---
+
 ## Chunk 2: Demo Cleanup
 
 > **Prasyarat:** Chunk 1 harus selesai dan `npm run build` sudah dijalankan di library.
