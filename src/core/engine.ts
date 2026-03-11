@@ -13,7 +13,7 @@
  *
  * engine.setScene(lines, curves)
  *
- * const state = engine.initializeVehicle('line-1', 0)
+ * const state = engine.initializeVehicle('line-1', 0, { axleSpacings: [40] })
  * const execution = engine.preparePath(state, 'line-3', 1.0, true)
  *
  * // In your animation/game loop:
@@ -27,7 +27,7 @@
  */
 
 import type { Line, Curve, Point } from './types/geometry'
-import type { AxleState } from './types/vehicle'
+import type { AxleState, VehicleDefinition } from './types/vehicle'
 import type { MovementConfig, CurveData, AxleExecutionState } from './types/movement'
 import type { PathResult, Graph } from './algorithms/pathFinding'
 import type { TangentMode } from './types/config'
@@ -52,10 +52,8 @@ export interface PathEngineConfig {
  * Multi-axle position state for use with PathEngine.
  * axles[0] = terdepan, axles[N-1] = paling belakang.
  */
-export interface VehiclePathState {
+export interface VehiclePathState extends VehicleDefinition {
   axles: Array<{ lineId: string; offset: number; position: Point }>
-  /** N-1 jarak arc-length antar axle berurutan */
-  axleSpacings: number[]
 }
 
 /**

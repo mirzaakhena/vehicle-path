@@ -25,6 +25,7 @@ export type {
 
 // Vehicle types
 export type {
+  VehicleDefinition,
   VehicleState,
   VehicleStart,
   Vehicle,

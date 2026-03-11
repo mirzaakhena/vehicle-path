@@ -5,6 +5,18 @@
 import type { Point } from './geometry'
 
 /**
+ * Base definition of a vehicle's physical structure.
+ * Client code is free to extend this with additional fields (id, name, color, etc).
+ *
+ * @example
+ * interface MyVehicle extends VehicleDefinition { id: string; name: string }
+ */
+export interface VehicleDefinition {
+  /** N-1 arc-length spacings between consecutive axles. axleSpacings[i] = distance from axles[i] to axles[i+1]. */
+  axleSpacings: number[]
+}
+
+/**
  * Animation state for a vehicle
  */
 export type VehicleState = 'idle' | 'moving' | 'waiting'
