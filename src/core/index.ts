@@ -147,6 +147,17 @@ export {
   type SceneSnapshot
 } from './snapshot'
 
+// Acceleration (Experimental)
+export {
+  moveVehicleWithAcceleration,
+  computeRemainingToArrival,
+  computeDistToNextCurve,
+  computeTargetSpeed,
+  approachSpeed,
+  type AccelerationConfig,
+  type AccelerationState
+} from './algorithms/acceleration'
+
 // Geometry Utilities
 export {
   projectPointOnLine,
