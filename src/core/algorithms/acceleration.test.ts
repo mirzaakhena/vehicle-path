@@ -1,12 +1,16 @@
 import { describe, it, expect } from 'vitest'
 import type { PathResult } from './pathFinding'
 import type { PathExecution } from '../engine'
+import { PathEngine } from '../engine'
+import type { VehiclePathState } from '../engine'
 import {
   computeRemainingToArrival,
   computeDistToNextCurve,
   computeTargetSpeed,
-  approachSpeed
+  approachSpeed,
+  moveVehicleWithAcceleration
 } from './acceleration'
+import type { AccelerationConfig, AccelerationState } from './acceleration'
 
 // ─── Mock helpers ─────────────────────────────────────────────────────────
 
@@ -180,5 +184,113 @@ describe('approachSpeed', () => {
 
   it('scales with deltaTime', () => {
     expect(approachSpeed(0, 200, 50, 100, 0.5)).toBeCloseTo(25)
+  })
+})
+
+// ─── moveVehicleWithAcceleration (integration) ─────────────────────────────
+
+describe('moveVehicleWithAcceleration', () => {
+  function makeScene() {
+    const engine = new PathEngine({ maxWheelbase: 200, tangentMode: 'proportional-40' })
+    engine.setScene(
+      [
+        { id: 'L1', start: { x: 0, y: 0 }, end: { x: 400, y: 0 } },
+        { id: 'L2', start: { x: 400, y: 0 }, end: { x: 800, y: 0 } },
+      ],
+      [
+        {
+          fromLineId: 'L1', toLineId: 'L2',
+          fromOffset: 1.0, fromIsPercentage: true,
+          toOffset: 0.0, toIsPercentage: true,
+        },
+      ]
+    )
+    return engine
+  }
+
+  const vehicle = { axleSpacings: [40] }
+
+  const accelConfig: AccelerationConfig = {
+    acceleration: 200,
+    deceleration: 300,
+    maxSpeed: 300,
+    minCurveSpeed: 60,
+  }
+
+  function makeLinesMap(engine: ReturnType<typeof makeScene>) {
+    return new Map(engine.lines.map(l => [l.id, l]))
+  }
+
+  it('kendaraan akhirnya tiba di tujuan', () => {
+    const engine = makeScene()
+    const linesMap = makeLinesMap(engine)
+    let state = engine.initializeVehicle('L1', 0, vehicle)!
+    let execution = engine.preparePath(state, 'L2', 1.0, true)!
+    let accelState: AccelerationState = { currentSpeed: 0 }
+
+    let arrived = false
+    for (let i = 0; i < 5000 && !arrived; i++) {
+      const result = moveVehicleWithAcceleration(state, execution, accelState, accelConfig, 1 / 60, linesMap)
+      state = result.state
+      execution = result.execution
+      accelState = result.accelState
+      arrived = result.arrived
+    }
+
+    expect(arrived).toBe(true)
+  })
+
+  it('kecepatan dimulai dari 0 dan bertambah di tick pertama', () => {
+    const engine = makeScene()
+    const linesMap = makeLinesMap(engine)
+    const state = engine.initializeVehicle('L1', 0, vehicle)!
+    const execution = engine.preparePath(state, 'L2', 1.0, true)!
+    const accelState: AccelerationState = { currentSpeed: 0 }
+
+    const result = moveVehicleWithAcceleration(state, execution, accelState, accelConfig, 1 / 60, linesMap)
+
+    expect(result.accelState.currentSpeed).toBeGreaterThan(0)
+    expect(result.arrived).toBe(false)
+  })
+
+  it('kecepatan tidak pernah melebihi maxSpeed', () => {
+    const engine = makeScene()
+    const linesMap = makeLinesMap(engine)
+    let state = engine.initializeVehicle('L1', 0, vehicle)!
+    let execution = engine.preparePath(state, 'L2', 1.0, true)!
+    let accelState: AccelerationState = { currentSpeed: 0 }
+
+    let arrived = false
+    for (let i = 0; i < 5000 && !arrived; i++) {
+      const result = moveVehicleWithAcceleration(state, execution, accelState, accelConfig, 1 / 60, linesMap)
+      state = result.state
+      execution = result.execution
+      accelState = result.accelState
+      arrived = result.arrived
+      expect(accelState.currentSpeed).toBeLessThanOrEqual(accelConfig.maxSpeed + 0.01)
+    }
+  })
+
+  it('kecepatan melambat saat mendekati tujuan', () => {
+    const engine = makeScene()
+    const linesMap = makeLinesMap(engine)
+    let state = engine.initializeVehicle('L1', 0, vehicle)!
+    let execution = engine.preparePath(state, 'L2', 1.0, true)!
+    let accelState: AccelerationState = { currentSpeed: 0 }
+
+    const speedHistory: number[] = []
+    let arrived = false
+    for (let i = 0; i < 5000 && !arrived; i++) {
+      const result = moveVehicleWithAcceleration(state, execution, accelState, accelConfig, 1 / 60, linesMap)
+      state = result.state
+      execution = result.execution
+      accelState = result.accelState
+      arrived = result.arrived
+      speedHistory.push(accelState.currentSpeed)
+    }
+
+    const maxSpeedAchieved = Math.max(...speedHistory)
+    const avgLastSpeeds = speedHistory.slice(-10).reduce((a, b) => a + b, 0) / 10
+    expect(avgLastSpeeds).toBeLessThan(maxSpeedAchieved)
   })
 })

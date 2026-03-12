@@ -1,5 +1,8 @@
-import type { PathExecution } from '../engine'
-import { getCumulativeArcLength } from './vehicleMovement'
+import type { VehiclePathState, PathExecution } from '../engine'
+import type { Line } from '../types/geometry'
+import type { AxleState } from '../types/vehicle'
+import type { AxleExecutionState } from '../types/movement'
+import { getCumulativeArcLength, moveVehicle } from './vehicleMovement'
 
 // =============================================================================
 // Types
@@ -114,4 +117,79 @@ export function approachSpeed(
   if (current < target) return Math.min(target, current + acceleration * deltaTime)
   if (current > target) return Math.max(target, current - deceleration * deltaTime)
   return current
+}
+
+// =============================================================================
+// moveVehicleWithAcceleration — Top-level function (Experimental)
+// =============================================================================
+
+/**
+ * Gerakkan vehicle per tick dengan efek acceleration dan deceleration.
+ *
+ * Versi eksperimental dari PathEngine.moveVehicle yang menambahkan:
+ * - Startup acceleration: kendaraan mulai dari berhenti dan mempercepat
+ * - Pre-curve deceleration: melambat sebelum memasuki curve
+ * - Arrival deceleration: melambat hingga berhenti total di tujuan
+ *
+ * Tidak memodifikasi PathEngine atau moveVehicle yang sudah ada.
+ *
+ * @param state      - Posisi vehicle saat ini
+ * @param execution  - Rencana rute (dari preparePath atau tick sebelumnya)
+ * @param accelState - State kecepatan saat ini (simpan antar tick)
+ * @param config     - Parameter acceleration/deceleration
+ * @param deltaTime  - Durasi frame dalam detik (misal: 1/60 untuk 60fps)
+ * @param linesMap   - Map dari line ID ke Line object (buat dari engine.lines)
+ */
+export function moveVehicleWithAcceleration(
+  state: VehiclePathState,
+  execution: PathExecution,
+  accelState: AccelerationState,
+  config: AccelerationConfig,
+  deltaTime: number,
+  linesMap: Map<string, Line>
+): {
+  state: VehiclePathState
+  execution: PathExecution
+  accelState: AccelerationState
+  arrived: boolean
+} {
+  const distToArrival = computeRemainingToArrival(execution)
+  const distToNextCurve = computeDistToNextCurve(execution)
+  const targetSpeed = computeTargetSpeed(distToArrival, distToNextCurve, config)
+  const newSpeed = approachSpeed(
+    accelState.currentSpeed,
+    targetSpeed,
+    config.acceleration,
+    config.deceleration,
+    deltaTime
+  )
+  const distance = newSpeed * deltaTime
+
+  const axleStates: AxleState[] = state.axles.map(a => ({
+    lineId: a.lineId,
+    position: a.position,
+    absoluteOffset: a.offset,
+  }))
+  const axleExecs: AxleExecutionState[] = execution.axleExecutions.map(e => ({
+    currentSegmentIndex: e.segmentIndex,
+    segmentDistance: e.segmentDistance,
+  }))
+
+  const result = moveVehicle(axleStates, axleExecs, execution.path, distance, linesMap, execution.curveDataMap)
+
+  return {
+    state: {
+      axles: result.axles.map(a => ({ lineId: a.lineId, offset: a.absoluteOffset, position: a.position })),
+      axleSpacings: state.axleSpacings,
+    },
+    execution: {
+      ...execution,
+      axleExecutions: result.axleExecutions.map(e => ({
+        segmentIndex: e.currentSegmentIndex,
+        segmentDistance: e.segmentDistance,
+      })),
+    },
+    accelState: { currentSpeed: newSpeed },
+    arrived: result.arrived,
+  }
 }
