@@ -105,6 +105,16 @@ describe('computeDistToNextCurve', () => {
     expect(computeDistToNextCurve(exec)).toBe(0)
   })
 
+  it('returns 0 jika rear axle di tengah curve (bukan di awal)', () => {
+    const path = makePath([
+      { type: 'line', length: 100 },
+      { type: 'curve', length: 50 },
+      { type: 'line', length: 100 },
+    ])
+    const exec = makeExecution(path, 1, 25)
+    expect(computeDistToNextCurve(exec)).toBe(0)
+  })
+
   it('returns null jika curve sudah terlewati (hanya ada line setelah posisi saat ini)', () => {
     const path = makePath([
       { type: 'curve', length: 50 },
@@ -278,19 +288,20 @@ describe('moveVehicleWithAcceleration', () => {
     let execution = engine.preparePath(state, 'L2', 1.0, true)!
     let accelState: AccelerationState = { currentSpeed: 0 }
 
-    const speedHistory: number[] = []
+    let lastSpeedBeforeArrival = 0
     let arrived = false
     for (let i = 0; i < 5000 && !arrived; i++) {
+      lastSpeedBeforeArrival = accelState.currentSpeed
       const result = moveVehicleWithAcceleration(state, execution, accelState, accelConfig, 1 / 60, linesMap)
       state = result.state
       execution = result.execution
       accelState = result.accelState
       arrived = result.arrived
-      speedHistory.push(accelState.currentSpeed)
     }
 
-    const maxSpeedAchieved = Math.max(...speedHistory)
-    const avgLastSpeeds = speedHistory.slice(-10).reduce((a, b) => a + b, 0) / 10
-    expect(avgLastSpeeds).toBeLessThan(maxSpeedAchieved)
+    // Kendaraan harus sudah arrived
+    expect(arrived).toBe(true)
+    // Kecepatan di tick terakhir sebelum arrived harus mendekati nol (jauh di bawah minCurveSpeed)
+    expect(lastSpeedBeforeArrival).toBeLessThan(accelConfig.minCurveSpeed)
   })
 })
