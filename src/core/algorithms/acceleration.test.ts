@@ -304,4 +304,41 @@ describe('moveVehicleWithAcceleration', () => {
     // Kecepatan di tick terakhir sebelum arrived harus mendekati nol (jauh di bawah minCurveSpeed)
     expect(lastSpeedBeforeArrival).toBeLessThan(accelConfig.minCurveSpeed)
   })
+
+  it('kecepatan meningkat kembali setelah keluar dari curve (post-curve acceleration)', () => {
+    // Buktikan bahwa setelah front axle keluar dari curve, approachSpeed menaikkan
+    // kecepatan kembali menuju maxSpeed — karena distToNextCurve berubah dari 0 → null/besar.
+    const engine = makeScene()
+    const linesMap = makeLinesMap(engine)
+    let state = engine.initializeVehicle('L1', 0, vehicle)!
+    let execution = engine.preparePath(state, 'L2', 1.0, true)!
+    let accelState: AccelerationState = { currentSpeed: 0 }
+
+    const speeds: number[] = []
+    let arrived = false
+    for (let i = 0; i < 5000 && !arrived; i++) {
+      const result = moveVehicleWithAcceleration(state, execution, accelState, accelConfig, 1 / 60, linesMap)
+      state = result.state
+      execution = result.execution
+      accelState = result.accelState
+      arrived = result.arrived
+      speeds.push(accelState.currentSpeed)
+    }
+    expect(arrived).toBe(true)
+
+    // Temukan kecepatan minimum dalam 60% awal perjalanan (terjadi saat melewati curve)
+    const earlyEnd = Math.floor(speeds.length * 0.6)
+    let minIdx = 0
+    for (let i = 1; i < earlyEnd; i++) {
+      if (speeds[i] < speeds[minIdx]) minIdx = i
+    }
+    const speedAtCurve = speeds[minIdx]
+    // Pastikan minimum ini memang di area curve (≈ minCurveSpeed)
+    expect(speedAtCurve).toBeLessThanOrEqual(accelConfig.minCurveSpeed + 1)
+
+    // Setelah minimum (keluar curve), kecepatan harus naik kembali di atas minCurveSpeed
+    const speedsAfterCurve = speeds.slice(minIdx + 1, minIdx + 40)
+    const maxAfterCurve = Math.max(...speedsAfterCurve)
+    expect(maxAfterCurve).toBeGreaterThan(accelConfig.minCurveSpeed)
+  })
 })

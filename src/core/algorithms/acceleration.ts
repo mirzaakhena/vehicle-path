@@ -50,23 +50,28 @@ export function computeRemainingToArrival(execution: PathExecution): number {
 }
 
 /**
- * Hitung jarak dari posisi rear axle ke awal segment curve berikutnya di path.
- * Return 0 jika rear axle sudah berada di dalam curve.
+ * Hitung jarak dari posisi front axle ke awal segment curve berikutnya di path.
+ * Return 0 jika front axle sudah berada di dalam curve.
  * Return null jika tidak ada curve lagi di depan.
+ *
+ * Menggunakan front axle (axleExecutions[0]) sebagai referensi — karena deceleration
+ * harus selesai (mencapai minCurveSpeed) tepat saat front axle secara visual memasuki
+ * curve. Jika menggunakan rear axle, kendaraan baru melambat setelah front axle
+ * sudah masuk curve.
  */
 export function computeDistToNextCurve(execution: PathExecution): number | null {
-  const rearExec = execution.axleExecutions[execution.axleExecutions.length - 1]
+  const frontExec = execution.axleExecutions[0]
   const currentArcLength = getCumulativeArcLength(
     execution.path,
-    rearExec.segmentIndex,
-    rearExec.segmentDistance
+    frontExec.segmentIndex,
+    frontExec.segmentDistance
   )
 
   let segStartArcLength = 0
   for (let i = 0; i < execution.path.segments.length; i++) {
     const seg = execution.path.segments[i]
 
-    if (i >= rearExec.segmentIndex && seg.type === 'curve') {
+    if (i >= frontExec.segmentIndex && seg.type === 'curve') {
       return Math.max(0, segStartArcLength - currentArcLength)
     }
 
