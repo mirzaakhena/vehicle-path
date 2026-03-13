@@ -9,7 +9,7 @@
  * ```typescript
  * import { PathEngine } from 'vehicle-path/core'
  *
- * const engine = new PathEngine({ maxWheelbase: 100, tangentMode: 'proportional-40' })
+ * const engine = new PathEngine({ tangentMode: 'proportional-40' })
  *
  * engine.setScene(lines, curves)
  *
@@ -44,7 +44,6 @@ import {
 // =============================================================================
 
 export interface PathEngineConfig {
-  maxWheelbase: number
   tangentMode: TangentMode
 }
 
@@ -93,7 +92,6 @@ export class PathEngine {
 
   constructor(engineConfig: PathEngineConfig) {
     this.config = {
-      maxWheelbase: engineConfig.maxWheelbase,
       tangentMode: engineConfig.tangentMode
     }
   }

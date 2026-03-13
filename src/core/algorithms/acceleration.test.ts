@@ -201,7 +201,7 @@ describe('approachSpeed', () => {
 
 describe('moveVehicleWithAcceleration', () => {
   function makeScene() {
-    const engine = new PathEngine({ maxWheelbase: 200, tangentMode: 'proportional-40' })
+    const engine = new PathEngine({ tangentMode: 'proportional-40' })
     engine.setScene(
       [
         { id: 'L1', start: { x: 0, y: 0 }, end: { x: 400, y: 0 } },

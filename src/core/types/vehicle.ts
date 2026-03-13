@@ -29,7 +29,7 @@ export interface VehicleStart {
   lineId: string
   offset: number
   isPercentage: boolean
-  /** Optional: defaults to [maxWheelbase] jika tidak disediakan */
+  /** axleSpacings[i] = arc-length antara axles[i] dan axles[i+1]. Default: [] (1 axle) */
   axleSpacings?: number[]
 }
 

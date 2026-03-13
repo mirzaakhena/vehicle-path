@@ -5,8 +5,7 @@ import { calculateInitialAxlePositions } from '../core/algorithms/vehicleMovemen
 
 export function validateAndCreateVehicles(
   vehicleStarts: VehicleStart[],
-  lines: Line[],
-  maxWheelbase: number = 0
+  lines: Line[]
 ): { vehicles: Vehicle[]; errors: string[] } {
   const vehicles: Vehicle[] = []
   const errors: string[] = []
@@ -27,8 +26,7 @@ export function validateAndCreateVehicles(
       continue
     }
 
-    // Gunakan axleSpacings dari VehicleStart, atau default ke [maxWheelbase]
-    const axleSpacings = vs.axleSpacings ?? [maxWheelbase]
+    const axleSpacings = vs.axleSpacings ?? []
     const totalVehicleLength = axleSpacings.reduce((a, b) => a + b, 0)
 
     // Check offset validity

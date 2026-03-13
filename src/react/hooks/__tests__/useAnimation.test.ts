@@ -47,7 +47,6 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves
         })
@@ -84,7 +83,6 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves
         })
@@ -108,7 +106,6 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves
         })
@@ -127,7 +124,6 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves
         })
@@ -151,7 +147,6 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves
         })
@@ -171,7 +166,6 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves,
           eventEmitter: emitter
@@ -193,7 +187,6 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves
         })
@@ -216,7 +209,6 @@ describe('useAnimation', () => {
           vehicles,
           lines: mockLines,
           vehicleQueues: new Map(),
-          maxWheelbase,
           tangentMode: 'proportional-40',
           curves: mockCurves
         })

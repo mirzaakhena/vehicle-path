@@ -22,7 +22,6 @@ export interface UseAnimationProps {
   vehicleQueues: Map<string, GotoCommand[]>
   /** Get current queues immediately (bypasses React state timing) */
   getVehicleQueues?: () => Map<string, GotoCommand[]>
-  maxWheelbase: number
   tangentMode: TangentMode
   curves: import('../../core/types/geometry').Curve[]
   eventEmitter?: VehicleEventEmitter
@@ -54,7 +53,6 @@ export function useAnimation({
   lines,
   vehicleQueues,
   getVehicleQueues,
-  maxWheelbase,
   tangentMode,
   curves,
   eventEmitter
@@ -88,9 +86,8 @@ export function useAnimation({
 
   // Create config object for movement functions
   const config: MovementConfig = useMemo(() => ({
-    maxWheelbase,
     tangentMode
-  }), [maxWheelbase, tangentMode])
+  }), [tangentMode])
 
   // Cache linesMap to avoid creating new Map on every frame
   const linesMap = useMemo(() =>

@@ -9,8 +9,6 @@ describe('useInitialMovement', () => {
     { id: 'line002', start: { x: 500, y: 100 }, end: { x: 500, y: 400 } }
   ]
 
-  const maxWheelbase = 30
-
   beforeEach(() => {
     vi.useFakeTimers()
   })
@@ -22,7 +20,7 @@ describe('useInitialMovement', () => {
   describe('initial state', () => {
     it('should initialize with empty vehicles', () => {
       const { result } = renderHook(() =>
-        useInitialMovement({ lines: mockLines, maxWheelbase })
+        useInitialMovement({ lines: mockLines })
       )
 
       expect(result.current.vehicles).toEqual([])
@@ -35,7 +33,7 @@ describe('useInitialMovement', () => {
   describe('setInitialMovementText - parsing DSL', () => {
     it('should parse single vehicle start from DSL text immediately', async () => {
       const { result } = renderHook(() =>
-        useInitialMovement({ lines: mockLines, maxWheelbase })
+        useInitialMovement({ lines: mockLines })
       )
 
       act(() => {
@@ -54,7 +52,7 @@ describe('useInitialMovement', () => {
 
     it('should parse multiple vehicle starts', async () => {
       const { result } = renderHook(() =>
-        useInitialMovement({ lines: mockLines, maxWheelbase })
+        useInitialMovement({ lines: mockLines })
       )
 
       act(() => {
@@ -71,7 +69,7 @@ v2 start line002 50%
 
     it('should parse absolute offset (non-percentage)', async () => {
       const { result } = renderHook(() =>
-        useInitialMovement({ lines: mockLines, maxWheelbase })
+        useInitialMovement({ lines: mockLines })
       )
 
       act(() => {
@@ -85,25 +83,24 @@ v2 start line002 50%
 
     it('should calculate percentage offset correctly based on effective length', async () => {
       const { result } = renderHook(() =>
-        useInitialMovement({ lines: mockLines, maxWheelbase })
+        useInitialMovement({ lines: mockLines })
       )
 
       // line001 length = 400 (from x:100 to x:500)
-      // Effective length = 400 - maxWheelbase = 400 - 30 = 370
-      // 50% of 370 = 185
+      // 1 axle, effectiveLength = 400, 50% of 400 = 200
       act(() => {
         result.current.setInitialMovementText('v1 start line001 50%')
       })
 
       expect(result.current.vehicles).toHaveLength(1)
-      // 50% of effective length (370) = 185
+      // 50% of effective length (400) = 200
       const vp = result.current.vehicles[0]
-      expect(vp.axles[vp.axles.length - 1].absoluteOffset).toBe(185)
+      expect(vp.axles[vp.axles.length - 1].absoluteOffset).toBe(200)
     })
 
-    it('should calculate front axle position based on maxWheelbase', async () => {
+    it('should place single axle vehicle at the given position', async () => {
       const { result } = renderHook(() =>
-        useInitialMovement({ lines: mockLines, maxWheelbase })
+        useInitialMovement({ lines: mockLines })
       )
 
       act(() => {
@@ -113,15 +110,15 @@ v2 start line002 50%
       expect(result.current.vehicles).toHaveLength(1)
       const vehicle = result.current.vehicles[0]
 
-      // axles[0] = terdepan (front), harus maxWheelbase lebih depan dari rear
-      expect(vehicle.axles[0].absoluteOffset).toBe(maxWheelbase)
+      // 1 axle only, axles[0] is the only axle at position 0
+      expect(vehicle.axles[0].absoluteOffset).toBe(0)
     })
   })
 
   describe('validation errors', () => {
     it('should report error for non-existent line', async () => {
       const { result } = renderHook(() =>
-        useInitialMovement({ lines: mockLines, maxWheelbase })
+        useInitialMovement({ lines: mockLines })
       )
 
       act(() => {
@@ -134,7 +131,7 @@ v2 start line002 50%
 
     it('should report error for duplicate vehicle ID', async () => {
       const { result } = renderHook(() =>
-        useInitialMovement({ lines: mockLines, maxWheelbase })
+        useInitialMovement({ lines: mockLines })
       )
 
       act(() => {
@@ -152,7 +149,7 @@ v1 start line002 50%
   describe('vehicle structure', () => {
     it('should create vehicle with correct structure', async () => {
       const { result } = renderHook(() =>
-        useInitialMovement({ lines: mockLines, maxWheelbase })
+        useInitialMovement({ lines: mockLines })
       )
 
       act(() => {
@@ -166,7 +163,7 @@ v1 start line002 50%
       expect(vehicle).toHaveProperty('state')
       expect(vehicle).toHaveProperty('axles')
       expect(vehicle).toHaveProperty('axleSpacings')
-      expect(vehicle.axles.length).toBeGreaterThanOrEqual(2)
+      expect(vehicle.axles.length).toBeGreaterThanOrEqual(1)
 
       // Check rear axle (axles[N-1])
       const rear = vehicle.axles[vehicle.axles.length - 1]
@@ -188,25 +185,24 @@ v1 start line002 50%
 
     it('should calculate correct position on line', async () => {
       const { result } = renderHook(() =>
-        useInitialMovement({ lines: mockLines, maxWheelbase })
+        useInitialMovement({ lines: mockLines })
       )
 
       // line001: (100,100) -> (500,100), length = 400
-      // Effective length = 400 - 30 = 370
-      // 50% of 370 = 185
-      // Position at offset 185 on line from (100,100) to (500,100):
-      // x = 100 + (185/400) * (500-100) = 100 + 185 = 285
+      // 1 axle, effectiveLength = 400, 50% of 400 = 200
+      // Position at offset 200 on line from (100,100) to (500,100):
+      // x = 100 + (200/400) * (500-100) = 100 + 200 = 300
       act(() => {
         result.current.setInitialMovementText('v1 start line001 50%')
       })
 
       const vehicle = result.current.vehicles[0]
 
-      // 50% of effective length puts rear (axles[N-1]) at offset 185
+      // 50% of effective length puts axle at offset 200
       // position = start + (offset/length) * (end - start)
-      // x = 100 + (185/400) * 400 = 100 + 185 = 285
+      // x = 100 + (200/400) * 400 = 100 + 200 = 300
       const rearAxle = vehicle.axles[vehicle.axles.length - 1]
-      expect(rearAxle.position.x).toBeCloseTo(285, 1)
+      expect(rearAxle.position.x).toBeCloseTo(300, 1)
       expect(rearAxle.position.y).toBeCloseTo(100, 1)
     })
   })
@@ -214,7 +210,7 @@ v1 start line002 50%
   describe('rapid changes behavior', () => {
     it('should handle rapid changes and use final state', async () => {
       const { result } = renderHook(() =>
-        useInitialMovement({ lines: mockLines, maxWheelbase })
+        useInitialMovement({ lines: mockLines })
       )
 
       // First change

@@ -80,8 +80,7 @@ export function resolveFromLineOffset(
   line: Line,
   offset: number | undefined,
   isPercentage: boolean | undefined,
-  defaultPercentage: number,
-  _maxWheelbase: number   // kept for API compatibility, no longer used
+  defaultPercentage: number
 ): number {
   const lineLength = distance(line.start, line.end)
 
@@ -107,8 +106,7 @@ export function resolveToLineOffset(
   line: Line,
   offset: number | undefined,
   isPercentage: boolean | undefined,
-  defaultPercentage: number,
-  _maxWheelbase: number   // kept for API compatibility, no longer used
+  defaultPercentage: number
 ): number {
   const lineLength = distance(line.start, line.end)
 
@@ -150,24 +148,18 @@ export function buildGraph(
 
     if (!fromLine || !toLine) continue
 
-    // Resolve offsets with wheelbase adjustment (default: from 1.0 to 0)
-    // fromLine: 0 → wheelbase, 1 → lineLength
-    // toLine: 0 → 0, 1 → lineLength - wheelbase
-    const fromOffset = resolveFromLineOffset(fromLine, curve.fromOffset, curve.fromIsPercentage, 1, config.maxWheelbase)
-    const toOffset = resolveToLineOffset(toLine, curve.toOffset, curve.toIsPercentage, 0, config.maxWheelbase)
+    const fromOffset = resolveFromLineOffset(fromLine, curve.fromOffset, curve.fromIsPercentage, 1)
+    const toOffset = resolveToLineOffset(toLine, curve.toOffset, curve.toIsPercentage, 0)
 
-    // Create bezier curve untuk menghitung arc length
-    // Pass resolved absolute offsets (not raw percentages)
     const bezier = createBezierCurve(
       fromLine,
       toLine,
       config,
-      false, // willFlip is always false now
       {
         fromOffset: fromOffset,
-        fromIsPercentage: false, // Already resolved to absolute
+        fromIsPercentage: false,
         toOffset: toOffset,
-        toIsPercentage: false    // Already resolved to absolute
+        toIsPercentage: false
       }
     )
 

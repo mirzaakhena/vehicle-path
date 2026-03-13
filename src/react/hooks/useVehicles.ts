@@ -7,7 +7,6 @@ import { toVehicleStart } from '../../utils/type-converters'
 
 export interface UseVehiclesProps {
   lines: Line[]
-  maxWheelbase: number
 }
 
 export interface UseVehiclesResult {
@@ -49,7 +48,7 @@ export interface UseVehiclesResult {
  * removeVehicle('v1')
  * ```
  */
-export function useVehicles({ lines, maxWheelbase }: UseVehiclesProps): UseVehiclesResult {
+export function useVehicles({ lines }: UseVehiclesProps): UseVehiclesResult {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [error, setError] = useState<string | null>(null)
 
@@ -82,11 +81,7 @@ export function useVehicles({ lines, maxWheelbase }: UseVehiclesProps): UseVehic
 
     // Validate and create vehicles
     const vehicleStarts = inputs.map(toVehicleStart)
-    const { vehicles: newVehicles, errors } = validateAndCreateVehicles(
-      vehicleStarts,
-      lines,
-      maxWheelbase
-    )
+    const { vehicles: newVehicles, errors } = validateAndCreateVehicles(vehicleStarts, lines)
 
     if (errors.length > 0) {
       setError(errors.join('; '))
@@ -98,7 +93,7 @@ export function useVehicles({ lines, maxWheelbase }: UseVehiclesProps): UseVehic
     setVehicles(vehiclesRef.current)
     setError(null)
     return { success: true }
-  }, [lines, maxWheelbase])
+  }, [lines])
 
   const updateVehicle = useCallback((vehicleId: string, updates: VehicleUpdateInput) => {
     // Find the vehicle
@@ -154,14 +149,11 @@ export function useVehicles({ lines, maxWheelbase }: UseVehiclesProps): UseVehic
       vehicleId,
       lineId: targetLineId,
       offset: newPosition,
-      isPercentage: newIsPercentage
+      isPercentage: newIsPercentage,
+      axleSpacings: vehicle.axleSpacings
     }
 
-    const { vehicles: updatedVehicles, errors } = validateAndCreateVehicles(
-      [vehicleStart],
-      lines,
-      maxWheelbase
-    )
+    const { vehicles: updatedVehicles, errors } = validateAndCreateVehicles([vehicleStart], lines)
 
     if (errors.length > 0) {
       setError(errors.join('; '))
@@ -175,7 +167,7 @@ export function useVehicles({ lines, maxWheelbase }: UseVehiclesProps): UseVehic
     setVehicles(vehiclesRef.current)
     setError(null)
     return { success: true }
-  }, [lines, maxWheelbase])
+  }, [lines])
 
   const removeVehicle = useCallback((vehicleId: string) => {
     const exists = vehiclesRef.current.some(v => v.id === vehicleId)

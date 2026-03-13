@@ -50,7 +50,6 @@ export interface VehicleMovementState {
  * Configuration for vehicle movement
  */
 export interface MovementConfig {
-  maxWheelbase: number
   tangentMode: TangentMode
 }
 

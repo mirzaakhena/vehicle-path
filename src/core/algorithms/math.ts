@@ -32,54 +32,31 @@ export function createBezierCurve(
   line: Line,
   nextLine: Line,
   config: MovementConfig,
-  willFlip: boolean = false,
   offsetOptions?: CurveOffsetOptions
 ): BezierCurve {
-  const { maxWheelbase, tangentMode } = config
-  // Calculate start point (p0) based on offset or default to end of line
-  let baseP0: Point
+  const { tangentMode } = config
+
+  let p0: Point
   if (offsetOptions?.fromOffset !== undefined) {
-    baseP0 = getPointOnLineByOffset(line, offsetOptions.fromOffset, offsetOptions.fromIsPercentage ?? false)
+    p0 = getPointOnLineByOffset(line, offsetOptions.fromOffset, offsetOptions.fromIsPercentage ?? false)
   } else {
-    baseP0 = line.end // Default: 100% = end of line
+    p0 = line.end
   }
 
-  // Calculate end point (p3) based on offset or default to start of nextLine
   let p3: Point
   if (offsetOptions?.toOffset !== undefined) {
     p3 = getPointOnLineByOffset(nextLine, offsetOptions.toOffset, offsetOptions.toIsPercentage ?? false)
   } else {
-    p3 = nextLine.start // Default: 0% = start of line
+    p3 = nextLine.start
   }
 
-  // p0: titik awal kurva (may need wheelbase adjustment for flip)
-  const dir = normalize(line.start, line.end)
-  const p0 = willFlip
-    ? {
-        // Transition with flip: kurva dimulai dari P (baseP0 - wheelbase in line direction)
-        x: baseP0.x - dir.x * maxWheelbase,
-        y: baseP0.y - dir.y * maxWheelbase
-      }
-    : baseP0  // Smooth transition: kurva dimulai dari baseP0
-
-  // Vektor arah normalized
   const dir0 = normalize(line.start, line.end)
   const dir3 = normalize(nextLine.start, nextLine.end)
-
-  // Jarak dan tangent length
   const dist = distance(p0, p3)
   const tangentLen = calculateTangentLength(tangentMode, dist)
 
-  // p1: control point pertama
-  const p1 = willFlip
-    ? { x: p0.x - dir0.x * tangentLen, y: p0.y - dir0.y * tangentLen }  // Inward (S-curve)
-    : { x: p0.x + dir0.x * tangentLen, y: p0.y + dir0.y * tangentLen }  // Outward (smooth)
-
-  // p2: control point kedua
-  const p2 = {
-    x: p3.x - dir3.x * tangentLen,
-    y: p3.y - dir3.y * tangentLen
-  }
+  const p1 = { x: p0.x + dir0.x * tangentLen, y: p0.y + dir0.y * tangentLen }
+  const p2 = { x: p3.x - dir3.x * tangentLen, y: p3.y - dir3.y * tangentLen }
 
   return { p0, p1, p2, p3 }
 }

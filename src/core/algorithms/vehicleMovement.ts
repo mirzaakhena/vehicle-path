@@ -485,32 +485,28 @@ function buildCurveDataMap(
         const fromLine = linesMap.get(curveSpec.fromLineId)
         const toLine = linesMap.get(curveSpec.toLineId)
         if (fromLine && toLine) {
-          // Resolve offsets with wheelbase adjustment (matching buildGraph logic)
           const fromOffset = resolveFromLineOffset(
             fromLine,
             curveSpec.fromOffset,
             curveSpec.fromIsPercentage,
-            1, // Default: 100% = 1.0
-            config.maxWheelbase
+            1
           )
           const toOffset = resolveToLineOffset(
             toLine,
             curveSpec.toOffset,
             curveSpec.toIsPercentage,
-            0,
-            config.maxWheelbase
+            0
           )
 
           const bezier = createBezierCurve(
             fromLine,
             toLine,
             config,
-            false, // willFlip is always false now
             {
               fromOffset: fromOffset,
-              fromIsPercentage: false, // Already resolved to absolute
+              fromIsPercentage: false,
               toOffset: toOffset,
-              toIsPercentage: false    // Already resolved to absolute
+              toIsPercentage: false
             }
           )
           const arcLengthTable = buildArcLengthTable(bezier)
