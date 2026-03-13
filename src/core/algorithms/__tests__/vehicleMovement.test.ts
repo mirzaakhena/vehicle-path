@@ -1111,6 +1111,18 @@ describe('moveVehicle (multi-axle)', () => {
     expect(result.axleExecutions[0].segmentDistance).toBeCloseTo(60)
     expect(result.axleExecutions[2].segmentDistance).toBeCloseTo(5)
   })
+
+  it('at arrival, non-rear axles hang over past path end instead of collapsing to rear position', () => {
+    // Bug regresi: saat rear tiba (arrived=true), axle tengah dulu ter-clamp ke endOffset=170
+    // (posisi sama dengan rear axle). Seharusnya 25 unit di depan rear (=195 pada line).
+    // axleSpacings: [30, 25] → front 55 unit di depan rear, middle 25 unit di depan rear
+    // path endOffset=170, line length=200 → semua non-rear axle "hang over" pada line
+    const result = moveVehicle(axleStates, axleExecutions, path, 170, linesMap, curveDataMap)
+    expect(result.arrived).toBe(true)
+    expect(result.axles[2].absoluteOffset).toBeCloseTo(170) // rear: tepat di path end
+    expect(result.axles[1].absoluteOffset).toBeCloseTo(195) // middle: 25 unit hang over
+    expect(result.axles[0].absoluteOffset).toBeCloseTo(200) // front: clamped ke ujung line
+  })
 })
 
 // =============================================================================

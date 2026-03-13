@@ -671,19 +671,22 @@ export function moveVehicle(
   axleExecutions: AxleExecutionState[]
   arrived: boolean
 } {
-  // axles[0] = terdepan, boleh "hang over" di ujung line segment terakhir
-  let frontMaxOffset: number | undefined
-  const frontExec = axleExecutions[0]
-  if (frontExec.currentSegmentIndex < path.segments.length) {
-    const seg = path.segments[frontExec.currentSegmentIndex]
-    if (seg.type === 'line') {
-      const line = linesMap.get(seg.lineId!)
-      if (line) frontMaxOffset = getLineLength(line)
-    }
-  }
-
+  // Semua axle kecuali rear (axles[N-1]) boleh "hang over" di ujung line segment terakhir.
+  // Path direncanakan untuk rear axle — saat rear tiba, axle-axle di depannya sudah
+  // melampaui batas path. Tanpa maxOffset mereka ter-clamp ke posisi rear axle (bug).
   const results = axleStates.map((axle, i) => {
-    const maxOffset = i === 0 ? frontMaxOffset : undefined
+    const isRear = i === axleStates.length - 1
+    let maxOffset: number | undefined
+    if (!isRear) {
+      const exec = axleExecutions[i]
+      if (exec.currentSegmentIndex < path.segments.length) {
+        const seg = path.segments[exec.currentSegmentIndex]
+        if (seg.type === 'line') {
+          const line = linesMap.get(seg.lineId!)
+          if (line) maxOffset = getLineLength(line)
+        }
+      }
+    }
     return updateAxlePosition(axle, axleExecutions[i], path, distance, linesMap, curveDataMap, maxOffset)
   })
 
