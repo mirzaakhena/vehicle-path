@@ -68,39 +68,37 @@ Curve menghubungkan **ujung satu line** ke **awal line lain**. Tidak bisa berdir
 ```typescript
 import type { Curve } from 'vehicle-path2/core'
 
-// Tambah curve
-engine.addCurve({
+// Tambah curve (returns curve id — auto-generated if not provided)
+const curveId = engine.addCurve({
+  id: 'c1',              // optional — auto-generated if omitted
   fromLineId: 'L1',
   toLineId: 'L2',
   fromOffset: 380,        // posisi di L1 (px dari start)
   fromIsPercentage: false,
   toOffset: 20,           // posisi di L2 (px dari start)
   toIsPercentage: false,
-} as Curve)
+})
 
-// Atau dengan offset persentase (0–1)
-engine.addCurve({
-  fromLineId: 'L1',
-  toLineId: 'L2',
-  fromOffset: 0.95,
-  fromIsPercentage: true,
-  toOffset: 0.05,
-  toIsPercentage: true,
-} as Curve)
+// Update curve berdasarkan id
+engine.updateCurve('c1', { fromOffset: 100 })
 
-// Update curve berdasarkan index
-engine.updateCurve(0, { fromOffset: 0.9 })
-
-// Hapus curve berdasarkan index
-engine.removeCurve(0)
+// Hapus curve berdasarkan id
+engine.removeCurve('c1')
 
 // Baca semua curves
 engine.getCurves() // → Curve[]
+
+// Dapatkan computed bezier untuk rendering
+engine.getCurveBeziers() // → Map<string, BezierCurve>
 ```
 
-> **Catatan:** Curve diidentifikasi via **array index** (bukan named ID). Gunakan `getCurves()` lalu cari index yang sesuai sebelum update/delete.
+> **Catatan:** Curve diidentifikasi via `id` (string). Jika tidak diberikan saat `addCurve`, id otomatis di-generate.
 
-> **Konsekuensi `removeLine`:** Curve yang terhubung ke line yang dihapus otomatis ikut terhapus, sehingga index curve-curve lainnya bisa bergeser.
+> **Konsekuensi `removeLine`:** Curve yang terhubung ke line yang dihapus otomatis ikut terhapus. `removeLine` mengembalikan `{ success, removedCurveIds }`.
+
+> **Path validation:** Gunakan `engine.canReach(fromLineId, fromOffset, toLineId, toOffset)` untuk mengecek apakah path ada tanpa membuat execution plan.
+
+> **Acceleration:** Gunakan `engine.moveVehicleWithAcceleration(state, exec, accelState, config, deltaTime)` untuk movement dengan physics-based acceleration/deceleration.
 
 ---
 
