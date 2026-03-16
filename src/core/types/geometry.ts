@@ -21,6 +21,7 @@ export interface BezierCurve {
 }
 
 export interface Curve {
+  id?: string
   fromLineId: string
   toLineId: string
   fromOffset?: number

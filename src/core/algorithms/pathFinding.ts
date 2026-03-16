@@ -8,11 +8,13 @@ import { distance, createBezierCurve, getPointOnBezier } from './math'
 
 export interface GraphEdge {
   curveIndex: number          // Index dalam array curves
+  curveId?: string            // From Curve.id, if provided
   fromLineId: string
   toLineId: string
   fromOffset: number          // Absolute offset (dalam pixels)
   toOffset: number            // Absolute offset (dalam pixels)
   curveLength: number         // Arc length dari bezier curve
+  bezier: BezierCurve         // Cached computed bezier curve
 }
 
 export interface Graph {
@@ -167,11 +169,13 @@ export function buildGraph(
 
     const edge: GraphEdge = {
       curveIndex: i,
+      curveId: curve.id,
       fromLineId: curve.fromLineId,
       toLineId: curve.toLineId,
       fromOffset,
       toOffset,
-      curveLength
+      curveLength,
+      bezier
     }
 
     adjacency.get(curve.fromLineId)!.push(edge)
