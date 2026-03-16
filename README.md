@@ -24,7 +24,6 @@ Titik acuan kendaraan adalah **axle paling belakang** (`axles[N-1]`). Semua axle
 import { PathEngine } from 'vehicle-path2/core'
 
 const engine = new PathEngine({
-  maxWheelbase: 100,              // batas maksimum total panjang kendaraan
   tangentMode: 'proportional-40' // mode kurva bezier
 })
 ```
@@ -197,7 +196,7 @@ if (result.arrived) {
 import { PathEngine } from 'vehicle-path2/core'
 import type { VehiclePathState, PathExecution } from 'vehicle-path2/core'
 
-const engine = new PathEngine({ maxWheelbase: 100, tangentMode: 'proportional-40' })
+const engine = new PathEngine({ tangentMode: 'proportional-40' })
 
 engine.setScene(
   [

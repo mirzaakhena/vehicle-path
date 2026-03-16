@@ -86,3 +86,17 @@ export interface GotoCompletionInfo {
  * Callback type for goto command completion
  */
 export type GotoCompletionCallback = (info: GotoCompletionInfo) => void
+
+/**
+ * Info when a command starts execution
+ */
+export interface CommandStartInfo {
+  vehicleId: string
+  command: GotoCommand
+  commandIndex: number
+  startPosition: {
+    lineId: string
+    absoluteOffset: number
+    position: Point
+  }
+}

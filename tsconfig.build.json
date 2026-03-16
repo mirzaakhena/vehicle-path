@@ -10,7 +10,6 @@
     "allowImportingTsExtensions": false,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    "jsx": "react-jsx",
 
     "declaration": true,
     "declarationDir": "./dist",
@@ -25,9 +24,6 @@
   },
   "include": ["src"],
   "exclude": [
-    "src/**/*.test.ts",
-    "src/**/*.test.tsx",
-    "src/react",
-    "src/utils"
+    "src/**/*.test.ts"
   ]
 }

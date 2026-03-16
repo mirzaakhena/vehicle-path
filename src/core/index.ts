@@ -32,7 +32,8 @@ export type {
   AxleState,
   GotoCommand,
   GotoCompletionInfo,
-  GotoCompletionCallback
+  GotoCompletionCallback,
+  CommandStartInfo
 } from './types/vehicle'
 
 // Movement state types

@@ -9,7 +9,7 @@
  */
 
 import type { Line, Point, Curve } from '../types/geometry'
-import type { Vehicle, AxleState, GotoCommand, GotoCompletionCallback } from '../types/vehicle'
+import type { Vehicle, AxleState, GotoCommand, GotoCompletionCallback, CommandStartInfo } from '../types/vehicle'
 import type {
   VehicleMovementState,
   PathExecutionState,
@@ -19,7 +19,6 @@ import type {
   MovementConfig
 } from '../types/movement'
 import type { PathResult, Graph, GraphEdge } from './pathFinding'
-import type { CommandStartInfo } from '../../utils/event-emitter'
 import { findPath, resolveFromLineOffset, resolveToLineOffset } from './pathFinding'
 import { createBezierCurve, buildArcLengthTable, getPointOnBezier, distanceToT } from './math'
 
