@@ -26,18 +26,23 @@
  * ```
  */
 
-import type { Line, Curve, Point } from './types/geometry'
+import type { Line, Curve, BezierCurve, Point } from './types/geometry'
 import type { AxleState, VehicleDefinition } from './types/vehicle'
 import type { MovementConfig, CurveData, AxleExecutionState } from './types/movement'
 import type { PathResult, Graph } from './algorithms/pathFinding'
 import type { TangentMode } from './types/config'
-import { buildGraph } from './algorithms/pathFinding'
+import { buildGraph, findPath } from './algorithms/pathFinding'
 import {
   moveVehicle,
   prepareCommandPath,
   calculateInitialAxlePositions,
   getLineLength
 } from './algorithms/vehicleMovement'
+import {
+  moveVehicleWithAcceleration as moveVehicleWithAccelerationFn,
+  type AccelerationConfig,
+  type AccelerationState
+} from './algorithms/acceleration'
 
 // =============================================================================
 // Types
@@ -86,14 +91,32 @@ export { moveVehicle } from './algorithms/vehicleMovement'
  */
 export class PathEngine {
   private graph: Graph | null = null
+  private graphDirty = true
   private linesMap = new Map<string, Line>()
-  private curves: Curve[] = []
+  private curvesMap = new Map<string, Curve>()
+  private curveSeq = 0
   private config: MovementConfig
 
   constructor(engineConfig: PathEngineConfig) {
     this.config = {
       tangentMode: engineConfig.tangentMode
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Internal
+  // ---------------------------------------------------------------------------
+
+  private ensureGraph(): Graph {
+    if (this.graphDirty || !this.graph) {
+      this.graph = buildGraph(
+        Array.from(this.linesMap.values()),
+        Array.from(this.curvesMap.values()),
+        this.config
+      )
+      this.graphDirty = false
+    }
+    return this.graph
   }
 
   // ---------------------------------------------------------------------------
@@ -109,7 +132,33 @@ export class PathEngine {
   }
 
   getCurves(): Curve[] {
-    return this.curves
+    return Array.from(this.curvesMap.values())
+  }
+
+  /**
+   * Expose the graph (lazily built) for consumers that need it
+   * (e.g., scene stats, custom pathfinding).
+   */
+  getGraph(): Graph {
+    return this.ensureGraph()
+  }
+
+  /**
+   * Returns computed bezier for each curve by id.
+   * Internally calls ensureGraph() to guarantee beziers are computed,
+   * then iterates graph edges to build the return map.
+   */
+  getCurveBeziers(): Map<string, BezierCurve> {
+    const graph = this.ensureGraph()
+    const result = new Map<string, BezierCurve>()
+    for (const edges of graph.adjacency.values()) {
+      for (const edge of edges) {
+        if (edge.curveId) {
+          result.set(edge.curveId, edge.bezier)
+        }
+      }
+    }
+    return result
   }
 
   // ---------------------------------------------------------------------------
@@ -117,15 +166,21 @@ export class PathEngine {
   // ---------------------------------------------------------------------------
 
   /**
-   * Replace the entire scene and rebuild the graph.
+   * Replace the entire scene. Graph is rebuilt lazily on first access.
    */
   setScene(lines: Line[], curves: Curve[]): void {
     this.linesMap.clear()
     for (const line of lines) {
       this.linesMap.set(line.id, line)
     }
-    this.curves = curves
-    this.graph = buildGraph(lines, curves, this.config)
+    this.curvesMap.clear()
+    this.curveSeq = 0
+    for (const curve of curves) {
+      const id = curve.id ?? `curve-${++this.curveSeq}`
+      this.curvesMap.set(id, { ...curve, id })
+    }
+    this.graph = null
+    this.graphDirty = true
   }
 
   /**
@@ -134,19 +189,19 @@ export class PathEngine {
   addLine(line: Line): boolean {
     if (this.linesMap.has(line.id)) return false
     this.linesMap.set(line.id, line)
-    this.graph = buildGraph(Array.from(this.linesMap.values()), this.curves, this.config)
+    this.graphDirty = true
     return true
   }
 
   /**
    * Update start and/or end coordinates of an existing line.
+   * Immutable — does not mutate the original line object.
    */
   updateLine(lineId: string, updates: { start?: Point; end?: Point }): boolean {
     const line = this.linesMap.get(lineId)
     if (!line) return false
-    if (updates.start) line.start = updates.start
-    if (updates.end) line.end = updates.end
-    this.graph = buildGraph(Array.from(this.linesMap.values()), this.curves, this.config)
+    this.linesMap.set(lineId, { ...line, ...updates })
+    this.graphDirty = true
     return true
   }
 
@@ -159,8 +214,9 @@ export class PathEngine {
 
   /**
    * Rename a line ID and cascade the change to all connected curves.
+   * Immutable — does not mutate original objects.
    */
-  renameLine(oldId: string, newId: string): { success: boolean; error?: string } {
+  renameLine(oldId: string, newId: string): { success: boolean; error?: string; renamedCurveIds?: string[] } {
     const trimmed = newId.trim()
     if (!trimmed) return { success: false, error: 'Name cannot be empty' }
     if (trimmed === oldId) return { success: true }
@@ -169,57 +225,92 @@ export class PathEngine {
     const line = this.linesMap.get(oldId)
     if (!line) return { success: false, error: `Line "${oldId}" not found` }
 
-    line.id = trimmed
+    // Immutable: create new line object
     this.linesMap.delete(oldId)
-    this.linesMap.set(trimmed, line)
+    this.linesMap.set(trimmed, { ...line, id: trimmed })
 
-    // Cascade: update all curves that reference the old ID
-    for (const curve of this.curves) {
-      if (curve.fromLineId === oldId) curve.fromLineId = trimmed
-      if (curve.toLineId === oldId) curve.toLineId = trimmed
+    // Cascade: immutably update curves
+    const renamedCurveIds: string[] = []
+    for (const [curveId, curve] of this.curvesMap) {
+      let changed = false
+      const updated = { ...curve }
+      if (curve.fromLineId === oldId) { updated.fromLineId = trimmed; changed = true }
+      if (curve.toLineId === oldId) { updated.toLineId = trimmed; changed = true }
+      if (changed) {
+        this.curvesMap.set(curveId, updated)
+        renamedCurveIds.push(curveId)
+      }
     }
 
-    this.graph = buildGraph(Array.from(this.linesMap.values()), this.curves, this.config)
-    return { success: true }
+    this.graphDirty = true
+    return { success: true, renamedCurveIds }
   }
 
   /**
    * Remove a line and all curves connected to it.
+   * Returns which curves were also removed.
    */
-  removeLine(lineId: string): boolean {
-    if (!this.linesMap.has(lineId)) return false
+  removeLine(lineId: string): { success: boolean; removedCurveIds: string[] } {
+    if (!this.linesMap.has(lineId)) return { success: false, removedCurveIds: [] }
     this.linesMap.delete(lineId)
-    this.curves = this.curves.filter(c => c.fromLineId !== lineId && c.toLineId !== lineId)
-    this.graph = buildGraph(Array.from(this.linesMap.values()), this.curves, this.config)
-    return true
+
+    const removedCurveIds: string[] = []
+    for (const [curveId, curve] of this.curvesMap) {
+      if (curve.fromLineId === lineId || curve.toLineId === lineId) {
+        removedCurveIds.push(curveId)
+      }
+    }
+    for (const id of removedCurveIds) {
+      this.curvesMap.delete(id)
+    }
+
+    this.graphDirty = true
+    return { success: true, removedCurveIds }
   }
 
   /**
    * Add a directional curve (connection) from one line to another.
+   * Returns the curve id (auto-generated if not provided).
    */
-  addCurve(curve: Curve): void {
-    this.curves.push(curve)
-    this.graph = buildGraph(Array.from(this.linesMap.values()), this.curves, this.config)
+  addCurve(curve: Curve): string {
+    const id = curve.id ?? `curve-${++this.curveSeq}`
+    this.curvesMap.set(id, { ...curve, id })
+    this.graphDirty = true
+    return id
   }
 
   /**
-   * Update a curve by index. Returns false if index is out of bounds.
+   * Update a curve by id. Returns false if curve not found.
    */
-  updateCurve(index: number, updates: Partial<Curve>): boolean {
-    if (index < 0 || index >= this.curves.length) return false
-    this.curves[index] = { ...this.curves[index], ...updates }
-    this.graph = buildGraph(Array.from(this.linesMap.values()), this.curves, this.config)
+  updateCurve(curveId: string, updates: Partial<Curve>): boolean {
+    const curve = this.curvesMap.get(curveId)
+    if (!curve) return false
+    this.curvesMap.set(curveId, { ...curve, ...updates, id: curveId })
+    this.graphDirty = true
     return true
   }
 
   /**
-   * Remove a curve by index. Returns false if index is out of bounds.
+   * Remove a curve by id. Returns false if curve not found.
    */
-  removeCurve(index: number): boolean {
-    if (index < 0 || index >= this.curves.length) return false
-    this.curves.splice(index, 1)
-    this.graph = buildGraph(Array.from(this.linesMap.values()), this.curves, this.config)
+  removeCurve(curveId: string): boolean {
+    if (!this.curvesMap.has(curveId)) return false
+    this.curvesMap.delete(curveId)
+    this.graphDirty = true
     return true
+  }
+
+  // ---------------------------------------------------------------------------
+  // Path validation
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Check if a path exists from one position to another.
+   * Both offsets are absolute pixel values.
+   */
+  canReach(fromLineId: string, fromOffset: number, toLineId: string, toOffset: number): boolean {
+    const graph = this.ensureGraph()
+    return findPath(graph, { lineId: fromLineId, offset: fromOffset }, toLineId, toOffset) !== null
   }
 
   // ---------------------------------------------------------------------------
@@ -270,7 +361,7 @@ export class PathEngine {
     targetOffset: number,
     isPercentage: boolean = false
   ): PathExecution | null {
-    if (!this.graph) return null
+    const graph = this.ensureGraph()
 
     const totalVehicleLength = vehicleState.axleSpacings.reduce((a, b) => a + b, 0)
     const rearmost = vehicleState.axles[vehicleState.axles.length - 1]
@@ -296,9 +387,9 @@ export class PathEngine {
       targetOffset,
       isPercentage
     }, {
-      graph: this.graph,
+      graph,
       linesMap: this.linesMap,
-      curves: this.curves,
+      curves: Array.from(this.curvesMap.values()),
       config: this.config
     })
     if (!result) return null
@@ -374,5 +465,21 @@ export class PathEngine {
       },
       arrived: result.arrived
     }
+  }
+
+  /**
+   * Advance a vehicle with physics-based acceleration/deceleration.
+   *
+   * Thin wrapper — internally calls the standalone moveVehicleWithAcceleration()
+   * function from acceleration.ts, injecting this.linesMap as the 6th argument.
+   */
+  moveVehicleWithAcceleration(
+    state: VehiclePathState,
+    execution: PathExecution,
+    accelState: AccelerationState,
+    config: AccelerationConfig,
+    deltaTime: number
+  ): { state: VehiclePathState; execution: PathExecution; accelState: AccelerationState; arrived: boolean } {
+    return moveVehicleWithAccelerationFn(state, execution, accelState, config, deltaTime, this.linesMap)
   }
 }
