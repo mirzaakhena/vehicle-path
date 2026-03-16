@@ -25,6 +25,7 @@ Fix PathEngine so demo can use it effectively as the single source of truth for 
 - PathEngine does NOT manage vehicles (demo's responsibility)
 - React & Utils layers are not modified (future deprecation scope)
 - No breaking changes to standalone functions (`buildGraph`, `findPath`, etc.)
+- Minimize breaking changes on PathEngine methods; where unavoidable, document explicitly
 
 ## Design
 
@@ -94,6 +95,8 @@ private ensureGraph(): Graph {
 
 All mutation methods set `this.graphDirty = true` instead of calling `buildGraph()`.
 
+**`setScene()`** also becomes lazy — it populates `linesMap` and `curvesMap`, then sets `graphDirty = true`. Graph is only built on first access.
+
 #### 2c. ID-based curve operations
 
 Internal storage changes from `Curve[]` to `Map<string, Curve>`.
@@ -106,15 +109,25 @@ Internal storage changes from `Curve[]` to `Map<string, Curve>`.
 
 Auto-generate: `curve.id ?? \`curve-${++this.curveSeq}\``
 
+**curveIndex migration:** `buildGraph()` receives `Array.from(curvesMap.values())` as the curves array. The integer `curveIndex` in `GraphEdge` and `PathSegment` remains the array index within that snapshot. This is safe because: (1) JavaScript Maps preserve insertion order, (2) the graph is always rebuilt from the current curvesMap state via lazy rebuild, and (3) `preparePath` uses the same graph that was built from the same curvesMap snapshot. The `curveIndex` in `PathSegment` and `curveDataMap` keys remain integer-based — no migration needed for downstream code.
+
+**`getCurves()` accessor:** Changes to return `Array.from(this.curvesMap.values())`, preserving the existing `Curve[]` return type.
+
 #### 2d. Enhanced return values
+
+`renameLine` already returns `{ success, error? }`. Adding `renamedCurveIds` is purely additive (new optional field on existing object return) — non-breaking:
 
 ```typescript
 renameLine(oldId: string, newId: string): {
   success: boolean
   error?: string
-  renamedCurveIds?: string[]  // NEW — which curves were affected
+  renamedCurveIds?: string[]  // NEW — additive, which curves were affected
 }
+```
 
+`removeLine` currently returns `boolean`. Changing to an object return is a **minor breaking change** (truthy object vs boolean). This is acceptable because: PathEngine's `updateCurve`/`removeCurve` are also changing (index→id), and these methods have zero external consumers and zero tests. We acknowledge this as a deliberate, documented breaking change on PathEngine methods:
+
+```typescript
 removeLine(lineId: string): {
   success: boolean
   removedCurveIds: string[]   // NEW — which curves were deleted
@@ -129,7 +142,7 @@ removeLine(lineId: string): {
 getCurveBeziers(): Map<string, BezierCurve>
 ```
 
-Returns computed bezier for each curve by id. Demo uses this for rendering instead of calling `createBezierCurve()` manually.
+Returns computed bezier for each curve by id. Internally calls `ensureGraph()` to guarantee beziers are computed, then iterates graph edges to build the return map. Demo uses this for rendering instead of calling `createBezierCurve()` manually.
 
 #### 3b. `canReach()`
 
@@ -151,7 +164,7 @@ moveVehicleWithAcceleration(
 ): { state: VehiclePathState; execution: PathExecution; accelState: AccelerationState; arrived: boolean }
 ```
 
-Thin wrapper — injects PathEngine's internal `linesMap` into the standalone `moveVehicleWithAcceleration()` function.
+Thin wrapper — internally calls the standalone `moveVehicleWithAcceleration()` function from `acceleration.ts`, injecting `this.linesMap` as the 6th argument. No new logic.
 
 #### 3d. `getGraph()`
 
@@ -172,7 +185,9 @@ const arcLengthTable = buildArcLengthTable(bezier)
 curveDataMap.set(segment.curveIndex, { bezier, arcLengthTable })
 ```
 
-`buildCurveDataMap` gains a `graph` parameter. This is internal — `PathEngine.preparePath()` signature does not change.
+`buildCurveDataMap` gains a `graph` parameter to look up cached beziers from `GraphEdge`. It finds the matching edge by scanning adjacency edges for the corresponding `curveIndex`. The `curves` array parameter may be kept or removed depending on whether other fields are still needed — implementation decides. This is internal — `PathEngine.preparePath()` signature does not change.
+
+Note: `SceneContext.curves` in `movement.ts` may still be needed by `prepareCommandPath` for resolving curve specs (fromLineId/toLineId lookup). If `buildCurveDataMap` no longer needs curves directly, `SceneContext` gains a `graph` field instead.
 
 ### 5. Test Plan
 
@@ -207,7 +222,7 @@ All tests in `src/core/__tests__/engine.test.ts` unless noted.
 - CurveData bezier matches GraphEdge bezier
 - Arc length table computed from cached bezier
 
-**Total: ~33 new tests. Existing 813 tests must remain passing.**
+**Total: ~32 new tests. Existing 813 tests must remain passing.**
 
 ### 6. What Does NOT Change
 
@@ -216,8 +231,10 @@ All tests in `src/core/__tests__/engine.test.ts` unless noted.
 - `buildGraph()` external signature unchanged (GraphEdge gaining `bezier` is additive)
 - `moveVehicle()` (constant speed) remains alongside acceleration variant
 - All standalone functions remain available
-- No breaking changes to public API (only additions)
-- The only "breaking" change: `updateCurve(index)` / `removeCurve(index)` on PathEngine become id-based — but these have zero external consumers and zero tests
+- **Acknowledged breaking changes on PathEngine methods** (zero external consumers, zero tests):
+  - `updateCurve(index)` / `removeCurve(index)` → id-based
+  - `removeLine` returns `{ success, removedCurveIds }` instead of `boolean`
+  - `addCurve` returns `string` (curve id) instead of `void`
 
 ### 7. Files Modified
 
@@ -227,6 +244,7 @@ All tests in `src/core/__tests__/engine.test.ts` unless noted.
 | `src/core/algorithms/pathFinding.ts` | `GraphEdge` gets `bezier` + `curveId`, `buildGraph` caches bezier |
 | `src/core/engine.ts` | Immutable updates, lazy rebuild, id-based curves, new methods |
 | `src/core/algorithms/vehicleMovement.ts` | `buildCurveDataMap` uses cached bezier from graph |
-| `src/core/__tests__/engine.test.ts` | ~31 new tests |
+| `src/core/__tests__/engine.test.ts` | ~30 new tests |
 | `src/core/algorithms/__tests__/vehicleMovement.test.ts` | ~2 new tests |
 | `src/core/index.ts` | Export new types if any |
+| `README.md` | Update PathEngine examples (index-based → id-based curve ops) |
