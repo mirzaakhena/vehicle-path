@@ -18,7 +18,7 @@ import type {
   SceneContext,
   MovementConfig
 } from '../types/movement'
-import type { PathResult } from './pathFinding'
+import type { PathResult, Graph, GraphEdge } from './pathFinding'
 import type { CommandStartInfo } from '../../utils/event-emitter'
 import { findPath, resolveFromLineOffset, resolveToLineOffset } from './pathFinding'
 import { createBezierCurve, buildArcLengthTable, getPointOnBezier, distanceToT } from './math'
@@ -468,49 +468,50 @@ export interface PreparedPath {
 }
 
 /**
- * Build curve data (bezier curves and arc-length tables) for all curve segments in a path
+ * Build curve data (bezier curves and arc-length tables) for all curve segments in a path.
+ *
+ * Uses cached bezier from GraphEdge when available (eliminates double computation).
+ * Falls back to recomputing from curve spec if no cached edge is found.
  */
 function buildCurveDataMap(
   path: PathResult,
+  graph: Graph,
   curves: Curve[],
   linesMap: Map<string, Line>,
   config: MovementConfig
 ): Map<number, CurveData> {
   const curveDataMap = new Map<number, CurveData>()
 
+  // Build lookup: curveIndex → GraphEdge (for cached bezier)
+  const edgeByCurveIndex = new Map<number, GraphEdge>()
+  for (const edges of graph.adjacency.values()) {
+    for (const edge of edges) {
+      edgeByCurveIndex.set(edge.curveIndex, edge)
+    }
+  }
+
   for (const segment of path.segments) {
     if (segment.type === 'curve' && segment.curveIndex !== undefined) {
-      const curveSpec = curves[segment.curveIndex]
-      if (curveSpec) {
-        const fromLine = linesMap.get(curveSpec.fromLineId)
-        const toLine = linesMap.get(curveSpec.toLineId)
-        if (fromLine && toLine) {
-          const fromOffset = resolveFromLineOffset(
-            fromLine,
-            curveSpec.fromOffset,
-            curveSpec.fromIsPercentage,
-            1
-          )
-          const toOffset = resolveToLineOffset(
-            toLine,
-            curveSpec.toOffset,
-            curveSpec.toIsPercentage,
-            0
-          )
-
-          const bezier = createBezierCurve(
-            fromLine,
-            toLine,
-            config,
-            {
-              fromOffset: fromOffset,
-              fromIsPercentage: false,
-              toOffset: toOffset,
-              toIsPercentage: false
-            }
-          )
-          const arcLengthTable = buildArcLengthTable(bezier)
-          curveDataMap.set(segment.curveIndex, { bezier, arcLengthTable })
+      const cachedEdge = edgeByCurveIndex.get(segment.curveIndex)
+      if (cachedEdge) {
+        // Use cached bezier from GraphEdge — no recomputation
+        const arcLengthTable = buildArcLengthTable(cachedEdge.bezier)
+        curveDataMap.set(segment.curveIndex, { bezier: cachedEdge.bezier, arcLengthTable })
+      } else {
+        // Fallback: compute from scratch (should not happen in normal flow)
+        const curveSpec = curves[segment.curveIndex]
+        if (curveSpec) {
+          const fromLine = linesMap.get(curveSpec.fromLineId)
+          const toLine = linesMap.get(curveSpec.toLineId)
+          if (fromLine && toLine) {
+            const fromOffset = resolveFromLineOffset(fromLine, curveSpec.fromOffset, curveSpec.fromIsPercentage, 1)
+            const toOffset = resolveToLineOffset(toLine, curveSpec.toOffset, curveSpec.toIsPercentage, 0)
+            const bezier = createBezierCurve(fromLine, toLine, config, {
+              fromOffset, fromIsPercentage: false, toOffset, toIsPercentage: false
+            })
+            const arcLengthTable = buildArcLengthTable(bezier)
+            curveDataMap.set(segment.curveIndex, { bezier, arcLengthTable })
+          }
         }
       }
     }
@@ -563,8 +564,8 @@ export function prepareCommandPath(
 
   if (!path) return null
 
-  // Build curve data for all curve segments
-  const curveDataMap = buildCurveDataMap(path, curves, linesMap, config)
+  // Build curve data for all curve segments (uses cached bezier from graph)
+  const curveDataMap = buildCurveDataMap(path, graph, curves, linesMap, config)
 
   return { path, curveDataMap }
 }

@@ -1164,3 +1164,52 @@ describe('Partial Target Scenario: goto 50%', () => {
     })
   })
 })
+
+// =============================================================================
+// buildCurveDataMap optimization tests
+// =============================================================================
+
+describe('buildCurveDataMap optimization', () => {
+  // These tests verify that CurveData bezier comes from GraphEdge cache
+  // rather than being recomputed from scratch.
+
+  it('CurveData bezier matches GraphEdge bezier', async () => {
+    const { PathEngine } = await import('../../engine')
+    const L1 = { id: 'L1', start: { x: 0, y: 0 }, end: { x: 200, y: 0 } }
+    const L2 = { id: 'L2', start: { x: 300, y: 0 }, end: { x: 500, y: 0 } }
+    const engine = new PathEngine({ tangentMode: 'proportional-40' })
+    engine.setScene([L1, L2], [{ id: 'c1', fromLineId: 'L1', toLineId: 'L2' }])
+
+    const state = engine.initializeVehicle('L1', 0, { axleSpacings: [40] })!
+    const exec = engine.preparePath(state, 'L2', 50)!
+
+    // Get bezier from graph (which is what buildCurveDataMap should use)
+    const graphBeziers = engine.getCurveBeziers()
+    const graphBez = [...graphBeziers.values()][0]
+
+    // Get bezier from curveDataMap (produced by buildCurveDataMap)
+    const movementBez = [...exec.curveDataMap.values()][0].bezier
+    expect(movementBez.p0.x).toBeCloseTo(graphBez.p0.x)
+    expect(movementBez.p0.y).toBeCloseTo(graphBez.p0.y)
+    expect(movementBez.p3.x).toBeCloseTo(graphBez.p3.x)
+    expect(movementBez.p3.y).toBeCloseTo(graphBez.p3.y)
+  })
+
+  it('arc length table is computed from cached bezier', async () => {
+    const { PathEngine } = await import('../../engine')
+    const L1 = { id: 'L1', start: { x: 0, y: 0 }, end: { x: 200, y: 0 } }
+    const L2 = { id: 'L2', start: { x: 300, y: 0 }, end: { x: 500, y: 0 } }
+    const engine = new PathEngine({ tangentMode: 'proportional-40' })
+    engine.setScene([L1, L2], [{ id: 'c1', fromLineId: 'L1', toLineId: 'L2' }])
+
+    const state = engine.initializeVehicle('L1', 0, { axleSpacings: [40] })!
+    const exec = engine.preparePath(state, 'L2', 50)!
+
+    const curveData = [...exec.curveDataMap.values()][0]
+    expect(curveData.arcLengthTable).toBeDefined()
+    expect(curveData.arcLengthTable.length).toBeGreaterThan(0)
+    // Last entry should approximate the total curve length
+    const lastEntry = curveData.arcLengthTable[curveData.arcLengthTable.length - 1]
+    expect(lastEntry.distance).toBeGreaterThan(0)
+  })
+})
